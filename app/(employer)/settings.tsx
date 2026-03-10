@@ -1,0 +1,111 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '@/theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/store/authStore';
+import { Avatar } from '@/components/ui/Avatar';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Globe, Palette, Bell, Lock, HelpCircle, Info, ChevronRight } from 'lucide-react-native';
+
+export default function EmployerSettingsScreen() {
+  const { colors, spacing: s, typography: t, radius: r } = useTheme();
+  const { t: tr } = useTranslation();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const user = useAuthStore((st) => st.user);
+  const signOut = useAuthStore((st) => st.signOut);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/auth/role-select');
+  };
+
+  const menuItems = [
+    { Icon: Globe, label: tr('settings.language'), onPress: () => router.push('/settings') },
+    { Icon: Palette, label: tr('settings.theme'), onPress: () => router.push('/settings') },
+    { Icon: Bell, label: tr('settings.notifications'), onPress: () => router.push('/notifications') },
+    { Icon: Lock, label: tr('settings.privacy'), onPress: () => Alert.alert(tr('settings.privacy'), tr('common.comingSoon')) },
+    { Icon: HelpCircle, label: tr('settings.help'), onPress: () => Alert.alert(tr('settings.help'), tr('common.comingSoon')) },
+    { Icon: Info, label: tr('settings.about'), onPress: () => Alert.alert('AxtarIS', 'Version 1.0.0\nPremium Employment Platform for Azerbaijan') },
+  ];
+
+  return (
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={[styles.header, { paddingTop: insets.top + 16, paddingHorizontal: s.xl }]}>
+        <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}>
+          {tr('settings.title')}
+        </Text>
+      </View>
+
+      <View style={[styles.profileCard, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
+        <Card padding="md">
+          <View style={styles.profileRow}>
+            <Avatar name={user?.fullName} size={52} />
+            <View style={[styles.profileInfo, { marginLeft: s.md }]}>
+              <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{user?.fullName}</Text>
+              <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: 2 }]}>{user?.email}</Text>
+            </View>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => Alert.alert(tr('common.edit'), tr('common.comingSoon'))}>
+              <Text style={[{ color: colors.primary, ...t.labelSmall }]}>{tr('common.edit')}</Text>
+            </TouchableOpacity>
+          </View>
+        </Card>
+      </View>
+
+      <View style={[styles.menuSection, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
+        {menuItems.map((item, i) => (
+          <TouchableOpacity
+            key={i}
+            activeOpacity={0.7}
+            onPress={item.onPress}
+            style={[
+              styles.menuItem,
+              {
+                paddingVertical: s.lg,
+                borderBottomWidth: i < menuItems.length - 1 ? 1 : 0,
+                borderBottomColor: colors.divider,
+              },
+            ]}
+          >
+            <item.Icon size={20} color={colors.textSecondary} strokeWidth={1.8} style={{ marginRight: s.md }} />
+            <Text style={[{ color: colors.textPrimary, ...t.bodyMedium, flex: 1 }]}>{item.label}</Text>
+            <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={[{ paddingHorizontal: s.xl, marginTop: s['4xl'] }]}>
+        <Button title={tr('settings.signOut')} onPress={handleSignOut} variant="destructive" size="md" />
+      </View>
+
+      <Text style={[styles.version, { color: colors.textTertiary, ...t.caption, marginTop: s['2xl'] }]}>
+        {tr('settings.version')} 1.0.0
+      </Text>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: {},
+  profileCard: {},
+  profileRow: { flexDirection: 'row', alignItems: 'center' },
+  profileInfo: { flex: 1 },
+  menuSection: {},
+  menuItem: { flexDirection: 'row', alignItems: 'center' },
+  version: { textAlign: 'center' },
+});
