@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   logoTextImage: {
     width: 240,
-    height: 60,
+    height: 120,
   },
   tagline: {
     fontSize: 14,

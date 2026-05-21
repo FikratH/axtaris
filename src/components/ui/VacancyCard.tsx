@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeContext';
-import { Vacancy } from '@/types/models';
+import { Vacancy, WorkType } from '@/types/models';
 import { Avatar } from './Avatar';
 import { Badge } from './Badge';
 import { useTranslation } from 'react-i18next';
@@ -17,13 +17,13 @@ interface VacancyCardProps {
   compact?: boolean;
 }
 
-const workTypeLabels: Record<string, string> = {
-  full_time: 'Full-time',
-  part_time: 'Part-time',
-  remote: 'Remote',
-  hybrid: 'Hybrid',
-  onsite: 'On-site',
-  internship: 'Internship',
+const workTypeTranslationKeys: Record<WorkType, string> = {
+  full_time: 'candidate.fullTime',
+  part_time: 'candidate.partTime',
+  remote: 'candidate.remote',
+  hybrid: 'candidate.hybrid',
+  onsite: 'candidate.onsite',
+  internship: 'candidate.internship',
 };
 
 function AnimatedSaveButton({
@@ -115,7 +115,7 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: Vacanc
         <View style={[styles.chipRow, { marginTop: 10 }]}>
           <Badge label={vacancy.city} variant="default" />
           <Badge
-            label={workTypeLabels[vacancy.workType] || vacancy.workType}
+            label={tr(workTypeTranslationKeys[vacancy.workType])}
             variant="info"
             style={{ marginLeft: 6 }}
           />
