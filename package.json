@@ -6,7 +6,13 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "supabase:verify": "node scripts/verify-supabase.mjs",
+    "supabase:storage": "node scripts/ensure-supabase-storage.mjs",
+    "supabase:smoke": "node scripts/smoke-supabase-real.mjs",
+    "supabase:seed": "node scripts/seed-supabase-real.mjs",
+    "supabase:push": "npx supabase db push",
+    "supabase:link": "npx supabase link --project-ref cwmjyonylopsqrtujuvo"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -45,6 +51,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@expo/ngrok": "^4.1.3",
     "@types/react": "~19.2.2",
     "typescript": "~5.9.2"
   },

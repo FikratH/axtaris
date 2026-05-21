@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, Animated, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/theme/ThemeContext';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
+
+const LOGO_ICON = require('@/assets/axtaris_logo_icon_png.png');
+const LOGO_TEXT = require('@/assets/axtaris_text_logo_png.png');
 
 export default function SplashScreen() {
   const { colors, typography: t } = useTheme();
@@ -16,10 +18,12 @@ export default function SplashScreen() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const authStatus = useAuthStore((s) => s.authStatus);
   const pendingVerification = useAuthStore((s) => s.pendingVerification);
+  const hasOnboarded = useAppStore((s) => s.hasCompletedOnboarding);
 
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const textOpacity = useRef(new Animated.Value(0)).current;
+  const loadingWidth = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
@@ -42,15 +46,19 @@ export default function SplashScreen() {
         useNativeDriver: true,
       }),
     ]).start();
+
+    Animated.timing(loadingWidth, {
+      toValue: 1,
+      duration: 1800,
+      useNativeDriver: false,
+    }).start();
   }, []);
 
   useEffect(() => {
     if (isLoading) return;
 
-    const timer = setTimeout(async () => {
-      const onboarded = await AsyncStorage.getItem('@axtaris_onboarded');
-
-      if (!onboarded) {
+    const timer = setTimeout(() => {
+      if (hasOnboarded === false) {
         router.replace('/onboarding');
       } else if (
         authStatus === 'pending_verification' &&
@@ -74,12 +82,18 @@ export default function SplashScreen() {
     return () => clearTimeout(timer);
   }, [
     authStatus,
+    hasOnboarded,
     isAuthenticated,
     isLoading,
     pendingVerification?.email,
     router,
     user,
   ]);
+
+  const animatedLoadingWidth = loadingWidth.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
 
   return (
     <View style={[styles.container, { backgroundColor: '#0A1628' }]}>
@@ -89,17 +103,11 @@ export default function SplashScreen() {
           { transform: [{ scale: logoScale }], opacity: logoOpacity },
         ]}
       >
-        <View style={styles.logoIcon}>
-          <View style={[styles.magnifier, { borderColor: '#FFFFFF' }]}>
-            <View style={[styles.magnifierHandle, { backgroundColor: '#FFFFFF' }]} />
-          </View>
-        </View>
+        <Image source={LOGO_ICON} style={styles.logoImage} resizeMode="contain" />
       </Animated.View>
 
       <Animated.View style={[styles.textContainer, { opacity: textOpacity }]}>
-        <Text style={[styles.appName, { color: '#FFFFFF' }]}>
-          Axtar<Text style={{ color: '#5B7FD6' }}>IS</Text>
-        </Text>
+        <Image source={LOGO_TEXT} style={styles.logoTextImage} resizeMode="contain" />
         <Text style={[styles.tagline, { color: 'rgba(255,255,255,0.5)' }]}>
           Premium Employment Platform
         </Text>
@@ -110,7 +118,7 @@ export default function SplashScreen() {
           <Animated.View
             style={[
               styles.loadingBarFill,
-              { backgroundColor: '#5B7FD6' },
+              { backgroundColor: '#5B7FD6', width: animatedLoadingWidth },
             ]}
           />
         </View>
@@ -128,38 +136,20 @@ const styles = StyleSheet.create({
   logoContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 100,
-    height: 100,
+    width: 140,
+    height: 140,
   },
-  logoIcon: {
-    width: 80,
-    height: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  magnifier: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 4,
-  },
-  magnifierHandle: {
-    position: 'absolute',
-    bottom: -12,
-    right: -8,
-    width: 4,
-    height: 20,
-    borderRadius: 2,
-    transform: [{ rotate: '45deg' }],
+  logoImage: {
+    width: 120,
+    height: 120,
   },
   textContainer: {
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 20,
   },
-  appName: {
-    fontSize: 36,
-    fontWeight: '800',
-    letterSpacing: -0.5,
+  logoTextImage: {
+    width: 240,
+    height: 60,
   },
   tagline: {
     fontSize: 14,
@@ -180,7 +170,6 @@ const styles = StyleSheet.create({
   },
   loadingBarFill: {
     height: '100%',
-    width: '60%',
     borderRadius: 2,
   },
 });

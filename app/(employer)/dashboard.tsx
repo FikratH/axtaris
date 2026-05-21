@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,11 +12,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
-import { useDataStore } from '@/store/dataStore';
+import { useEmployerApplications, useNotifications } from '@/hooks/useEngagementQueries';
+import { useEmployerVacancies } from '@/hooks/useVacancyQueries';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import {
+  getSubscriptionCatalogDescription,
+  getSubscriptionCatalogTitle,
+  getSubscriptionPlanHighlights,
+} from '@/utils/subscriptionPresentation';
 import { Bell, Plus, Users, Briefcase, Eye, UserCheck, TrendingUp, ChevronRight } from 'lucide-react-native';
 
 export default function EmployerDashboardScreen() {
@@ -25,17 +33,45 @@ export default function EmployerDashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((st) => st.user);
-  const a = useDataStore((s) => s.analytics);
-  const vacancies = useDataStore((s) => s.vacancies);
-  const applications = useDataStore((s) => s.applications);
+  const { data: applications = [], isLoading: applicationsLoading } = useEmployerApplications(user?.id);
+  const { data: notifications = [] } = useNotifications(user?.id);
+  const { data: vacancies = [], isLoading: vacanciesLoading } = useEmployerVacancies(user?.id);
 
   const firstName = user?.fullName?.split(' ')[0] || 'User';
+  const hasUnreadNotifications = notifications.some((notification) => !notification.read);
+
+  const analytics = useMemo(() => {
+    const now = Date.now();
+    const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const totalVacancies = vacancies.length;
+    const totalApplicants = applications.length;
+    const totalViews = vacancies.reduce((sum, vacancy) => sum + (vacancy.viewCount || 0), 0);
+    const weeklyApplicants = applications.filter(
+      (application) => new Date(application.appliedAt).getTime() >= weekAgo
+    ).length;
+    const shortlisted = applications.filter((application) => application.status === 'shortlisted').length;
+    const hired = applications.filter((application) => application.status === 'accepted').length;
+    const rejected = applications.filter((application) => application.status === 'rejected').length;
+    const reviewed = applications.filter((application) => application.status !== 'pending').length;
+    const responseRate = totalApplicants > 0 ? Math.round((reviewed / totalApplicants) * 100) : 0;
+
+    return {
+      totalVacancies,
+      totalApplicants,
+      totalViews,
+      weeklyApplicants,
+      shortlisted,
+      hired,
+      rejected,
+      responseRate,
+    };
+  }, [applications, vacancies]);
 
   const stats = [
-    { label: tr('employer.activeVacancies'), value: a.totalVacancies, icon: Briefcase, color: colors.primary, bg: isDark ? 'rgba(91,127,214,0.12)' : '#EEF2FF' },
-    { label: tr('employer.totalApplicants'), value: a.totalApplicants, icon: Users, color: colors.accent, bg: isDark ? 'rgba(34,211,238,0.12)' : '#E0F7FA' },
-    { label: tr('employer.newApplicants'), value: a.weeklyApplicants, icon: TrendingUp, color: colors.success, bg: isDark ? 'rgba(52,211,153,0.12)' : '#ECFDF5' },
-    { label: tr('employer.hired'), value: a.hired, icon: UserCheck, color: colors.warning, bg: isDark ? 'rgba(251,191,36,0.12)' : '#FFFBEB' },
+    { label: tr('employer.activeVacancies'), value: analytics.totalVacancies, icon: Briefcase, color: colors.primary, bg: isDark ? 'rgba(91,127,214,0.12)' : '#EEF2FF' },
+    { label: tr('employer.totalApplicants'), value: analytics.totalApplicants, icon: Users, color: colors.accent, bg: isDark ? 'rgba(34,211,238,0.12)' : '#E0F7FA' },
+    { label: tr('employer.newApplicants'), value: analytics.weeklyApplicants, icon: TrendingUp, color: colors.success, bg: isDark ? 'rgba(52,211,153,0.12)' : '#ECFDF5' },
+    { label: tr('employer.hired'), value: analytics.hired, icon: UserCheck, color: colors.warning, bg: isDark ? 'rgba(251,191,36,0.12)' : '#FFFBEB' },
   ];
 
   return (
@@ -65,7 +101,9 @@ export default function EmployerDashboardScreen() {
             style={styles.headerIconBtn}
           >
             <Bell size={20} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />
-            <View style={[styles.notifDot, { backgroundColor: colors.error }]} />
+            {hasUnreadNotifications && (
+              <View style={[styles.notifDot, { backgroundColor: colors.error }]} />
+            )}
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -103,6 +141,34 @@ export default function EmployerDashboardScreen() {
         </TouchableOpacity>
       </View>
 
+      <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push('/subscription' as never)}
+        >
+          <Card padding="lg" style={{ borderWidth: 1, borderColor: colors.cardBorder }}>
+            <View style={styles.subscriptionCardHeader}>
+              <View style={[styles.subscriptionIcon, { backgroundColor: isDark ? 'rgba(91,127,214,0.16)' : '#EEF2FF' }]}>
+                <TrendingUp size={18} color={colors.primary} strokeWidth={1.8} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{getSubscriptionCatalogTitle(tr, 'employer')}</Text>
+                <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.bodySmall]}>{getSubscriptionCatalogDescription(tr, 'employer')}</Text>
+              </View>
+              <ChevronRight size={18} color={colors.textTertiary} strokeWidth={1.8} />
+            </View>
+
+            <View style={[styles.subscriptionHighlights, { marginTop: 12 }]}> 
+              {getSubscriptionPlanHighlights(tr, 'premium', 'employer').map((item) => (
+                <Text key={item} style={[{ color: colors.textTertiary }, t.caption]}>
+                  {item}
+                </Text>
+              ))}
+            </View>
+          </Card>
+        </TouchableOpacity>
+      </View>
+
       {/* ── New Applicants ── */}
       <View style={{ marginTop: 20 }}>
         <SectionHeader
@@ -111,25 +177,35 @@ export default function EmployerDashboardScreen() {
           onAction={() => router.push('/(employer)/applicants')}
         />
         <View style={{ paddingHorizontal: 20 }}>
-          {applications.slice(0, 3).map((app) => (
-            <Card key={app.id} onPress={() => router.push('/(employer)/applicants')} padding="md" style={{ marginBottom: 10 }}>
-              <View style={styles.applicantRow}>
-                <Avatar name={app.candidate?.user?.fullName || 'Candidate'} size={42} />
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>
-                    {app.candidate?.user?.fullName || 'Candidate'}
-                  </Text>
-                  <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>
-                    {app.vacancy?.title}
-                  </Text>
-                </View>
-                <Badge
-                  label={app.status === 'pending' ? tr('employer.pendingReview') : app.status}
-                  variant={app.status === 'pending' ? 'warning' : app.status === 'shortlisted' ? 'success' : 'info'}
-                />
-              </View>
-            </Card>
-          ))}
+          {applicationsLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <VacancyCardSkeleton key={index} />
+              ))
+            : applications.slice(0, 3).map((app) => (
+                <Card key={app.id} onPress={() => router.push('/(employer)/applicants')} padding="md" style={{ marginBottom: 10 }}>
+                  <View style={styles.applicantRow}>
+                    <Avatar uri={app.candidate?.user?.avatarUrl} name={app.candidate?.user?.fullName || 'Candidate'} size={42} />
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>
+                        {app.candidate?.user?.fullName || 'Candidate'}
+                      </Text>
+                      <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>
+                        {app.vacancy?.title}
+                      </Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <SubscriptionPill
+                        planCode={app.subscriptionPlan || 'free'}
+                        style={{ marginBottom: 6 }}
+                      />
+                      <Badge
+                        label={app.status === 'pending' ? tr('employer.pendingReview') : app.status}
+                        variant={app.status === 'pending' ? 'warning' : app.status === 'shortlisted' ? 'success' : 'info'}
+                      />
+                    </View>
+                  </View>
+                </Card>
+              ))}
         </View>
       </View>
 
@@ -141,31 +217,35 @@ export default function EmployerDashboardScreen() {
           onAction={() => router.push('/(employer)/vacancies')}
         />
         <View style={{ paddingHorizontal: 20 }}>
-          {vacancies.slice(0, 3).map((vacancy) => (
-            <Card
-              key={vacancy.id}
-              onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
-              padding="md"
-              style={{ marginBottom: 10 }}
-            >
-              <View style={styles.vacancyRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>{vacancy.title}</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Users size={12} color={colors.textTertiary} strokeWidth={1.8} />
-                      <Text style={[{ color: colors.textTertiary, marginLeft: 4 }, t.caption]}>{vacancy.applicantCount}</Text>
+          {vacanciesLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <VacancyCardSkeleton key={index} />
+              ))
+            : vacancies.slice(0, 3).map((vacancy) => (
+                <Card
+                  key={vacancy.id}
+                  onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
+                  padding="md"
+                  style={{ marginBottom: 10 }}
+                >
+                  <View style={styles.vacancyRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>{vacancy.title}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 12 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Users size={12} color={colors.textTertiary} strokeWidth={1.8} />
+                          <Text style={[{ color: colors.textTertiary, marginLeft: 4 }, t.caption]}>{vacancy.applicantCount}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Eye size={12} color={colors.textTertiary} strokeWidth={1.8} />
+                          <Text style={[{ color: colors.textTertiary, marginLeft: 4 }, t.caption]}>{vacancy.viewCount}</Text>
+                        </View>
+                      </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Eye size={12} color={colors.textTertiary} strokeWidth={1.8} />
-                      <Text style={[{ color: colors.textTertiary, marginLeft: 4 }, t.caption]}>{vacancy.viewCount}</Text>
-                    </View>
+                    <Badge label={vacancy.status === 'active' ? 'Active' : vacancy.status} variant="success" />
                   </View>
-                </View>
-                <Badge label={vacancy.status === 'active' ? 'Active' : vacancy.status} variant="success" />
-              </View>
-            </Card>
-          ))}
+                </Card>
+              ))}
         </View>
       </View>
     </ScrollView>
@@ -203,6 +283,23 @@ const styles = StyleSheet.create({
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 14, borderRadius: 14, borderWidth: 1,
   },
-  applicantRow: { flexDirection: 'row', alignItems: 'center' },
+  subscriptionCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subscriptionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subscriptionHighlights: {
+    gap: 6,
+  },
+  applicantRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   vacancyRow: { flexDirection: 'row', alignItems: 'center' },
 });

@@ -10,16 +10,20 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { useAuthStore } from '@/store/authStore';
 import { languages, changeLanguage, LanguageCode } from '@/i18n';
 import { Card } from '@/components/ui/Card';
 import i18n from '@/i18n';
-import { ChevronLeft, Check } from 'lucide-react-native';
+import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
+import { ChevronLeft, Check, ChevronRight, Sparkles } from 'lucide-react-native';
 
 export default function SettingsScreen() {
   const { colors, spacing: s, typography: t, radius: r, mode, setMode } = useTheme();
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const user = useAuthStore((state) => state.user);
+  const audience = user?.role === 'employer' ? 'employer' : 'candidate';
 
   const currentLang = i18n.language as LanguageCode;
 
@@ -54,8 +58,8 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['3xl'] }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>
+      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['3xl'] }]}> 
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}> 
           {tr('settings.language')}
         </Text>
         <Card padding="none">
@@ -83,8 +87,8 @@ export default function SettingsScreen() {
         </Card>
       </View>
 
-      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>
+      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}> 
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}> 
           {tr('settings.theme')}
         </Text>
         <Card padding="none">
@@ -109,6 +113,26 @@ export default function SettingsScreen() {
               )}
             </TouchableOpacity>
           ))}
+        </Card>
+      </View>
+
+      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}> 
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}> 
+          {tr('subscription.title')}
+        </Text>
+        <Card padding="none">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/subscription' as never)}
+            style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
+          >
+            <Sparkles size={18} color={colors.primary} strokeWidth={1.8} style={{ marginRight: 10 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={[{ color: colors.textPrimary, ...t.bodyMedium }]}>{tr('subscription.managePlan')}</Text>
+              <Text style={[{ color: colors.textTertiary, ...t.caption, marginTop: 3 }]}>{getSubscriptionSettingsDescription(tr, audience)}</Text>
+            </View>
+            <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
+          </TouchableOpacity>
         </Card>
       </View>
     </ScrollView>

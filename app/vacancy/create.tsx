@@ -13,12 +13,17 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import {
+  useCreateVacancy,
+  useEmployerCompany,
+} from '@/hooks/useVacancyQueries';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { ChevronLeft } from 'lucide-react-native';
-import { WorkType, ExperienceLevel, Vacancy } from '@/types/models';
+import { WorkType, ExperienceLevel, VacancyStatus } from '@/types/models';
 
 const workTypes: { key: WorkType; label: string }[] = [
   { key: 'full_time', label: 'Full-time' },
@@ -42,8 +47,9 @@ export default function CreateVacancyScreen() {
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const addVacancy = useDataStore((s) => s.addVacancy);
-  const companies = useDataStore((s) => s.companies);
+  const user = useAuthStore((s) => s.user);
+  const { data: company, isLoading: companyLoading, isError: companyError, refetch } = useEmployerCompany(user?.id);
+  const createVacancy = useCreateVacancy(user?.id);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -57,8 +63,6 @@ export default function CreateVacancyScreen() {
   const [requirements, setRequirements] = useState('');
   const [responsibilities, setResponsibilities] = useState('');
   const [benefits, setBenefits] = useState('');
-  const [loading, setLoading] = useState(false);
-
   const addSkill = () => {
     const trimmed = skillInput.trim();
     if (trimmed && !skills.includes(trimmed)) {
@@ -71,7 +75,7 @@ export default function CreateVacancyScreen() {
     setSkills(skills.filter((s) => s !== skill));
   };
 
-  const handlePublish = () => {
+  const submitVacancy = async (status: VacancyStatus) => {
     if (!title.trim()) {
       Alert.alert(tr('common.error'), tr('validation.required'));
       return;
@@ -81,39 +85,52 @@ export default function CreateVacancyScreen() {
       return;
     }
 
-    setLoading(true);
-    const newVacancy: Vacancy = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      description: description.trim(),
-      requirements: requirements.split('\n').filter(Boolean),
-      responsibilities: responsibilities.split('\n').filter(Boolean),
-      benefits: benefits.split('\n').filter(Boolean),
-      salaryMin: salaryMin ? parseInt(salaryMin) : undefined,
-      salaryMax: salaryMax ? parseInt(salaryMax) : undefined,
-      salaryCurrency: 'AZN',
-      showSalary: !!(salaryMin || salaryMax),
-      city: city.trim() || 'Bakı',
-      workType,
-      experienceLevel,
-      skills,
-      companyId: companies[0]?.id || '1',
-      company: companies[0],
-      status: 'active',
-      applicantCount: 0,
-      viewCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    if (!company) {
+      Alert.alert(tr('common.error'), tr('employer.noVacanciesDesc'));
+      return;
+    }
 
-    setTimeout(() => {
-      addVacancy(newVacancy);
-      setLoading(false);
-      Alert.alert(tr('employer.publishVacancy'), '', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    }, 600);
+    try {
+      await createVacancy.mutateAsync({
+        title: title.trim(),
+        description: description.trim(),
+        requirements: requirements.split('\n').map((item) => item.trim()).filter(Boolean),
+        responsibilities: responsibilities.split('\n').map((item) => item.trim()).filter(Boolean),
+        benefits: benefits.split('\n').map((item) => item.trim()).filter(Boolean),
+        salaryMin: salaryMin ? parseInt(salaryMin, 10) : undefined,
+        salaryMax: salaryMax ? parseInt(salaryMax, 10) : undefined,
+        salaryCurrency: 'AZN',
+        showSalary: !!(salaryMin || salaryMax),
+        city: city.trim() || 'Bakı',
+        workType,
+        experienceLevel,
+        skills,
+        companyId: company.id,
+        status,
+      });
+
+      Alert.alert(
+        status === 'draft' ? tr('employer.saveDraft') : tr('employer.publishVacancy'),
+        '',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+    } catch (error: any) {
+      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+    }
   };
+
+  if (companyError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.backgroundSecondary, justifyContent: 'center' }}>
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -183,8 +200,20 @@ export default function CreateVacancyScreen() {
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>
-          <Button title={tr('employer.publishVacancy')} onPress={handlePublish} loading={loading} size="lg" />
-          <Button title={tr('employer.saveDraft')} onPress={() => router.back()} variant="outline" size="md" />
+          <Button
+            title={tr('employer.publishVacancy')}
+            onPress={() => submitVacancy('active')}
+            loading={createVacancy.isPending}
+            disabled={companyLoading}
+            size="lg"
+          />
+          <Button
+            title={tr('employer.saveDraft')}
+            onPress={() => submitVacancy('draft')}
+            variant="outline"
+            size="md"
+            disabled={companyLoading || createVacancy.isPending}
+          />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

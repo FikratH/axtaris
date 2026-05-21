@@ -12,12 +12,18 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import {
+  useSavedJobIds,
+  useToggleSavedJob,
+} from '@/hooks/useCandidateVacancyActions';
+import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { WorkType } from '@/types/models';
 import { Search as SearchIcon, SlidersHorizontal, SearchX } from 'lucide-react-native';
 
@@ -29,9 +35,15 @@ export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const allVacancies = useDataStore((s) => s.vacancies);
-  const toggleSave = useDataStore((s) => s.toggleSaveJob);
-  const savedJobIds = useDataStore((s) => s.savedJobIds);
+  const user = useAuthStore((s) => s.user);
+  const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
+  const toggleSave = useToggleSavedJob(user?.id);
+  const {
+    data: allVacancies = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useCandidateVacancies();
   const [query, setQuery] = useState('');
   const [selectedWorkTypes, setSelectedWorkTypes] = useState<WorkType[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
@@ -119,29 +131,47 @@ export default function SearchScreen() {
       </View>
 
       <FlatList
-        data={filteredVacancies}
+        data={isLoading ? [] : filteredVacancies}
         contentContainerStyle={{ paddingHorizontal: s.xl, paddingTop: s.lg, paddingBottom: 24 }}
         renderItem={({ item }) => (
           <VacancyCard
             vacancy={item}
             onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-            onSave={() => toggleSave(item.id)}
+            onSave={() => toggleSave.mutate(item.id)}
             saved={savedJobIds.includes(item.id)}
           />
         )}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <EmptyState
-            title={tr('common.noResults')}
-            subtitle={tr('candidate.searchPlaceholder')}
-            icon={<SearchX size={48} color={colors.textTertiary} strokeWidth={1.2} />}
-          />
+          isLoading ? (
+            <View>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <VacancyCardSkeleton key={index} />
+              ))}
+            </View>
+          ) : isError ? (
+            <EmptyState
+              title={tr('common.error')}
+              subtitle={tr('common.retry')}
+              icon={<SearchX size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              actionTitle={tr('common.retry')}
+              onAction={() => refetch()}
+            />
+          ) : (
+            <EmptyState
+              title={tr('common.noResults')}
+              subtitle={tr('candidate.searchPlaceholder')}
+              icon={<SearchX size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+            />
+          )
         }
         ListHeaderComponent={
-          <Text style={[{ color: colors.textSecondary, ...t.caption, marginBottom: s.md }]}>
-            {filteredVacancies.length} {tr('employer.vacancies').toLowerCase()}
-          </Text>
+          !isLoading ? (
+            <Text style={[{ color: colors.textSecondary, ...t.caption, marginBottom: s.md }]}>
+              {filteredVacancies.length} {tr('employer.vacancies').toLowerCase()}
+            </Text>
+          ) : null
         }
       />
 

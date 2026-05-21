@@ -26,6 +26,7 @@ interface AuthState {
   sessionExpired: boolean;
   isSigningOut: boolean;
   setSelectedRole: (role: UserRole | null) => void;
+  updateUser: (updates: Partial<User>) => Promise<void>;
   completeAuthentication: (user: User, token: string | null) => Promise<void>;
   refreshAuthentication: (user: User, token: string | null) => Promise<void>;
   setPendingVerification: (pending: PendingVerificationState | null) => Promise<void>;
@@ -107,6 +108,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isSigningOut: false,
 
   setSelectedRole: (role) => set({ selectedRole: role }),
+
+  updateUser: async (updates) => {
+    const currentUser = get().user;
+
+    if (!currentUser) {
+      return;
+    }
+
+    const nextUser: User = {
+      ...currentUser,
+      ...updates,
+      updatedAt: updates.updatedAt || new Date().toISOString(),
+    };
+
+    await storage.setItem(USER_KEY, JSON.stringify(nextUser));
+
+    set({
+      user: nextUser,
+      selectedRole: nextUser.role,
+    });
+  },
 
   completeAuthentication: async (user, token) => {
     await Promise.all([

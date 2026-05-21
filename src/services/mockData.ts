@@ -1,12 +1,44 @@
 import { User, CandidateProfile, Company, Vacancy, Application, Notification, AnalyticsSummary } from '@/types/models';
 
+const buildAvatarUrl = (name: string, background: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${background}&color=FFFFFF&bold=true&format=png&size=256`;
+
+const buildCompanyLogoUrl = (name: string, background: string) =>
+  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${background}&color=FFFFFF&bold=true&format=png&size=256`;
+
+const mockAvatarUrls = {
+  aliHasanov:
+    'https://www.corporatephotographylondon.com/wp-content/uploads/2019/11/HKstrategies-1210-1024x683.jpg',
+  leylaMammadova:
+    'https://thumbs.dreamstime.com/b/profile-picture-caucasian-male-employee-posing-office-happy-young-worker-look-camera-workplace-headshot-portrait-smiling-190186649.jpg',
+  nigarAliyeva:
+    'https://thumbs.dreamstime.com/b/profile-picture-smiling-male-employee-posing-workplace-close-up-headshot-portrait-smiling-caucasian-businessman-look-190961990.jpg',
+  raminQuliyev:
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqIZXTe5iRAKg6-DVQypvrm1wuVQtUxsAX1Q&s',
+  aytenMuradova:
+    'https://images.template.net/547749/Employee-Profile-Picture-Template-edit-online.webp',
+} as const;
+
+const mockCompanyLogoUrls = {
+  kapitalBank:
+    'https://habrastorage.org/getpro/moikrug/uploads/company/100/007/831/1/logo/medium_4cbbb4549ce92e5c6b3b9b341ccb85cb.png',
+  azercell:
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSsztcc-hBegyyoYfswjrrycf1WNOImwQCR9A&s',
+  pashaHolding:
+    'https://pasha-holding.az/site/templates/images/share.png',
+  abb:
+    'https://igrtzfvphltnoiwedbtz.supabase.co/storage/v1/object/public/images/companies/1755687147529-lq1vnwq1ymh.svg',
+  bravoSupermarket:
+    'https://upload.wikimedia.org/wikipedia/commons/d/d7/Bravo_Supermarketl%C9%99r_%C5%9E%C9%99b%C9%99k%C9%99si.jpg',
+} as const;
+
 export const mockUser: User = {
   id: '1',
   email: 'ali@example.com',
   role: 'candidate',
   fullName: 'Əli Həsənov',
   phone: '+994501234567',
-  avatarUrl: undefined,
+  avatarUrl: mockAvatarUrls.aliHasanov || buildAvatarUrl('Əli Həsənov', '1B2E5A'),
   emailVerified: true,
   createdAt: '2024-01-15T10:00:00Z',
   updatedAt: '2024-03-10T10:00:00Z',
@@ -18,7 +50,7 @@ export const mockEmployerUser: User = {
   role: 'employer',
   fullName: 'Leyla Məmmədova',
   phone: '+994502345678',
-  avatarUrl: undefined,
+  avatarUrl: mockAvatarUrls.leylaMammadova || buildAvatarUrl('Leyla Məmmədova', '3755A0'),
   emailVerified: true,
   createdAt: '2024-01-10T10:00:00Z',
   updatedAt: '2024-03-10T10:00:00Z',
@@ -87,13 +119,112 @@ export const mockCandidateProfile: CandidateProfile = {
   updatedAt: '2024-03-10T10:00:00Z',
 };
 
+const mockApplicantUsers: User[] = [
+  {
+    id: '11',
+    email: 'nigar.aliyeva@example.com',
+    role: 'candidate',
+    fullName: 'Nigar Əliyeva',
+    phone: '+994551112233',
+    avatarUrl: mockAvatarUrls.nigarAliyeva || buildAvatarUrl('Nigar Əliyeva', '0F766E'),
+    emailVerified: true,
+    createdAt: '2024-02-01T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+  },
+  {
+    id: '12',
+    email: 'ramin.guliyev@example.com',
+    role: 'candidate',
+    fullName: 'Ramin Quliyev',
+    phone: '+994555556677',
+    avatarUrl: mockAvatarUrls.raminQuliyev || buildAvatarUrl('Ramin Quliyev', '7C3AED'),
+    emailVerified: true,
+    createdAt: '2024-02-03T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+  },
+  {
+    id: '13',
+    email: 'ayten.muradova@example.com',
+    role: 'candidate',
+    fullName: 'Aytən Muradova',
+    phone: '+994557778899',
+    avatarUrl: mockAvatarUrls.aytenMuradova || buildAvatarUrl('Aytən Muradova', 'C2410C'),
+    emailVerified: true,
+    createdAt: '2024-02-05T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+  },
+];
+
+const mockApplicantProfiles: Array<CandidateProfile & { user: User }> = [
+  {
+    id: '11',
+    userId: '11',
+    title: 'Senior DevOps Engineer',
+    location: 'Bakı',
+    expectedSalary: 4200,
+    salaryCurrency: 'AZN',
+    skills: ['AWS', 'Terraform', 'Kubernetes', 'CI/CD', 'Linux'],
+    workExperience: [],
+    education: [],
+    languages: [],
+    certifications: [],
+    availability: 'two_weeks',
+    workPreference: 'remote',
+    profileCompleteness: 92,
+    bio: 'Cloud and infrastructure engineer focused on scalable deployment pipelines.',
+    createdAt: '2024-02-01T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+    user: mockApplicantUsers[0],
+  },
+  {
+    id: '12',
+    userId: '12',
+    title: 'Backend Engineer',
+    location: 'Sumqayıt',
+    expectedSalary: 3300,
+    salaryCurrency: 'AZN',
+    skills: ['Node.js', 'PostgreSQL', 'GraphQL', 'Docker', 'Redis'],
+    workExperience: [],
+    education: [],
+    languages: [],
+    certifications: [],
+    availability: 'one_month',
+    workPreference: 'hybrid',
+    profileCompleteness: 88,
+    bio: 'Backend engineer building resilient APIs and data-heavy systems.',
+    createdAt: '2024-02-03T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+    user: mockApplicantUsers[1],
+  },
+  {
+    id: '13',
+    userId: '13',
+    title: 'Product Designer',
+    location: 'Gəncə',
+    expectedSalary: 2600,
+    salaryCurrency: 'AZN',
+    skills: ['Figma', 'Design Systems', 'UX Research', 'Prototyping', 'Mobile UI'],
+    workExperience: [],
+    education: [],
+    languages: [],
+    certifications: [],
+    availability: 'immediate',
+    workPreference: 'remote',
+    profileCompleteness: 90,
+    bio: 'Designer focused on product usability and premium mobile experiences.',
+    createdAt: '2024-02-05T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+    user: mockApplicantUsers[2],
+  },
+];
+
 export const mockCompanies: Company[] = [
   {
     id: '1',
     name: 'Kapital Bank',
     industry: 'Maliyyə',
     description: 'Azərbaycanın aparıcı bankı. Müasir rəqəmsal bank xidmətləri və innovativ maliyyə həlləri.',
-    logoUrl: undefined,
+    logoUrl: mockCompanyLogoUrls.kapitalBank || buildCompanyLogoUrl('Kapital Bank', '2445A7'),
     website: 'https://kapitalbank.az',
     employeeCount: '1000-5000',
     location: 'Bakı',
@@ -110,7 +241,7 @@ export const mockCompanies: Company[] = [
     name: 'Azercell',
     industry: 'Telekommunikasiya',
     description: 'Azərbaycanın ən böyük mobil operator şirkəti.',
-    logoUrl: undefined,
+    logoUrl: mockCompanyLogoUrls.azercell || buildCompanyLogoUrl('Azercell', '6D28D9'),
     website: 'https://azercell.com',
     employeeCount: '1000-5000',
     location: 'Bakı',
@@ -127,7 +258,7 @@ export const mockCompanies: Company[] = [
     name: 'PASHA Holding',
     industry: 'Holdinq',
     description: 'Azərbaycanın aparıcı investisiya holdinqi.',
-    logoUrl: undefined,
+    logoUrl: mockCompanyLogoUrls.pashaHolding || buildCompanyLogoUrl('PASHA Holding', '0F766E'),
     website: 'https://pashaholding.az',
     employeeCount: '5000+',
     location: 'Bakı',
@@ -144,7 +275,7 @@ export const mockCompanies: Company[] = [
     name: 'ABB',
     industry: 'Maliyyə',
     description: 'Azərbaycan Beynəlxalq Bankı - ölkənin ən böyük dövlət bankı.',
-    logoUrl: undefined,
+    logoUrl: mockCompanyLogoUrls.abb || buildCompanyLogoUrl('ABB', 'B45309'),
     website: 'https://abb-bank.az',
     employeeCount: '1000-5000',
     location: 'Bakı',
@@ -161,7 +292,7 @@ export const mockCompanies: Company[] = [
     name: 'Bravo Supermarket',
     industry: 'Pərakəndə satış',
     description: 'Azərbaycanın aparıcı supermarket şəbəkəsi.',
-    logoUrl: undefined,
+    logoUrl: mockCompanyLogoUrls.bravoSupermarket || buildCompanyLogoUrl('Bravo', 'DC2626'),
     website: 'https://bravo.az',
     employeeCount: '1000-5000',
     location: 'Bakı',
@@ -328,7 +459,11 @@ export const mockApplications: Application[] = [
     vacancyId: '1',
     candidateId: '1',
     status: 'reviewed',
+    subscriptionPlan: 'free',
+    employerNotes: 'Looks aligned for mobile banking; confirm Expo and Supabase depth.',
+    employerRating: 4,
     vacancy: mockVacancies[0],
+    candidate: { ...mockCandidateProfile, user: mockUser },
     appliedAt: '2024-03-06T10:00:00Z',
     reviewedAt: '2024-03-08T10:00:00Z',
     updatedAt: '2024-03-08T10:00:00Z',
@@ -338,7 +473,9 @@ export const mockApplications: Application[] = [
     vacancyId: '3',
     candidateId: '1',
     status: 'pending',
+    subscriptionPlan: 'pro',
     vacancy: mockVacancies[2],
+    candidate: { ...mockCandidateProfile, user: mockUser },
     appliedAt: '2024-03-09T10:00:00Z',
     updatedAt: '2024-03-09T10:00:00Z',
   },
@@ -347,10 +484,49 @@ export const mockApplications: Application[] = [
     vacancyId: '5',
     candidateId: '1',
     status: 'shortlisted',
+    subscriptionPlan: 'premium',
     vacancy: mockVacancies[4],
+    candidate: { ...mockCandidateProfile, user: mockUser },
     appliedAt: '2024-03-08T10:00:00Z',
     reviewedAt: '2024-03-10T10:00:00Z',
     updatedAt: '2024-03-10T10:00:00Z',
+  },
+  {
+    id: '4',
+    vacancyId: '1',
+    candidateId: '11',
+    status: 'pending',
+    subscriptionPlan: 'premium',
+    vacancy: mockVacancies[0],
+    candidate: mockApplicantProfiles[0],
+    appliedAt: '2024-03-10T09:00:00Z',
+    updatedAt: '2024-03-10T09:00:00Z',
+  },
+  {
+    id: '5',
+    vacancyId: '6',
+    candidateId: '12',
+    status: 'shortlisted',
+    subscriptionPlan: 'pro',
+    employerNotes: 'Strong cloud background. Schedule technical interview.',
+    employerRating: 5,
+    vacancy: mockVacancies[5],
+    candidate: mockApplicantProfiles[1],
+    appliedAt: '2024-03-09T14:30:00Z',
+    reviewedAt: '2024-03-10T11:00:00Z',
+    updatedAt: '2024-03-10T11:00:00Z',
+  },
+  {
+    id: '6',
+    vacancyId: '1',
+    candidateId: '13',
+    status: 'reviewed',
+    subscriptionPlan: 'free',
+    vacancy: mockVacancies[0],
+    candidate: mockApplicantProfiles[2],
+    appliedAt: '2024-03-08T16:45:00Z',
+    reviewedAt: '2024-03-09T09:30:00Z',
+    updatedAt: '2024-03-09T09:30:00Z',
   },
 ];
 

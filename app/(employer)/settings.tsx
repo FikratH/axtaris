@@ -36,7 +36,7 @@ export default function EmployerSettingsScreen() {
     { Icon: Bell, label: tr('settings.notifications'), onPress: () => router.push('/notifications') },
     { Icon: Lock, label: tr('settings.privacy'), onPress: () => Alert.alert(tr('settings.privacy'), tr('common.comingSoon')) },
     { Icon: HelpCircle, label: tr('settings.help'), onPress: () => Alert.alert(tr('settings.help'), tr('common.comingSoon')) },
-    { Icon: Info, label: tr('settings.about'), onPress: () => Alert.alert('AxtarIS', 'Version 1.0.0\nPremium Employment Platform for Azerbaijan') },
+    { Icon: Info, label: tr('settings.about'), onPress: () => Alert.alert('AxtarIS', `${tr('settings.version')} 1.0.0\n${tr('common.tagline')}`) },
   ];
 
   return (

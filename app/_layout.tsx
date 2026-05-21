@@ -8,6 +8,7 @@ import { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { ThemeProvider, useTheme } from '@/theme/ThemeContext';
 import { loadSavedLanguage } from '@/i18n';
 import { useAuthStore } from '@/store/authStore';
+import { useAppStore } from '@/store/appStore';
 import { authService, toAppUser, USE_MOCK_AUTH } from '@/services/authService';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
@@ -39,6 +40,7 @@ function AppContent() {
   const user = useAuthStore((s) => s.user);
   const pendingVerification = useAuthStore((s) => s.pendingVerification);
   const sessionExpired = useAuthStore((s) => s.sessionExpired);
+  const hasOnboarded = useAppStore((s) => s.hasCompletedOnboarding);
 
   useEffect(() => {
     loadSavedLanguage();
@@ -87,6 +89,8 @@ function AppContent() {
     };
 
     const bootstrap = async () => {
+      await useAppStore.getState().loadOnboardingStatus();
+
       await loadSession();
 
       if (USE_MOCK_AUTH) return;
@@ -149,16 +153,18 @@ function AppContent() {
 
     const firstSegment = segments[0];
     const secondSegment = segments[1];
+    const currentPath = segments.join('/');
     const isRootRoute = !firstSegment;
     const isAuthRoute = firstSegment === 'auth';
+    const isResetPasswordRoute = currentPath === 'auth/reset-password';
     const isOnboardingRoute = firstSegment === 'onboarding';
     const isCandidateOnlyRoute =
       firstSegment === '(candidate)' ||
-      firstSegment === 'profile' ||
-      firstSegment === 'settings';
+      firstSegment === 'profile';
     const isEmployerOnlyRoute =
       firstSegment === '(employer)' ||
       (firstSegment === 'vacancy' && secondSegment === 'create') ||
+      (firstSegment === 'vacancy' && secondSegment === 'edit') ||
       (firstSegment === 'company' && secondSegment === 'edit');
 
     if (authStatus === 'pending_verification' && pendingVerification?.email) {
@@ -172,7 +178,9 @@ function AppContent() {
     }
 
     if (!isAuthenticated || !user) {
-      if (!isRootRoute && !isAuthRoute && !isOnboardingRoute) {
+      if (hasOnboarded === false && !isOnboardingRoute && !isRootRoute) {
+        router.replace('/onboarding');
+      } else if (!isRootRoute && !isAuthRoute && !isOnboardingRoute) {
         router.replace('/auth/role-select');
       }
       return;
@@ -188,7 +196,7 @@ function AppContent() {
       return;
     }
 
-    if (isAuthRoute || isOnboardingRoute) {
+    if ((isAuthRoute && !isResetPasswordRoute) || isOnboardingRoute) {
       router.replace(
         user.role === 'employer'
           ? '/(employer)/dashboard'
@@ -197,6 +205,7 @@ function AppContent() {
     }
   }, [
     authStatus,
+    hasOnboarded,
     isAuthenticated,
     isLoading,
     navigationState?.key,

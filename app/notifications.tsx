@@ -5,15 +5,20 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Notification } from '@/types/models';
+import {
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
+  useNotifications,
+} from '@/hooks/useEngagementQueries';
 import { ChevronLeft, FileText, UserPlus, Briefcase, Star, BadgeCheck, ClipboardList, Bell as BellIcon } from 'lucide-react-native';
 
 const typeIconMap: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
@@ -33,13 +38,15 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
 
   const user = useAuthStore((s) => s.user);
-  const role = user?.role === 'employer' ? 'employer' : 'candidate';
-  const candidateNotifs = useDataStore((s) => s.candidateNotifications);
-  const employerNotifs = useDataStore((s) => s.employerNotifications);
-  const markAllRead = useDataStore((s) => s.markAllNotificationsRead);
-  const markRead = useDataStore((s) => s.markNotificationRead);
-
-  const notifications = role === 'employer' ? employerNotifs : candidateNotifs;
+  const {
+    data: notifications = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useNotifications(user?.id);
+  const markRead = useMarkNotificationRead(user?.id);
+  const markAllRead = useMarkAllNotificationsRead(user?.id);
+  const hasUnread = notifications.some((notification) => !notification.read);
 
   const today = notifications.filter((n) => {
     const diff = Date.now() - new Date(n.createdAt).getTime();
@@ -73,7 +80,11 @@ export default function NotificationsScreen() {
     return (
       <TouchableOpacity
         activeOpacity={0.7}
-        onPress={() => markRead(role, notif.id)}
+        onPress={() => {
+          if (!notif.read) {
+            markRead.mutate(notif.id);
+          }
+        }}
         style={[
           styles.notifItem,
           {
@@ -105,35 +116,65 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
-      <View style={[styles.header, { paddingHorizontal: s.xl }]}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
-            <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
+    <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}> 
+      <View style={[styles.header, { paddingHorizontal: s.xl }]}> 
+        <View style={styles.headerRow}> 
+          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}> 
+            <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} /> 
           </TouchableOpacity>
-          <Text style={[{ color: colors.textPrimary, ...t.headingMedium, flex: 1, marginLeft: s.md }]}>
-            {tr('notifications.title')}
+          <Text style={[{ color: colors.textPrimary, ...t.headingMedium, flex: 1, marginLeft: s.md }]}> 
+            {tr('notifications.title')} 
           </Text>
-          <TouchableOpacity onPress={() => markAllRead(role)} activeOpacity={0.7}>
-            <Text style={[{ color: colors.primary, ...t.labelSmall }]}>{tr('notifications.markAllRead')}</Text>
+          <TouchableOpacity
+            onPress={() => markAllRead.mutate()}
+            activeOpacity={0.7}
+            disabled={!hasUnread || markAllRead.isPending}
+          >
+            <Text
+              style={[
+                {
+                  color: !hasUnread || markAllRead.isPending ? colors.textTertiary : colors.primary,
+                  ...t.labelSmall,
+                },
+              ]}
+            >
+              {tr('notifications.markAllRead')}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      <FlatList
-        data={allItems}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.kind === 'header' ? item.id : item.notification.id}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
-        ListEmptyComponent={
-          <EmptyState
-            title={tr('notifications.empty')}
-            subtitle={tr('notifications.emptyDesc')}
-            icon={<BellIcon size={48} color={colors.textTertiary} strokeWidth={1.2} />}
-          />
-        }
-      />
+      {isLoading ? (
+        <View style={styles.stateContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.md }]}>
+            {tr('common.loading')}
+          </Text>
+        </View>
+      ) : isError ? (
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          icon={<BellIcon size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      ) : (
+        <FlatList
+          data={allItems}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.kind === 'header' ? item.id : item.notification.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          ListEmptyComponent={
+            <EmptyState
+              title={tr('notifications.empty')}
+              subtitle={tr('notifications.emptyDesc')}
+              icon={<BellIcon size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+            />
+          }
+        />
+      )}
     </View>
   );
 }
@@ -143,6 +184,7 @@ const styles = StyleSheet.create({
   header: {},
   headerRow: { flexDirection: 'row', alignItems: 'center' },
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  stateContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24 },
   sectionTitle: {},
   notifItem: { flexDirection: 'row', alignItems: 'flex-start' },
   notifIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', marginTop: 2 },

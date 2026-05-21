@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { UserSearch, Building2, ArrowRight } from 'lucide-react-native';
+import { FadeInView, ScaleInView } from '@/components/ui/Animated';
 
 const { width } = Dimensions.get('window');
+const LOGO_ICON = require('@/assets/axtaris_logo_icon_png.png');
 
 export default function RoleSelectScreen() {
   const { colors, spacing: s, typography: t, radius: r } = useTheme();
@@ -23,19 +25,23 @@ export default function RoleSelectScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 40 }]}>
-      <View style={styles.header}>
-        <Text style={[styles.appName, { color: colors.textPrimary }]}>
-          Axtar<Text style={{ color: colors.primary }}>IS</Text>
-        </Text>
+      <FadeInView delay={0} style={styles.header}>
+        <View style={styles.logoRow}>
+          <Image source={LOGO_ICON} style={styles.logoIcon} resizeMode="contain" />
+          <Text style={[styles.logoText, { color: colors.textPrimary }]}>
+            Axtar<Text style={{ color: colors.primary }}>IS</Text>
+          </Text>
+        </View>
         <Text style={[styles.title, { color: colors.textPrimary, ...t.displaySmall, marginTop: s['3xl'] }]}>
           {tr('roleSelect.title')}
         </Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary, ...t.bodyMedium, marginTop: s.sm }]}>
           {tr('roleSelect.subtitle')}
         </Text>
-      </View>
+      </FadeInView>
 
       <View style={[styles.cardsContainer, { paddingHorizontal: s.xl, marginTop: s['4xl'] }]}>
+        <ScaleInView delay={150}>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => handleSelectRole('candidate')}
@@ -62,7 +68,9 @@ export default function RoleSelectScreen() {
             <ArrowRight size={18} color={colors.primary} strokeWidth={2} />
           </View>
         </TouchableOpacity>
+        </ScaleInView>
 
+        <ScaleInView delay={250}>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() => handleSelectRole('employer')}
@@ -90,6 +98,7 @@ export default function RoleSelectScreen() {
             <ArrowRight size={18} color={colors.accent} strokeWidth={2} />
           </View>
         </TouchableOpacity>
+        </ScaleInView>
       </View>
     </View>
   );
@@ -102,10 +111,19 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 24,
   },
-  appName: {
-    fontSize: 28,
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    width: 48,
+    height: 48,
+  },
+  logoText: {
+    fontSize: 32,
     fontWeight: '800',
     letterSpacing: -0.5,
+    marginLeft: 10,
   },
   title: {},
   subtitle: {},

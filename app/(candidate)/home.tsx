@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,24 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
-import { useDataStore } from '@/store/dataStore';
+import {
+  useCandidateProfile,
+  useSavedJobIds,
+  useToggleSavedJob,
+} from '@/hooks/useCandidateVacancyActions';
+import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
+import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import {
+  getSubscriptionActionLabel,
+  getSubscriptionPlanLabel,
+  getSubscriptionSummaryLine,
+} from '@/utils/subscriptionPresentation';
 import { Search, Bell, TrendingUp, Sparkles } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -29,14 +42,35 @@ export default function CandidateHomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((st) => st.user);
-  const vacancies = useDataStore((s) => s.vacancies);
-  const companies = useDataStore((s) => s.companies);
-  const profile = useDataStore((s) => s.candidateProfile);
-  const toggleSave = useDataStore((s) => s.toggleSaveJob);
-  const savedJobIds = useDataStore((s) => s.savedJobIds);
+  const { data: profile } = useCandidateProfile(user?.id);
+  const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
+  const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
+  const toggleSave = useToggleSavedJob(user?.id);
+  const {
+    data: vacancies = [],
+    isLoading: vacanciesLoading,
+    isError: vacanciesError,
+    refetch,
+  } = useCandidateVacancies();
+
+  const companies = useMemo(() => {
+    const unique = new Map<string, NonNullable<(typeof vacancies)[number]['company']> & { vacancyCount: number }>();
+
+    vacancies.forEach((vacancy) => {
+      if (vacancy.company) {
+        const existing = unique.get(vacancy.company.id);
+        unique.set(vacancy.company.id, {
+          ...vacancy.company,
+          vacancyCount: (existing?.vacancyCount || 0) + 1,
+        });
+      }
+    });
+
+    return Array.from(unique.values());
+  }, [vacancies]);
 
   const firstName = user?.fullName?.split(' ')[0] || 'User';
-  const completeness = profile.profileCompleteness;
+  const completeness = profile?.profileCompleteness || 0;
 
   return (
     <ScrollView
@@ -112,6 +146,29 @@ export default function CandidateHomeScreen() {
         </TouchableOpacity>
       )}
 
+      {subscriptionSummary ? (
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => router.push('/subscription' as never)}
+          style={[styles.subscriptionBanner, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
+        >
+          <View style={[styles.subscriptionIcon, { backgroundColor: isDark ? 'rgba(91,127,214,0.16)' : '#EEF2FF' }]}> 
+            <Sparkles size={20} color={colors.primary} strokeWidth={1.8} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>
+              {getSubscriptionPlanLabel(tr, subscriptionSummary.subscription.plan)}
+            </Text>
+            <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.bodySmall]}>
+              {getSubscriptionSummaryLine(tr, subscriptionSummary)}
+            </Text>
+          </View>
+          <Text style={[{ color: colors.primary, marginLeft: 12 }, t.labelMedium]}>
+            {getSubscriptionActionLabel(tr, subscriptionSummary.subscription.plan)}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
       {/* ── Recommended Jobs ── */}
       <View style={{ marginTop: 20 }}>
         <SectionHeader
@@ -119,25 +176,50 @@ export default function CandidateHomeScreen() {
           actionTitle={tr('common.seeAll')}
           onAction={() => router.push('/(candidate)/search')}
         />
-        <FlatList
-          data={vacancies.slice(0, 4)}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 20 }}
-          ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-          renderItem={({ item }) => (
-            <View style={{ width: width * 0.78 }}>
-              <VacancyCard
-                vacancy={item}
-                onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-                onSave={() => toggleSave(item.id)}
-                saved={savedJobIds.includes(item.id)}
-                compact
-              />
-            </View>
-          )}
-          keyExtractor={(item) => item.id}
-        />
+        {vacanciesError ? (
+          <View style={{ paddingHorizontal: 20 }}>
+            <EmptyState
+              title={tr('common.error')}
+              subtitle={tr('common.retry')}
+              actionTitle={tr('common.retry')}
+              onAction={() => refetch()}
+            />
+          </View>
+        ) : vacanciesLoading ? (
+          <FlatList
+            data={[1, 2, 3]}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+            renderItem={() => (
+              <View style={{ width: width * 0.78 }}>
+                <VacancyCardSkeleton />
+              </View>
+            )}
+            keyExtractor={(item) => item.toString()}
+          />
+        ) : (
+          <FlatList
+            data={vacancies.slice(0, 4)}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
+            renderItem={({ item }) => (
+              <View style={{ width: width * 0.78 }}>
+                <VacancyCard
+                  vacancy={item}
+                  onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
+                  onSave={() => toggleSave.mutate(item.id)}
+                  saved={savedJobIds.includes(item.id)}
+                  compact
+                />
+              </View>
+            )}
+            keyExtractor={(item) => item.id}
+          />
+        )}
       </View>
 
       {/* ── Top Companies ── */}
@@ -181,15 +263,21 @@ export default function CandidateHomeScreen() {
           onAction={() => router.push('/(candidate)/search')}
         />
         <View style={{ paddingHorizontal: 20 }}>
-          {vacancies.slice(0, 4).map((vacancy) => (
-            <VacancyCard
-              key={vacancy.id}
-              vacancy={vacancy}
-              onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
-              onSave={() => toggleSave(vacancy.id)}
-              saved={savedJobIds.includes(vacancy.id)}
-            />
-          ))}
+          {vacanciesLoading ? (
+            Array.from({ length: 3 }).map((_, index) => (
+              <VacancyCardSkeleton key={index} />
+            ))
+          ) : (
+            vacancies.slice(0, 4).map((vacancy) => (
+              <VacancyCard
+                key={vacancy.id}
+                vacancy={vacancy}
+                onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
+                onSave={() => toggleSave.mutate(vacancy.id)}
+                saved={savedJobIds.includes(vacancy.id)}
+              />
+            ))
+          )}
         </View>
       </View>
     </ScrollView>
@@ -245,14 +333,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 20,
     marginTop: 16,
-    padding: 14,
+    paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
   },
   completionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subscriptionBanner: {
+    marginTop: 14,
+    marginHorizontal: 20,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  subscriptionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },

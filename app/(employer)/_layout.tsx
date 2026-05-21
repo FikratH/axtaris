@@ -42,6 +42,10 @@ export default function EmployerLayout() {
       }}
     >
       <Tabs.Screen
+        name="applicant/[id]"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
         name="dashboard"
         options={{
           title: tr('employer.dashboard'),

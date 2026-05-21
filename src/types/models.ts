@@ -5,6 +5,9 @@ export type WorkType = 'full_time' | 'part_time' | 'remote' | 'hybrid' | 'onsite
 export type ExperienceLevel = 'no_experience' | 'junior' | 'mid' | 'senior' | 'lead' | 'executive';
 export type VerificationStatus = 'not_verified' | 'pending' | 'verified' | 'rejected';
 export type ModerationStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
+export type SubscriptionPlanCode = 'free' | 'pro' | 'premium';
+export type SubscriptionStatus = 'active' | 'canceled' | 'expired';
+export type SubscriptionAudience = 'candidate' | 'employer';
 
 export interface User {
   id: string;
@@ -79,6 +82,49 @@ export interface Certification {
   credentialUrl?: string;
 }
 
+export interface SubscriptionPlan {
+  code: SubscriptionPlanCode;
+  name: string;
+  monthlyPriceAzn?: number;
+  monthlyPriceLabel: string;
+  dailyApplicationLimit: number | null;
+  visibilityLabel: string;
+  sortPriority: number;
+  isPopular?: boolean;
+}
+
+export interface SubscriptionFeatureComparisonRow {
+  id: string;
+  label: string;
+  free: string;
+  pro: string;
+  premium: string;
+}
+
+export interface CandidateSubscription {
+  id: string;
+  userId: string;
+  plan: SubscriptionPlanCode;
+  status: SubscriptionStatus;
+  priceAmount: number;
+  priceCurrency: string;
+  billingInterval: 'month';
+  startedAt: string;
+  expiresAt?: string;
+  canceledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CandidateSubscriptionSummary {
+  subscription: CandidateSubscription;
+  dailyApplicationLimit: number | null;
+  applicationsUsedToday: number;
+  applicationsRemainingToday: number | null;
+  visibilityScore: number;
+  visibilityLabel: string;
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -139,8 +185,12 @@ export interface Application {
   vacancyId: string;
   candidateId: string;
   status: ApplicationStatus;
+  subscriptionPlan?: SubscriptionPlanCode;
+  visibilityScore?: number;
   coverLetter?: string;
   cvUrl?: string;
+  employerNotes?: string;
+  employerRating?: number;
   vacancy?: Vacancy;
   candidate?: CandidateProfile & { user?: User };
   appliedAt: string;

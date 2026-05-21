@@ -1,29 +1,112 @@
 import React from 'react';
 import {
+  Alert,
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { CheckCircle2, Clock } from 'lucide-react-native';
+import { useImagePicker } from '@/hooks/useImagePicker';
+import { useEmployerCompany, useEmployerVacancies, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
+import { fileStorageService } from '@/services/fileStorageService';
 
 export default function CompanyScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const companies = useDataStore((s) => s.companies);
-  const company = companies[0];
+  const user = useAuthStore((s) => s.user);
+  const {
+    data: company,
+    isLoading,
+    isError,
+    refetch,
+  } = useEmployerCompany(user?.id);
+  const { data: vacancies = [] } = useEmployerVacancies(user?.id);
+  const updateCompany = useUpdateEmployerCompany(user?.id);
+  const imagePicker = useImagePicker({ aspect: [1, 1], quality: 0.8 });
+
+  const handleChangeLogo = async () => {
+    if (!user?.id || !company) {
+      return;
+    }
+
+    const picked = await imagePicker.showPicker();
+    if (picked) {
+      const previousLogoUrl = company.logoUrl;
+
+      try {
+        const uploaded = await fileStorageService.uploadCompanyLogo(user.id, company.id, {
+          uri: picked.uri,
+          fileName: picked.fileName,
+          mimeType: picked.type,
+          fileSize: picked.fileSize,
+        });
+
+        await updateCompany.mutateAsync({
+          companyId: company.id,
+          input: { logoUrl: uploaded.url },
+        });
+
+        if (previousLogoUrl && previousLogoUrl !== uploaded.url) {
+          void fileStorageService.removeUploadedFile(previousLogoUrl).catch(() => undefined);
+        }
+      } catch (error) {
+        Alert.alert(
+          tr('common.error'),
+          error instanceof Error ? error.message : tr('common.error')
+        );
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[{ color: colors.textSecondary, marginTop: s.md }, t.bodyMedium]}>{tr('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (!company) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <EmptyState
+          title={tr('employer.companyProfile')}
+          subtitle={tr('common.error')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   const verificationLabel =
     company.verificationStatus === 'verified'
@@ -54,7 +137,7 @@ export default function CompanyScreen() {
       <View style={[styles.profileSection, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
         <Card variant="elevated" padding="lg">
           <View style={styles.profileHeader}>
-            <Avatar name={company.name} size={72} />
+            <Avatar name={company.name} uri={company.logoUrl} size={72} editable onPress={handleChangeLogo} />
             <View style={[styles.profileInfo, { marginLeft: s.lg }]}>
               <Text style={[{ color: colors.textPrimary, ...t.headingMedium }]}>
                 {company.name}
@@ -70,15 +153,15 @@ export default function CompanyScreen() {
             </View>
           </View>
 
-          <View style={[styles.statsRow, { marginTop: s.lg, paddingTop: s.lg, borderTopWidth: 1, borderTopColor: colors.divider }]}>
+          <View style={[styles.statsRow, { marginTop: s.lg, paddingTop: s.lg, borderTopWidth: 1, borderTopColor: colors.divider }]}> 
             <View style={styles.stat}>
-              <Text style={[{ color: colors.primary, ...t.headingSmall }]}>{company.vacancyCount}</Text>
+              <Text style={[{ color: colors.primary, ...t.headingSmall }]}>{vacancies.length}</Text>
               <Text style={[{ color: colors.textTertiary, ...t.caption }]}>{tr('employer.vacancies')}</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.stat}>
               <Text style={[{ color: colors.primary, ...t.headingSmall }]}>{company.rating || '-'}</Text>
-              <Text style={[{ color: colors.textTertiary, ...t.caption }]}>Rating</Text>
+              <Text style={[{ color: colors.textTertiary, ...t.caption }]}>{tr('employer.rating')}</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.stat}>
@@ -104,14 +187,14 @@ export default function CompanyScreen() {
 
       <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
         <Text style={[{ color: colors.textPrimary, ...t.labelMedium, marginBottom: s.md }]}>
-          Details
+          {tr('employer.details')}
         </Text>
         {[
           { label: tr('employer.industry'), value: company.industry },
           { label: tr('candidate.location'), value: company.location },
           { label: tr('employer.website'), value: company.website },
           { label: tr('employer.employeeCount'), value: company.employeeCount },
-          { label: 'Founded', value: company.foundedYear?.toString() },
+          { label: tr('employer.founded'), value: company.foundedYear?.toString() },
         ].map((item, i) => (
           <View
             key={i}
@@ -159,6 +242,7 @@ export default function CompanyScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  stateContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   header: {},
   profileSection: {},
   profileHeader: { flexDirection: 'row', alignItems: 'center' },

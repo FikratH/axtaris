@@ -8,13 +8,16 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/axtaris_splash_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#0A1628"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "az.axtaris.app"
+      "bundleIdentifier": "az.axtaris.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "az.axtaris.app",
@@ -23,7 +26,10 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -38,6 +44,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "aa03aa4f-d500-4e59-a339-8df137c8a1e6"
+      }
     }
   }
 }

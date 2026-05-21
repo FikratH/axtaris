@@ -1,5 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeContext';
 import { Vacancy } from '@/types/models';
 import { Avatar } from './Avatar';
@@ -23,6 +25,48 @@ const workTypeLabels: Record<string, string> = {
   onsite: 'On-site',
   internship: 'Internship',
 };
+
+function AnimatedSaveButton({
+  saved,
+  onPress,
+  colors,
+}: {
+  saved?: boolean;
+  onPress: () => void;
+  colors: Record<string, string>;
+}) {
+  const scale = useSharedValue(1);
+  const prevSaved = React.useRef(saved);
+
+  useEffect(() => {
+    if (prevSaved.current !== saved) {
+      scale.value = withSequence(
+        withSpring(1.3, { damping: 8, stiffness: 300 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
+      if (Platform.OS !== 'web') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      prevSaved.current = saved;
+    }
+  }, [saved]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.6} style={styles.saveButton}>
+      <Animated.View style={animatedStyle}>
+        {saved ? (
+          <BookmarkCheck size={20} color={colors.primary} strokeWidth={1.8} />
+        ) : (
+          <Bookmark size={20} color={colors.textTertiary} strokeWidth={1.8} />
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
 export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: VacancyCardProps) {
   const { colors, radius: r, spacing: s, typography: t, isDark } = useTheme();
@@ -53,7 +97,7 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: Vacanc
       ]}
     >
       <View style={styles.header}>
-        <Avatar name={vacancy.company?.name} size={40} />
+        <Avatar uri={vacancy.company?.logoUrl} name={vacancy.company?.name} size={40} />
         <View style={styles.headerText}>
           <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>
             {vacancy.title}
@@ -63,12 +107,7 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: Vacanc
           </Text>
         </View>
         {onSave && (
-          <TouchableOpacity onPress={onSave} activeOpacity={0.6} style={styles.saveButton}>
-            {saved
-              ? <BookmarkCheck size={20} color={colors.primary} strokeWidth={1.8} />
-              : <Bookmark size={20} color={colors.textTertiary} strokeWidth={1.8} />
-            }
-          </TouchableOpacity>
+          <AnimatedSaveButton saved={saved} onPress={onSave} colors={colors} />
         )}
       </View>
 

@@ -4,9 +4,15 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import {
+  useSavedJobIds,
+  useToggleSavedJob,
+} from '@/hooks/useCandidateVacancyActions';
+import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Bookmark } from 'lucide-react-native';
 
 export default function SavedScreen() {
@@ -15,9 +21,18 @@ export default function SavedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const vacancies = useDataStore((s) => s.vacancies);
-  const savedJobIds = useDataStore((s) => s.savedJobIds);
-  const toggleSave = useDataStore((s) => s.toggleSaveJob);
+  const user = useAuthStore((s) => s.user);
+  const {
+    data: savedJobIds = [],
+    isLoading: savedJobsLoading,
+  } = useSavedJobIds(user?.id);
+  const toggleSave = useToggleSavedJob(user?.id);
+  const {
+    data: vacancies = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useCandidateVacancies();
   const savedJobs = vacancies.filter((v) => savedJobIds.includes(v.id));
 
   return (
@@ -38,20 +53,36 @@ export default function SavedScreen() {
           <VacancyCard
             vacancy={item}
             onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-            onSave={() => toggleSave(item.id)}
+            onSave={() => toggleSave.mutate(item.id)}
             saved={savedJobIds.includes(item.id)}
           />
         )}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <EmptyState
-            title={tr('candidate.noSavedJobs')}
-            subtitle={tr('candidate.noSavedJobsDesc')}
-            icon={<Bookmark size={48} color={colors.textTertiary} strokeWidth={1.2} />}
-            actionTitle={tr('candidate.search')}
-            onAction={() => router.push('/(candidate)/search')}
-          />
+          isLoading || savedJobsLoading ? (
+            <View>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <VacancyCardSkeleton key={index} />
+              ))}
+            </View>
+          ) : isError ? (
+            <EmptyState
+              title={tr('common.error')}
+              subtitle={tr('common.retry')}
+              icon={<Bookmark size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              actionTitle={tr('common.retry')}
+              onAction={() => refetch()}
+            />
+          ) : (
+            <EmptyState
+              title={tr('candidate.noSavedJobs')}
+              subtitle={tr('candidate.noSavedJobsDesc')}
+              icon={<Bookmark size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              actionTitle={tr('candidate.search')}
+              onAction={() => router.push('/(candidate)/search')}
+            />
+          )
         }
       />
     </View>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -11,12 +11,25 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
 import { useAuthStore } from '@/store/authStore';
+import {
+  useApplyToVacancy,
+  useCandidateApplications,
+  useSavedJobIds,
+  useToggleSavedJob,
+} from '@/hooks/useCandidateVacancyActions';
+import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
+import { useVacancy } from '@/hooks/useVacancyQueries';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import {
+  getSubscriptionPlanLabel,
+  getSubscriptionSummaryLine,
+} from '@/utils/subscriptionPresentation';
 import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star } from 'lucide-react-native';
 
 const workTypeLabels: Record<string, string> = {
@@ -37,20 +50,76 @@ export default function VacancyDetailScreen() {
 
   const user = useAuthStore((s) => s.user);
   const isEmployer = user?.role === 'employer';
-  const vacancies = useDataStore((s) => s.vacancies);
-  const applyToVacancy = useDataStore((s) => s.applyToVacancy);
-  const hasApplied = useDataStore((s) => s.hasApplied);
-  const toggleSave = useDataStore((s) => s.toggleSaveJob);
-  const isJobSaved = useDataStore((s) => s.isJobSaved);
+  const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
+  const toggleSave = useToggleSavedJob(user?.id);
+  const { data: applications = [] } = useCandidateApplications(user?.id);
+  const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
+  const applyToVacancy = useApplyToVacancy(user?.id);
+  const {
+    data: vacancy,
+    isLoading,
+    isError,
+    refetch,
+  } = useVacancy(id);
 
-  const vacancy = vacancies.find((v) => v.id === id);
-  const applied = hasApplied(id || '');
-  const saved = isJobSaved(id || '');
+  const applied = applications.some((application) => application.vacancyId === (id || ''));
+  const saved = savedJobIds.includes(id || '');
+
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.background,
+            paddingTop: insets.top + 16,
+            paddingHorizontal: s.xl,
+          },
+        ]}
+      >
+        <VacancyCardSkeleton />
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+          },
+        ]}
+      >
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   if (!vacancy) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={[{ color: colors.textSecondary, ...t.bodyMedium }]}>{tr('common.error')}</Text>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.background,
+            justifyContent: 'center',
+            alignItems: 'center',
+          },
+        ]}
+      >
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.noResults')}
+        />
       </View>
     );
   }
@@ -60,9 +129,15 @@ export default function VacancyDetailScreen() {
       ? `${vacancy.salaryMin}${vacancy.salaryMax ? ` - ${vacancy.salaryMax}` : '+'} ${vacancy.salaryCurrency || 'AZN'}`
       : null;
 
-  const handleApply = () => {
-    if (id) applyToVacancy(id);
-    Alert.alert(tr('candidate.applied'));
+  const handleApply = async () => {
+    if (!id) return;
+
+    try {
+      await applyToVacancy.mutateAsync(id);
+      Alert.alert(tr('candidate.applied'));
+    } catch (error: any) {
+      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+    }
   };
 
   return (
@@ -79,7 +154,7 @@ export default function VacancyDetailScreen() {
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => id && toggleSave(id)}
+            onPress={() => id && toggleSave.mutate(id)}
             style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
           >
             {saved
@@ -89,9 +164,9 @@ export default function VacancyDetailScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={[styles.companySection, { paddingHorizontal: s.xl, marginTop: s.xl }]}>
-          <Avatar name={vacancy.company?.name} size={56} />
-          <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s.lg }]}>
+        <View style={[styles.companySection, { paddingHorizontal: s.xl, marginTop: s.xl }]}> 
+          <Avatar uri={vacancy.company?.logoUrl} name={vacancy.company?.name} size={56} />
+          <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s.lg }]}> 
             {vacancy.title}
           </Text>
           <TouchableOpacity activeOpacity={0.7} style={[styles.companyRow, { marginTop: s.sm }]}>
@@ -216,12 +291,12 @@ export default function VacancyDetailScreen() {
 
         {vacancy.company && (
           <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
-            <Text style={[{ color: colors.textPrimary, ...t.headingSmall, marginBottom: s.md }]}>
+            <Text style={[{ color: colors.textSecondary, marginTop: s.sm, marginBottom: s.md }, t.bodySmall]}> 
               {tr('candidate.aboutCompany')}
             </Text>
-            <View style={[styles.companyCard, { backgroundColor: colors.surfaceSecondary, borderRadius: r.lg, padding: s.lg }]}>
+            <View style={[styles.companyCard, { backgroundColor: colors.surfaceSecondary, borderRadius: r.lg, padding: s.lg }]}> 
               <View style={styles.companyCardHeader}>
-                <Avatar name={vacancy.company.name} size={44} />
+                <Avatar uri={vacancy.company.logoUrl} name={vacancy.company.name} size={44} />
                 <View style={{ marginLeft: s.md, flex: 1 }}>
                   <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{vacancy.company.name}</Text>
                   <Text style={[{ color: colors.textSecondary, ...t.caption }]}>{vacancy.company.industry}</Text>
@@ -258,13 +333,30 @@ export default function VacancyDetailScreen() {
             size="lg"
           />
         ) : (
-          <Button
-            title={applied ? tr('candidate.applied') : tr('candidate.applyNow')}
-            onPress={handleApply}
-            disabled={applied}
-            size="lg"
-            variant={applied ? 'secondary' : 'primary'}
-          />
+          <View>
+            {subscriptionSummary ? (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => router.push('/subscription' as never)}
+                style={[styles.subscriptionHint, { backgroundColor: colors.backgroundSecondary, borderColor: colors.divider, borderRadius: r.lg, marginBottom: s.md }]}
+              >
+                <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>
+                  {getSubscriptionPlanLabel(tr, subscriptionSummary.subscription.plan)}
+                </Text>
+                <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.caption]}>
+                  {getSubscriptionSummaryLine(tr, subscriptionSummary)}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            <Button
+              title={applied ? tr('candidate.applied') : tr('candidate.applyNow')}
+              onPress={handleApply}
+              disabled={applied || applyToVacancy.isPending}
+              loading={applyToVacancy.isPending}
+              size="lg"
+              variant={applied ? 'secondary' : 'primary'}
+            />
+          </View>
         )}
       </View>
     </View>
@@ -336,5 +428,9 @@ const styles = StyleSheet.create({
     right: 0,
     paddingTop: 12,
     borderTopWidth: 0.5,
+  },
+  subscriptionHint: {
+    borderWidth: 1,
+    padding: 12,
   },
 });

@@ -4,11 +4,16 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
 import { aiService, AISuggestion } from '@/services/aiService';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import {
+  useCandidateProfile,
+  useUpdateCandidateProfile,
+} from '@/hooks/useCandidateVacancyActions';
 import { ChevronLeft, Sparkles, Lightbulb, Zap, CheckCircle2 } from 'lucide-react-native';
 
 export default function AIAssistantScreen() {
@@ -16,8 +21,14 @@ export default function AIAssistantScreen() {
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const profile = useDataStore((s) => s.candidateProfile);
-  const updateProfile = useDataStore((s) => s.updateCandidateProfile);
+  const user = useAuthStore((s) => s.user);
+  const {
+    data: profile,
+    isLoading: profileLoading,
+    isError,
+    refetch,
+  } = useCandidateProfile(user?.id);
+  const updateProfile = useUpdateCandidateProfile(user?.id);
 
   const [loading, setLoading] = useState(true);
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
@@ -25,6 +36,8 @@ export default function AIAssistantScreen() {
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
 
   useEffect(() => {
+    if (!profile) return;
+
     (async () => {
       const [sug, skills] = await Promise.all([
         aiService.analyzeProfile(profile),
@@ -34,24 +47,65 @@ export default function AIAssistantScreen() {
       setSuggestedSkills(skills);
       setLoading(false);
     })();
-  }, []);
+  }, [profile]);
 
-  const applySuggestion = (s: AISuggestion) => {
+  const applySuggestion = async (s: AISuggestion) => {
+    if (!profile) return;
+
     if (s.type === 'bio' && s.suggestedText) {
-      updateProfile({ bio: s.suggestedText });
+      await updateProfile.mutateAsync({ bio: s.suggestedText });
     }
     if (s.type === 'skill') {
-      updateProfile({ skills: [...profile.skills, ...suggestedSkills.slice(0, 3)] });
+      await updateProfile.mutateAsync({
+        skills: Array.from(new Set([...profile.skills, ...suggestedSkills.slice(0, 3)])),
+      });
     }
     setAppliedIds((prev) => [...prev, s.id]);
   };
 
-  const addSkill = (skill: string) => {
+  const addSkill = async (skill: string) => {
+    if (!profile) return;
+
     if (!profile.skills.includes(skill)) {
-      updateProfile({ skills: [...profile.skills, skill] });
+      await updateProfile.mutateAsync({ skills: [...profile.skills, skill] });
       setSuggestedSkills((prev) => prev.filter((s) => s !== skill));
     }
   };
+
+  if (profileLoading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[{ color: colors.textSecondary, marginTop: 12 }, t.bodyMedium]}>{tr('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <EmptyState
+          title={tr('ai.assistant')}
+          subtitle={tr('common.error')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   return (
     <ScrollView

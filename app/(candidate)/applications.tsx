@@ -4,12 +4,24 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import { useCandidateApplications } from '@/hooks/useCandidateVacancyActions';
+import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Application, ApplicationStatus } from '@/types/models';
-import { FileText } from 'lucide-react-native';
+import {
+  getApplicationsUpsellBody,
+  getApplicationsUpsellTitle,
+  getSubscriptionActionLabel,
+  getSubscriptionPlanLabel,
+  getSubscriptionSummaryLine,
+} from '@/utils/subscriptionPresentation';
+import { FileText, Sparkles } from 'lucide-react-native';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -24,7 +36,14 @@ export default function ApplicationsScreen() {
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const applications = useDataStore((s) => s.applications);
+  const user = useAuthStore((s) => s.user);
+  const {
+    data: applications = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useCandidateApplications(user?.id);
+  const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
 
   const getStatusLabel = (status: ApplicationStatus) => {
     const labels: Record<ApplicationStatus, string> = {
@@ -58,8 +77,8 @@ export default function ApplicationsScreen() {
         ]}
       >
         <View style={styles.cardHeader}>
-          <Avatar name={item.vacancy?.company?.name} size={42} />
-          <View style={[styles.cardHeaderText, { marginLeft: s.md }]}>
+          <Avatar uri={item.vacancy?.company?.logoUrl} name={item.vacancy?.company?.name} size={42} />
+          <View style={[styles.cardHeaderText, { marginLeft: s.md }]}> 
             <Text
               style={[{ color: colors.textPrimary, ...t.labelMedium }]}
               numberOfLines={1}
@@ -87,14 +106,52 @@ export default function ApplicationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
-      <View style={[styles.header, { paddingHorizontal: s.xl }]}>
-        <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}>
+      <View style={[styles.header, { paddingHorizontal: s.xl }]}> 
+        <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}> 
           {tr('candidate.applications')}
         </Text>
-        <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.xs }]}>
+        <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.xs }]}> 
           {applications.length} {tr('candidate.applications').toLowerCase()}
         </Text>
       </View>
+
+      {subscriptionSummary ? (
+        <View style={{ paddingHorizontal: s.xl, paddingTop: s.lg }}>
+          <Card padding="lg" style={{ borderWidth: 1, borderColor: colors.cardBorder }}>
+            <View style={styles.upsellHeader}>
+              <View style={[styles.upsellIcon, { backgroundColor: colors.primaryLight, borderRadius: r.full }]}>
+                <Sparkles size={18} color={colors.primary} strokeWidth={1.8} />
+              </View>
+              <View style={{ flex: 1, marginLeft: s.md }}>
+                <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>
+                  {getApplicationsUpsellTitle(tr, subscriptionSummary.subscription.plan)}
+                </Text>
+                <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.bodySmall]}>
+                  {getApplicationsUpsellBody(tr, subscriptionSummary.subscription.plan)}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.upsellMeta, { marginTop: s.md, backgroundColor: colors.surfaceSecondary, borderRadius: r.lg }]}> 
+              <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>
+                {getSubscriptionPlanLabel(tr, subscriptionSummary.subscription.plan)}
+              </Text>
+              <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.caption]}>
+                {getSubscriptionSummaryLine(tr, subscriptionSummary)}
+              </Text>
+            </View>
+
+            <View style={{ marginTop: s.md }}>
+              <Button
+                title={getSubscriptionActionLabel(tr, subscriptionSummary.subscription.plan)}
+                onPress={() => router.push('/subscription' as never)}
+                variant={subscriptionSummary.subscription.plan === 'free' ? 'primary' : 'outline'}
+                size="md"
+              />
+            </View>
+          </Card>
+        </View>
+      ) : null}
 
       <FlatList
         data={applications}
@@ -103,13 +160,29 @@ export default function ApplicationsScreen() {
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <EmptyState
-            title={tr('candidate.noApplications')}
-            subtitle={tr('candidate.noApplicationsDesc')}
-            icon={<FileText size={48} color={colors.textTertiary} strokeWidth={1.2} />}
-            actionTitle={tr('candidate.search')}
-            onAction={() => router.push('/(candidate)/search')}
-          />
+          isLoading ? (
+            <View>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <VacancyCardSkeleton key={index} />
+              ))}
+            </View>
+          ) : isError ? (
+            <EmptyState
+              title={tr('common.error')}
+              subtitle={tr('common.retry')}
+              icon={<FileText size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              actionTitle={tr('common.retry')}
+              onAction={() => refetch()}
+            />
+          ) : (
+            <EmptyState
+              title={tr('candidate.noApplications')}
+              subtitle={tr('candidate.noApplicationsDesc')}
+              icon={<FileText size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              actionTitle={tr('candidate.search')}
+              onAction={() => router.push('/(candidate)/search')}
+            />
+          )
         }
       />
     </View>
@@ -138,5 +211,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  upsellHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  upsellIcon: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  upsellMeta: {
+    padding: 12,
   },
 });

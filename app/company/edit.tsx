@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { useEmployerCompany, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function EditCompanyScreen() {
@@ -14,34 +16,93 @@ export default function EditCompanyScreen() {
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const companies = useDataStore((s) => s.companies);
-  const updateCompany = useDataStore((s) => s.updateCompany);
-  const company = companies[0];
+  const user = useAuthStore((s) => s.user);
+  const {
+    data: company,
+    isLoading,
+    isError,
+    refetch,
+  } = useEmployerCompany(user?.id);
+  const updateCompany = useUpdateEmployerCompany(user?.id);
 
-  const [name, setName] = useState(company?.name || '');
-  const [industry, setIndustry] = useState(company?.industry || '');
-  const [description, setDescription] = useState(company?.description || '');
-  const [website, setWebsite] = useState(company?.website || '');
-  const [location, setLocation] = useState(company?.location || '');
-  const [employeeCount, setEmployeeCount] = useState(company?.employeeCount || '');
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [industry, setIndustry] = useState('');
+  const [description, setDescription] = useState('');
+  const [website, setWebsite] = useState('');
+  const [location, setLocation] = useState('');
+  const [employeeCount, setEmployeeCount] = useState('');
 
-  const handleSave = () => {
+  useEffect(() => {
+    if (!company) return;
+
+    setName(company.name || '');
+    setIndustry(company.industry || '');
+    setDescription(company.description || '');
+    setWebsite(company.website || '');
+    setLocation(company.location || '');
+    setEmployeeCount(company.employeeCount || '');
+  }, [company]);
+
+  const handleSave = async () => {
     if (!name.trim()) { Alert.alert(tr('common.error'), tr('validation.required')); return; }
-    setLoading(true);
-    setTimeout(() => {
-      updateCompany(company.id, {
-        name: name.trim(),
-        industry: industry.trim(),
-        description: description.trim(),
-        website: website.trim() || undefined,
-        location: location.trim() || undefined,
-        employeeCount: employeeCount.trim() || undefined,
+
+    if (!company) {
+      return;
+    }
+
+    try {
+      await updateCompany.mutateAsync({
+        companyId: company.id,
+        input: {
+          name,
+          industry,
+          description,
+          website,
+          location,
+          employeeCount,
+        },
       });
-      setLoading(false);
+
       Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => router.back() }]);
-    }, 500);
+    } catch (error) {
+      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+    }
   };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[{ color: colors.textSecondary, marginTop: 12 }, t.bodyMedium]}>{tr('common.loading')}</Text>
+      </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
+
+  if (!company) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+        <EmptyState
+          title={tr('employer.editCompany')}
+          subtitle={tr('common.error')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -68,7 +129,7 @@ export default function EditCompanyScreen() {
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>
-          <Button title={tr('common.save')} onPress={handleSave} loading={loading} size="lg" />
+          <Button title={tr('common.save')} onPress={handleSave} loading={updateCompany.isPending} size="lg" />
           <Button title={tr('common.cancel')} onPress={() => router.back()} variant="ghost" size="md" />
         </View>
       </ScrollView>
@@ -78,6 +139,7 @@ export default function EditCompanyScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  stateContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
   topRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   backBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   formCard: { borderRadius: 14, borderWidth: 1, padding: 16 },

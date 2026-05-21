@@ -8,6 +8,7 @@ import {
   TextStyle,
   View,
 } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme } from '@/theme/ThemeContext';
 
 interface ButtonProps {
@@ -97,26 +98,45 @@ export function Button({
   if (style) containerStyles.push(style);
   if (textStyle) textStyles.push(textStyle);
 
+  const scale = useSharedValue(1);
+  const animatedScale = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (!isDisabled) {
+      scale.value = withSpring(0.97, { damping: 15, stiffness: 300 });
+    }
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
   return (
-    <TouchableOpacity
-      onPress={onPress}
-      disabled={isDisabled}
-      activeOpacity={0.7}
-      style={containerStyles}
-    >
-      {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'primary' || variant === 'destructive' ? '#FFFFFF' : colors.primary}
-        />
-      ) : (
-        <View style={styles.content}>
-          {icon && iconPosition === 'left' && <View style={styles.iconLeft}>{icon}</View>}
-          <Text style={textStyles}>{title}</Text>
-          {icon && iconPosition === 'right' && <View style={styles.iconRight}>{icon}</View>}
-        </View>
-      )}
-    </TouchableOpacity>
+    <Animated.View style={animatedScale}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={isDisabled}
+        activeOpacity={0.85}
+        style={containerStyles}
+      >
+        {loading ? (
+          <ActivityIndicator
+            size="small"
+            color={variant === 'primary' || variant === 'destructive' ? '#FFFFFF' : colors.primary}
+          />
+        ) : (
+          <View style={styles.content}>
+            {icon && iconPosition === 'left' && <View style={styles.iconLeft}>{icon}</View>}
+            <Text style={textStyles}>{title}</Text>
+            {icon && iconPosition === 'right' && <View style={styles.iconRight}>{icon}</View>}
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 

@@ -437,12 +437,21 @@ Based on README, schema, types, screen structure, and naming conventions, the in
 
 Tasks are ordered by execution priority. Dependencies are noted. Risk levels: 🔴 Critical, 🟠 High, 🟡 Medium, 🟢 Low.
 
+## 10.1 Execution Tracking
+
+- **Tracking Rule:** This document must be updated during every implementation cycle.
+- **Current Execution Phase:** Phase 1 — Foundation & Backend Integration
+- **Last Completed Cycle:** Cycle 4 — `T-002: Replace Mock Data Layer with Supabase Integration` (Candidate vacancy actions slice)
+- **Current Active Cycle:** Cycle 5 — `T-002: Replace Mock Data Layer with Supabase Integration` (Applications and notifications slice)
+
 ---
 
 ## PHASE 1: Foundation & Backend Integration (Weeks 1-3)
 
 ### T-001: Implement Auth State Machine & Route Guards
 - **Area:** Frontend / Security
+- **Execution Status:** ✅ Completed
+- **Implementation Note:** Root auth listener, guarded routing, role-based protection, session expiry handling, and OTP-gated authentication were implemented in Cycle 1.
 - **Problem:** No authentication enforcement. Any user can access any route. Token never refreshes.
 - **Why it matters:** Without this, the app is fundamentally insecure and cannot go to production.
 - **What must be implemented:**
@@ -459,6 +468,14 @@ Tasks are ordered by execution priority. Dependencies are noted. Risk levels: �
 
 ### T-002: Replace Mock Data Layer with Supabase Integration
 - **Area:** Backend / Frontend
+- **Execution Status:** 🟡 In Progress
+- **Completed Slice:** Typed Supabase vacancy/company read service plus React Query hooks for candidate vacancy lists, vacancy detail, and employer vacancy preview.
+- **Implemented Consumers:** `app/(candidate)/home.tsx`, `app/(candidate)/search.tsx`, `app/(candidate)/saved.tsx`, `app/vacancy/[id].tsx`, `app/(employer)/dashboard.tsx`
+- **Completed Mutation Slice:** Employer company lookup, vacancy create mutation, vacancy status mutation, vacancy delete mutation, and migration of employer vacancy management screens.
+- **Implemented Management Screens:** `app/vacancy/create.tsx`, `app/(employer)/vacancies.tsx`
+- **Completed Candidate Action Slice:** Saved jobs query/mutation hooks, candidate applications query/mutation hooks, and migration of candidate vacancy save/apply consumers.
+- **Implemented Candidate Action Screens:** `app/(candidate)/home.tsx`, `app/(candidate)/search.tsx`, `app/(candidate)/saved.tsx`, `app/vacancy/[id].tsx`, `app/(candidate)/applications.tsx`
+- **Current Slice:** Applications and notifications migration.
 - **Problem:** All data is hardcoded. `USE_MOCK = true` blocks all real functionality.
 - **Why it matters:** The app is non-functional without real data persistence.
 - **What must be implemented:**

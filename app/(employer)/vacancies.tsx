@@ -4,39 +4,64 @@ import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { useDataStore } from '@/store/dataStore';
+import { useAuthStore } from '@/store/authStore';
+import {
+  useDeleteVacancy,
+  useEmployerVacancies,
+  useUpdateVacancyStatus,
+} from '@/hooks/useVacancyQueries';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Chip } from '@/components/ui/Chip';
+import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Vacancy, VacancyStatus } from '@/types/models';
 import { Plus, Briefcase, Pause, Play, X, Trash2, Users, Eye, Pencil } from 'lucide-react-native';
 
-const statusConfig: Record<VacancyStatus, { label: string; variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
-  active: { label: 'Active', variant: 'success' },
-  draft: { label: 'Draft', variant: 'default' },
-  pending_moderation: { label: 'Pending', variant: 'warning' },
-  paused: { label: 'Paused', variant: 'info' },
-  closed: { label: 'Closed', variant: 'default' },
-  rejected: { label: 'Rejected', variant: 'error' },
+const statusConfig: Record<VacancyStatus, { variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
+  active: { variant: 'success' },
+  draft: { variant: 'default' },
+  pending_moderation: { variant: 'warning' },
+  paused: { variant: 'info' },
+  closed: { variant: 'default' },
+  rejected: { variant: 'error' },
 };
+
+function getVacancyStatusLabel(status: VacancyStatus, tr: (key: string) => string) {
+  const labels: Record<VacancyStatus, string> = {
+    active: tr('employer.status.active'),
+    draft: tr('employer.status.draft'),
+    pending_moderation: tr('employer.status.pendingModeration'),
+    paused: tr('employer.status.paused'),
+    closed: tr('employer.status.closed'),
+    rejected: tr('employer.status.rejected'),
+  };
+
+  return labels[status];
+}
 
 export default function VacanciesScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const allVacancies = useDataStore((s) => s.vacancies);
-  const changeStatus = useDataStore((s) => s.changeVacancyStatus);
-  const deleteVacancy = useDataStore((s) => s.deleteVacancy);
+  const user = useAuthStore((s) => s.user);
+  const {
+    data: allVacancies = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useEmployerVacancies(user?.id);
+  const updateVacancyStatus = useUpdateVacancyStatus(user?.id);
+  const deleteVacancy = useDeleteVacancy(user?.id);
   const [filter, setFilter] = useState<'all' | VacancyStatus>('all');
 
   const filters: { key: 'all' | VacancyStatus; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'active', label: 'Active' },
-    { key: 'paused', label: 'Paused' },
-    { key: 'closed', label: 'Closed' },
+    { key: 'all', label: tr('common.all') },
+    { key: 'active', label: tr('employer.status.active') },
+    { key: 'paused', label: tr('employer.status.paused') },
+    { key: 'closed', label: tr('employer.status.closed') },
   ];
 
   const filtered = filter === 'all' ? allVacancies : allVacancies.filter((v) => v.status === filter);
@@ -44,10 +69,20 @@ export default function VacanciesScreen() {
   const handleDelete = (id: string, title: string) => {
     Alert.alert(
       tr('common.confirm'),
-      `Delete "${title}"?`,
+      tr('employer.deleteVacancyConfirm', { title }),
       [
         { text: tr('common.cancel'), style: 'cancel' },
-        { text: tr('common.delete'), style: 'destructive', onPress: () => deleteVacancy(id) },
+        {
+          text: tr('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteVacancy.mutateAsync(id);
+            } catch (error: any) {
+              Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+            }
+          },
+        },
       ]
     );
   };
@@ -69,7 +104,7 @@ export default function VacanciesScreen() {
             </Text>
           </View>
           <Badge
-            label={statusConfig[item.status]?.label || item.status}
+            label={getVacancyStatusLabel(item.status, tr)}
             variant={statusConfig[item.status]?.variant || 'default'}
           />
         </View>
@@ -93,7 +128,7 @@ export default function VacanciesScreen() {
         <View style={styles.actionRow}>
           <Button
             title={tr('common.edit')}
-            onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
+            onPress={() => router.push({ pathname: '/vacancy/edit/[id]', params: { id: item.id } } as never)}
             variant="outline"
             size="sm"
             fullWidth={false}
@@ -102,8 +137,17 @@ export default function VacanciesScreen() {
           />
           {(isActive || isPaused) && (
             <Button
-              title={isActive ? 'Pause' : 'Activate'}
-              onPress={() => changeStatus(item.id, isActive ? 'paused' : 'active')}
+              title={isActive ? tr('employer.pause') : tr('employer.activate')}
+              onPress={async () => {
+                try {
+                  await updateVacancyStatus.mutateAsync({
+                    id: item.id,
+                    status: isActive ? 'paused' : 'active',
+                  });
+                } catch (error: any) {
+                  Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+                }
+              }}
               variant="secondary"
               size="sm"
               fullWidth={false}
@@ -116,8 +160,17 @@ export default function VacanciesScreen() {
           )}
           {!isClosed && (
             <Button
-              title="Close"
-              onPress={() => changeStatus(item.id, 'closed')}
+              title={tr('employer.closeVacancy')}
+              onPress={async () => {
+                try {
+                  await updateVacancyStatus.mutateAsync({
+                    id: item.id,
+                    status: 'closed',
+                  });
+                } catch (error: any) {
+                  Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+                }
+              }}
               variant="ghost"
               size="sm"
               fullWidth={false}
@@ -166,22 +219,38 @@ export default function VacanciesScreen() {
         </View>
       </View>
 
-      <FlatList
-        data={filtered}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
-        renderItem={renderVacancy}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <EmptyState
-            title={tr('employer.noVacancies')}
-            subtitle={tr('employer.noVacanciesDesc')}
-            icon={<Briefcase size={48} color={colors.textTertiary} strokeWidth={1.2} />}
-            actionTitle={tr('employer.createVacancy')}
-            onAction={() => router.push('/vacancy/create')}
-          />
-        }
-      />
+      {isError ? (
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          icon={<Briefcase size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetch()}
+        />
+      ) : isLoading ? (
+        <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <VacancyCardSkeleton key={index} />
+          ))}
+        </View>
+      ) : (
+        <FlatList
+          data={filtered}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 }}
+          renderItem={renderVacancy}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <EmptyState
+              title={tr('employer.noVacancies')}
+              subtitle={tr('employer.noVacanciesDesc')}
+              icon={<Briefcase size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              actionTitle={tr('employer.createVacancy')}
+              onAction={() => router.push('/vacancy/create')}
+            />
+          }
+        />
+      )}
     </View>
   );
 }

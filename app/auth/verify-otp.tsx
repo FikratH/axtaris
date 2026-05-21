@@ -111,7 +111,7 @@ export default function VerifyOTPScreen() {
         <OTPInput onComplete={handleVerify} error={error} />
         {error && (
           <Text style={[{ color: colors.error, ...t.caption, textAlign: 'center', marginTop: s.md }]}>
-            Invalid code. Please try again.
+            {tr('auth.otpInvalid')}
           </Text>
         )}
       </View>

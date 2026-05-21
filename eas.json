@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://cwmjyonylopsqrtujuvo.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_tElHfJFhgJNKSAVkOBkRrg_RRXQ9c9j",
+        "EXPO_PUBLIC_APP_ENV": "preview",
+        "EXPO_PUBLIC_ENABLE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_REQUIRE_REAL_BACKEND": "true",
+        "EXPO_PUBLIC_API_URL": "https://api.axtaris.az"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://cwmjyonylopsqrtujuvo.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_tElHfJFhgJNKSAVkOBkRrg_RRXQ9c9j",
+        "EXPO_PUBLIC_APP_ENV": "production",
+        "EXPO_PUBLIC_ENABLE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_REQUIRE_REAL_BACKEND": "true",
+        "EXPO_PUBLIC_API_URL": "https://api.axtaris.az"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

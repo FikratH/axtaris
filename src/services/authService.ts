@@ -1,9 +1,11 @@
 import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
 import { User, UserRole } from '@/types/models';
+import { runtimeConfig } from '@/config/runtime';
 import { mockUser, mockEmployerUser } from './mockData';
 import { getSupabase } from './supabase';
 
-export const USE_MOCK_AUTH = true;
+export const USE_MOCK_AUTH = runtimeConfig.useMockAuth;
 
 export interface SignUpParams {
   email: string;
@@ -177,7 +179,43 @@ class AuthService {
       return;
     }
 
-    const { error } = await getSupabase().auth.resetPasswordForEmail(email);
+    const { error } = await getSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: Linking.createURL('/auth/reset-password'),
+    });
+    if (error) throw new Error(error.message);
+  }
+
+  async restoreRecoverySession(
+    accessToken: string,
+    refreshToken: string
+  ): Promise<{ user: User; token: string | null }> {
+    if (USE_MOCK_AUTH) {
+      await this.delay();
+      return { user: mockUser, token: 'mock-token-candidate' };
+    }
+
+    const { data, error } = await getSupabase().auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error('Recovery session could not be restored');
+
+    return {
+      user: toAppUser(data.user),
+      token: data.session?.access_token || null,
+    };
+  }
+
+  async updatePassword(password: string): Promise<void> {
+    if (USE_MOCK_AUTH) {
+      await this.delay();
+      return;
+    }
+
+    const { error } = await getSupabase().auth.updateUser({ password });
+
     if (error) throw new Error(error.message);
   }
 
