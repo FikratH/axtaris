@@ -17,7 +17,7 @@ import i18n from '@/i18n';
 import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
 import { ChevronLeft, Check, ChevronRight, Sparkles } from 'lucide-react-native';
 
-export default function SettingsScreen() {
+export default function PreferencesScreen() {
   const { colors, spacing: s, typography: t, radius: r, mode, setMode } = useTheme();
   const { t: tr } = useTranslation();
   const router = useRouter();
@@ -38,6 +38,15 @@ export default function SettingsScreen() {
     label: lang.nativeLabel,
   }));
 
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace((user?.role === 'employer' ? '/(employer)/settings' : '/(candidate)/profile') as never);
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -47,7 +56,7 @@ export default function SettingsScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 12, paddingHorizontal: s.xl }]}>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={goBack}
             style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
           >
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />

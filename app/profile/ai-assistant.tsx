@@ -14,6 +14,7 @@ import {
   useCandidateProfile,
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Sparkles, Lightbulb, Zap, CheckCircle2 } from 'lucide-react-native';
 
 export default function AIAssistantScreen() {
@@ -114,7 +115,7 @@ export default function AIAssistantScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(candidate)/profile')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
           <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('ai.assistant')}</Text>
@@ -194,7 +195,7 @@ export default function AIAssistantScreen() {
           )}
 
           <View style={{ marginTop: 24 }}>
-            <Button title={tr('common.done')} onPress={() => router.back()} size="lg" />
+            <Button title={tr('common.done')} onPress={() => safeBack(router, '/(candidate)/profile')} size="lg" />
           </View>
         </>
       )}

@@ -16,6 +16,7 @@ import { ChevronLeft } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
+import { safeBack } from '@/utils/navigation';
 import { Button, EmptyState, Input, SelectField } from '@/components/ui';
 import {
   useCandidateProfile,
@@ -80,7 +81,7 @@ export default function LanguageFormScreen() {
       await updateProfile.mutateAsync({
         languages: upsertListItem(profile.languages, nextItem),
       });
-      router.back();
+      safeBack(router, '/(candidate)/profile');
     } catch (error) {
       Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
     }
@@ -103,7 +104,7 @@ export default function LanguageFormScreen() {
               await updateProfile.mutateAsync({
                 languages: removeListItem(profile.languages, item.id),
               });
-              router.back();
+              safeBack(router, '/(candidate)/profile');
             } catch (error) {
               Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
             }
@@ -147,7 +148,7 @@ export default function LanguageFormScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}> 
+          <TouchableOpacity onPress={() => safeBack(router, '/(candidate)/profile')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}> 
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>
@@ -176,7 +177,7 @@ export default function LanguageFormScreen() {
           {!isNew ? (
             <Button title={tr('common.delete')} onPress={handleDelete} variant="destructive" size="md" />
           ) : null}
-          <Button title={tr('common.cancel')} onPress={() => router.back()} variant="ghost" size="md" />
+          <Button title={tr('common.cancel')} onPress={() => safeBack(router, '/(candidate)/profile')} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

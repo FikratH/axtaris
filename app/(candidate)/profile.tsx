@@ -241,7 +241,7 @@ export default function CandidateProfileScreen() {
               <Bell size={18} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => router.push('/settings')}
+              onPress={() => router.push('/preferences' as never)}
               style={[styles.headerBtn, { marginLeft: 8 }]}
             >
               <Settings size={18} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />

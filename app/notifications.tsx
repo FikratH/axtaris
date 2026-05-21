@@ -19,6 +19,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from '@/hooks/useEngagementQueries';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, FileText, UserPlus, Briefcase, Star, BadgeCheck, ClipboardList, Bell as BellIcon } from 'lucide-react-native';
 
 const typeIconMap: Record<string, React.ComponentType<{ size: number; color: string; strokeWidth: number }>> = {
@@ -119,7 +120,7 @@ export default function NotificationsScreen() {
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}> 
       <View style={[styles.header, { paddingHorizontal: s.xl }]}> 
         <View style={styles.headerRow}> 
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}> 
+          <TouchableOpacity onPress={() => safeBack(router, user?.role === 'employer' ? '/(employer)/dashboard' : '/(candidate)/home')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}> 
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} /> 
           </TouchableOpacity>
           <Text style={[{ color: colors.textPrimary, ...t.headingMedium, flex: 1, marginLeft: s.md }]}> 

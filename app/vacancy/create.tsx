@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft } from 'lucide-react-native';
 import { WorkType, ExperienceLevel, VacancyStatus } from '@/types/models';
 
@@ -112,7 +113,7 @@ export default function CreateVacancyScreen() {
       Alert.alert(
         status === 'draft' ? tr('employer.saveDraft') : tr('employer.publishVacancy'),
         '',
-        [{ text: 'OK', onPress: () => router.back() }]
+        [{ text: 'OK', onPress: () => safeBack(router, '/(employer)/vacancies') }]
       );
     } catch (error: any) {
       Alert.alert(tr('common.error'), error?.message || tr('common.error'));
@@ -141,7 +142,7 @@ export default function CreateVacancyScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
+          <TouchableOpacity onPress={() => safeBack(router, '/(employer)/vacancies')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('employer.createVacancy')}</Text>

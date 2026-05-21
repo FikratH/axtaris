@@ -23,6 +23,7 @@ import { useFieldError } from '@/hooks/useFormValidation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FadeInView } from '@/components/ui/Animated';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 
 const LOGO_ICON = require('@/assets/axtaris_logo_icon_png.png');
@@ -87,7 +88,7 @@ export default function SignInScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => safeBack(router, '/auth/role-select')}
           style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
         >
           <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />

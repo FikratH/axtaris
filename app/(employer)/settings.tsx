@@ -31,8 +31,8 @@ export default function EmployerSettingsScreen() {
   };
 
   const menuItems = [
-    { Icon: Globe, label: tr('settings.language'), onPress: () => router.push('/settings') },
-    { Icon: Palette, label: tr('settings.theme'), onPress: () => router.push('/settings') },
+    { Icon: Globe, label: tr('settings.language'), onPress: () => router.push('/preferences' as never) },
+    { Icon: Palette, label: tr('settings.theme'), onPress: () => router.push('/preferences' as never) },
     { Icon: Bell, label: tr('settings.notifications'), onPress: () => router.push('/notifications') },
     { Icon: Lock, label: tr('settings.privacy'), onPress: () => Alert.alert(tr('settings.privacy'), tr('common.comingSoon')) },
     { Icon: HelpCircle, label: tr('settings.help'), onPress: () => Alert.alert(tr('settings.help'), tr('common.comingSoon')) },
@@ -59,7 +59,7 @@ export default function EmployerSettingsScreen() {
               <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{user?.fullName}</Text>
               <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: 2 }]}>{user?.email}</Text>
             </View>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => Alert.alert(tr('common.edit'), tr('common.comingSoon'))}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/company/edit' as never)}>
               <Text style={[{ color: colors.primary, ...t.labelSmall }]}>{tr('common.edit')}</Text>
             </TouchableOpacity>
           </View>

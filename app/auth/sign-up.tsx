@@ -26,6 +26,7 @@ import {
 import { useFieldError } from '@/hooks/useFormValidation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import { FadeInView } from '@/components/ui/Animated';
 
@@ -106,7 +107,7 @@ export default function SignUpScreen() {
         showsVerticalScrollIndicator={false}
       >
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => safeBack(router, '/auth/role-select')}
           style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
         >
           <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />

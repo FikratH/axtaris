@@ -145,21 +145,37 @@ export default function ApplicantsScreen() {
           )}
         </View>
 
-        <View style={[styles.actionRow, { marginTop: s.md, gap: 8 }]}> 
-          <View style={{ flex: 1 }}>
-            <Button
-              title={tr('employer.review')}
-              onPress={() =>
-                router.push({
-                  pathname: '/(employer)/applicant/[id]',
-                  params: { id: item.id },
-                } as never)
-              }
-              variant="secondary"
-              size="sm"
-            />
+        <View style={{ marginTop: s.md, gap: 8 }}>
+          <View style={[styles.actionRow, { gap: 8 }]}>
+            <View style={styles.actionCell}>
+              <Button
+                title={tr('employer.review')}
+                onPress={() =>
+                  router.push({
+                    pathname: '/(employer)/applicant/[id]',
+                    params: { id: item.id },
+                  } as never)
+                }
+                variant="secondary"
+                size="sm"
+              />
+            </View>
+            <View style={styles.actionCell}>
+              <Button
+                title={tr('employer.reject')}
+                onPress={() =>
+                  updateStatus.mutate({
+                    applicationId: item.id,
+                    status: 'rejected',
+                  })
+                }
+                variant="outline"
+                size="sm"
+                disabled={item.status === 'rejected' || updateStatus.isPending}
+              />
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
+          <View>
             <Button
               title={tr('employer.shortlist')}
               onPress={() =>
@@ -170,19 +186,7 @@ export default function ApplicantsScreen() {
               }
               variant="primary"
               size="sm"
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              title={tr('employer.reject')}
-              onPress={() =>
-                updateStatus.mutate({
-                  applicationId: item.id,
-                  status: 'rejected',
-                })
-              }
-              variant="outline"
-              size="sm"
+              disabled={item.status === 'shortlisted' || updateStatus.isPending}
             />
           </View>
         </View>
@@ -262,4 +266,5 @@ const styles = StyleSheet.create({
   applicantInfo: { flex: 1 },
   skillsRow: { flexDirection: 'row', flexWrap: 'wrap' },
   actionRow: { flexDirection: 'row' },
+  actionCell: { flex: 1, minWidth: 0 },
 });

@@ -36,6 +36,7 @@ import {
   getSubscriptionUsageCaption,
   getSubscriptionVisibilityLabel,
 } from '@/utils/subscriptionPresentation';
+import { safeBack } from '@/utils/navigation';
 
 const iconMap: Record<SubscriptionPlanCode, typeof Sparkles> = {
   free: Sparkles,
@@ -99,7 +100,7 @@ export default function SubscriptionScreen() {
     >
       <View style={[styles.header, { paddingTop: insets.top + 12, paddingHorizontal: s.xl }]}> 
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}> 
+          <TouchableOpacity onPress={() => safeBack(router, user?.role === 'employer' ? '/(employer)/settings' : '/(candidate)/profile')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}> 
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <Text style={[{ color: colors.textPrimary, ...t.headingMedium, marginLeft: s.md }]}>{getSubscriptionCatalogTitle(tr, audience)}</Text>

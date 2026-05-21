@@ -12,6 +12,7 @@ import {
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
 import { fileStorageService } from '@/services/fileStorageService';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, FileUp, FileCheck, Trash2 } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
@@ -132,7 +133,7 @@ export default function UploadCVScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
       <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(candidate)/profile')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
           <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('candidate.uploadCV')}</Text>

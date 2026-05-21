@@ -30,6 +30,7 @@ import {
   getSubscriptionPlanLabel,
   getSubscriptionSummaryLine,
 } from '@/utils/subscriptionPresentation';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star } from 'lucide-react-native';
 
 const workTypeLabels: Record<string, string> = {
@@ -148,7 +149,7 @@ export default function VacancyDetailScreen() {
       >
         <View style={[styles.topBar, { paddingTop: insets.top + 8, paddingHorizontal: s.xl }]}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => safeBack(router, isEmployer ? '/(employer)/vacancies' : '/(candidate)/search')}
             style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
           >
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />

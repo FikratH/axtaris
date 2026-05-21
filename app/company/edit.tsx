@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useEmployerCompany, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function EditCompanyScreen() {
@@ -63,7 +64,7 @@ export default function EditCompanyScreen() {
         },
       });
 
-      Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => router.back() }]);
+      Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => safeBack(router, '/(employer)/company') }]);
     } catch (error) {
       Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
     }
@@ -113,7 +114,7 @@ export default function EditCompanyScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
+          <TouchableOpacity onPress={() => safeBack(router, '/(employer)/company')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('employer.editCompany')}</Text>
@@ -130,7 +131,7 @@ export default function EditCompanyScreen() {
 
         <View style={{ marginTop: 16, gap: 10 }}>
           <Button title={tr('common.save')} onPress={handleSave} loading={updateCompany.isPending} size="lg" />
-          <Button title={tr('common.cancel')} onPress={() => router.back()} variant="ghost" size="md" />
+          <Button title={tr('common.cancel')} onPress={() => safeBack(router, '/(employer)/company')} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

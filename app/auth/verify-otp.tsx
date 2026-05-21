@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/authService';
 import { OTPInput } from '@/components/ui/OTPInput';
 import { Button } from '@/components/ui/Button';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Mail } from 'lucide-react-native';
 
 export default function VerifyOTPScreen() {
@@ -89,7 +90,7 @@ export default function VerifyOTPScreen() {
       ]}
     >
       <TouchableOpacity
-        onPress={() => router.back()}
+        onPress={() => safeBack(router, '/auth/sign-up')}
         style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
       >
         <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />

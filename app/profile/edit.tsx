@@ -13,6 +13,7 @@ import {
   useCandidateProfile,
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
+import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Plus } from 'lucide-react-native';
 
 export default function EditProfileScreen() {
@@ -67,7 +68,7 @@ export default function EditProfileScreen() {
         portfolioUrl,
       });
 
-      Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => router.back() }]);
+      Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => safeBack(router, '/(candidate)/profile') }]);
     } catch (error) {
       Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
     }
@@ -119,7 +120,7 @@ export default function EditProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.topRow}>
-          <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
+          <TouchableOpacity onPress={() => safeBack(router, '/(candidate)/profile')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary }]}>
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('candidate.editProfile')}</Text>
@@ -150,7 +151,7 @@ export default function EditProfileScreen() {
 
         <View style={{ marginTop: 16, gap: 10 }}>
           <Button title={tr('common.save')} onPress={handleSave} loading={updateProfile.isPending} size="lg" />
-          <Button title={tr('common.cancel')} onPress={() => router.back()} variant="ghost" size="md" />
+          <Button title={tr('common.cancel')} onPress={() => safeBack(router, '/(candidate)/profile')} variant="ghost" size="md" />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

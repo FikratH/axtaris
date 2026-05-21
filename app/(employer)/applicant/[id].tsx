@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/Input';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { ApplicationStatus } from '@/types/models';
 import { fileStorageService } from '@/services/fileStorageService';
+import { safeBack } from '@/utils/navigation';
 import { Briefcase, ChevronLeft, Download, Mail, MapPin } from 'lucide-react-native';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
@@ -181,7 +182,7 @@ export default function EmployerApplicantDetailScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(employer)/applicants')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
           <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
         </TouchableOpacity>
         <Text style={[{ color: colors.textPrimary, marginLeft: s.md }, t.headingMedium]}>
