@@ -64,7 +64,7 @@ export default function EditCompanyScreen() {
         },
       });
 
-      Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => safeBack(router, '/(employer)/company') }]);
+      Alert.alert(tr('common.save'), '', [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/company') }]);
     } catch (error) {
       Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
     }
@@ -121,11 +121,11 @@ export default function EditCompanyScreen() {
         </View>
 
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-          <Input label={tr('employer.companyName')} value={name} onChangeText={setName} placeholder="Company LLC" />
-          <Input label={tr('employer.industry')} value={industry} onChangeText={setIndustry} placeholder="Technology" />
-          <Input label={tr('employer.about')} value={description} onChangeText={setDescription} placeholder="About the company..." multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
+          <Input label={tr('employer.companyName')} value={name} onChangeText={setName} placeholder={tr('employer.companyNamePlaceholder')} />
+          <Input label={tr('employer.industry')} value={industry} onChangeText={setIndustry} placeholder={tr('employer.industryPlaceholder')} />
+          <Input label={tr('employer.about')} value={description} onChangeText={setDescription} placeholder={tr('employer.aboutPlaceholder')} multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
           <Input label={tr('employer.website')} value={website} onChangeText={setWebsite} placeholder="https://company.com" keyboardType="url" autoCapitalize="none" />
-          <Input label={tr('candidate.location')} value={location} onChangeText={setLocation} placeholder="Bakı" />
+          <Input label={tr('candidate.location')} value={location} onChangeText={setLocation} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
           <Input label={tr('employer.employeeCount')} value={employeeCount} onChangeText={setEmployeeCount} placeholder="100-500" />
         </View>
 

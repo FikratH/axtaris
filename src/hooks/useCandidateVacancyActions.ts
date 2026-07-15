@@ -5,6 +5,7 @@ import {
   CandidateProfileMutationInput,
 } from '@/services/candidateVacancyService';
 import { vacancyQueryKeys } from './useVacancyQueries';
+import { subscriptionQueryKeys } from './useSubscriptionQueries';
 
 export const candidateVacancyActionKeys = {
   savedJobIds: (userId: string) => ['saved-jobs', userId] as const,
@@ -110,6 +111,12 @@ export function useApplyToVacancy(userId?: string) {
       );
 
       queryClient.invalidateQueries({ queryKey: vacancyQueryKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: candidateVacancyActionKeys.applications(userId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: subscriptionQueryKeys.candidateSummary(userId),
+      });
     },
   });
 }

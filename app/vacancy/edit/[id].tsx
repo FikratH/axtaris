@@ -25,26 +25,13 @@ import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { safeBack } from '@/utils/navigation';
+import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
 import { ChevronLeft } from 'lucide-react-native';
 import { ExperienceLevel, VacancyStatus, WorkType } from '@/types/models';
 
-const workTypes: { key: WorkType; label: string }[] = [
-  { key: 'full_time', label: 'Full-time' },
-  { key: 'part_time', label: 'Part-time' },
-  { key: 'remote', label: 'Remote' },
-  { key: 'hybrid', label: 'Hybrid' },
-  { key: 'onsite', label: 'On-site' },
-  { key: 'internship', label: 'Internship' },
-];
+const workTypes: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
 
-const expLevels: { key: ExperienceLevel; label: string }[] = [
-  { key: 'no_experience', label: 'No experience' },
-  { key: 'junior', label: 'Junior' },
-  { key: 'mid', label: 'Mid' },
-  { key: 'senior', label: 'Senior' },
-  { key: 'lead', label: 'Lead' },
-  { key: 'executive', label: 'Executive' },
-];
+const expLevels: ExperienceLevel[] = ['no_experience', 'junior', 'mid', 'senior', 'lead', 'executive'];
 
 function joinLines(items: string[]): string {
   return items.join('\n');
@@ -58,12 +45,11 @@ function parseOptionalAmount(value: string): number | undefined {
   const trimmed = value.trim();
   if (!trimmed) return undefined;
 
-  const parsed = Number.parseInt(trimmed, 10);
-  if (Number.isNaN(parsed)) {
+  if (!/^\d+$/.test(trimmed)) {
     throw new Error('Salary must be a number');
   }
 
-  return parsed;
+  return Number.parseInt(trimmed, 10);
 }
 
 export default function EditVacancyScreen() {
@@ -133,10 +119,22 @@ export default function EditVacancyScreen() {
       return;
     }
 
+    let nextSalaryMin: number | undefined;
+    let nextSalaryMax: number | undefined;
     try {
-      const nextSalaryMin = parseOptionalAmount(salaryMin);
-      const nextSalaryMax = parseOptionalAmount(salaryMax);
+      nextSalaryMin = parseOptionalAmount(salaryMin);
+      nextSalaryMax = parseOptionalAmount(salaryMax);
+    } catch {
+      Alert.alert(tr('common.error'), tr('validation.salaryNumber'));
+      return;
+    }
 
+    if (nextSalaryMin !== undefined && nextSalaryMax !== undefined && nextSalaryMin > nextSalaryMax) {
+      Alert.alert(tr('common.error'), tr('validation.salaryRange'));
+      return;
+    }
+
+    try {
       await updateVacancy.mutateAsync({
         id,
         input: {
@@ -159,7 +157,7 @@ export default function EditVacancyScreen() {
       });
 
       Alert.alert(tr('common.done'), '', [
-        { text: 'OK', onPress: () => safeBack(router, '/(employer)/vacancies') },
+        { text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/vacancies') },
       ]);
     } catch (error: any) {
       Alert.alert(tr('common.error'), error?.message || tr('common.error'));
@@ -205,9 +203,9 @@ export default function EditVacancyScreen() {
         </View>
 
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-          <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder="e.g. Senior React Native Developer" />
+          <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder={tr('employer.vacancyTitlePlaceholder')} />
           <Input label={tr('employer.vacancyDescription')} value={description} onChangeText={setDescription} placeholder={tr('employer.vacancyDescription')} multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder="Bakı" />
+          <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
@@ -221,14 +219,14 @@ export default function EditVacancyScreen() {
           <Text style={[{ color: colors.textPrimary, marginBottom: 8 }, t.labelSmall]}>{tr('candidate.jobType')}</Text>
           <View style={styles.chipRow}>
             {workTypes.map((wt) => (
-              <Chip key={wt.key} label={wt.label} selected={workType === wt.key} onPress={() => setWorkType(wt.key)} style={{ marginBottom: 6 }} />
+              <Chip key={wt} label={getWorkTypeLabel(tr, wt)} selected={workType === wt} onPress={() => setWorkType(wt)} style={{ marginBottom: 6 }} />
             ))}
           </View>
 
           <Text style={[{ color: colors.textPrimary, marginTop: 16, marginBottom: 8 }, t.labelSmall]}>{tr('candidate.experience')}</Text>
           <View style={styles.chipRow}>
             {expLevels.map((el) => (
-              <Chip key={el.key} label={el.label} selected={experienceLevel === el.key} onPress={() => setExperienceLevel(el.key)} style={{ marginBottom: 6 }} />
+              <Chip key={el} label={getExperienceLevelLabel(tr, el)} selected={experienceLevel === el} onPress={() => setExperienceLevel(el)} style={{ marginBottom: 6 }} />
             ))}
           </View>
 
@@ -237,9 +235,9 @@ export default function EditVacancyScreen() {
               label={tr('candidate.skills')}
               value={skillInput}
               onChangeText={setSkillInput}
-              placeholder="Type a skill and press Add"
+              placeholder={tr('employer.skillInputPlaceholder')}
               onSubmitEditing={addSkill}
-              rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>Add</Text>}
+              rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>{tr('common.add')}</Text>}
               onRightIconPress={addSkill}
             />
             {skills.length > 0 && (
@@ -251,9 +249,9 @@ export default function EditVacancyScreen() {
             )}
           </View>
 
-          <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder="One per line" multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder="One per line" multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder="One per line" multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>

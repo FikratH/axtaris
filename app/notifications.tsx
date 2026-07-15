@@ -85,6 +85,15 @@ export default function NotificationsScreen() {
           if (!notif.read) {
             markRead.mutate(notif.id);
           }
+          const data = notif.data || {};
+          if (data.applicationId && user?.role === 'employer') {
+            router.push({
+              pathname: '/(employer)/applicant/[id]',
+              params: { id: data.applicationId },
+            });
+          } else if (data.vacancyId) {
+            router.push({ pathname: '/vacancy/[id]', params: { id: data.vacancyId } });
+          }
         }}
         style={[
           styles.notifItem,

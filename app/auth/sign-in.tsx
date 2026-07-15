@@ -67,7 +67,7 @@ export default function SignInScreen() {
         router.replace('/(candidate)/home');
       }
     } catch (err: any) {
-      Alert.alert(tr('common.error'), err.message || 'Sign in failed');
+      Alert.alert(tr('common.error'), err.message || tr('errors.signInFailed'));
     } finally {
       setLoading(false);
     }

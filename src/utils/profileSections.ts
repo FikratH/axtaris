@@ -15,3 +15,17 @@ export function upsertListItem<T extends { id: string }>(items: T[], item: T) {
 export function removeListItem<T extends { id: string }>(items: T[], id: string) {
   return items.filter((entry) => entry.id !== id);
 }
+
+export function dedupeBy<T>(items: T[], keyFn: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+
+  for (const item of items) {
+    const key = keyFn(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+
+  return result;
+}

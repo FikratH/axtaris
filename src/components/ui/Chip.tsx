@@ -10,7 +10,7 @@ interface ChipProps {
 }
 
 export function Chip({ label, selected = false, onPress, style }: ChipProps) {
-  const { colors, radius: r } = useTheme();
+  const { colors, radius: r, typography } = useTheme();
 
   return (
     <TouchableOpacity
@@ -30,6 +30,7 @@ export function Chip({ label, selected = false, onPress, style }: ChipProps) {
     >
       <Text
         style={[
+          typography.labelSmall,
           styles.text,
           { color: selected ? colors.primary : colors.textSecondary },
         ]}
@@ -47,7 +48,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: 13,
     fontWeight: '500',
   },
 });

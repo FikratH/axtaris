@@ -69,7 +69,7 @@ function AnimatedSaveButton({
 }
 
 export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: VacancyCardProps) {
-  const { colors, radius: r, spacing: s, typography: t, isDark } = useTheme();
+  const { colors, radius: r, spacing: s, typography: t, elevation: e, isDark } = useTheme();
   const { t: tr } = useTranslation();
 
   const salary =
@@ -91,8 +91,9 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: Vacanc
         {
           backgroundColor: colors.cardBackground,
           borderColor: colors.cardBorder,
-          borderRadius: 14,
+          borderRadius: r.lg,
           padding: 14,
+          ...(!isDark ? e.sm : {}),
         },
       ]}
     >
@@ -114,14 +115,8 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: Vacanc
       {!compact && (
         <View style={[styles.chipRow, { marginTop: 10 }]}>
           <Badge label={vacancy.city} variant="default" />
-          <Badge
-            label={tr(workTypeTranslationKeys[vacancy.workType])}
-            variant="info"
-            style={{ marginLeft: 6 }}
-          />
-          {salary && (
-            <Badge label={salary} variant="success" style={{ marginLeft: 6 }} />
-          )}
+          <Badge label={tr(workTypeTranslationKeys[vacancy.workType])} variant="info" />
+          {salary && <Badge label={salary} variant="success" />}
         </View>
       )}
 
@@ -162,6 +157,7 @@ const styles = StyleSheet.create({
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 6,
   },
   footer: {
     flexDirection: 'row',

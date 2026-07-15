@@ -125,6 +125,7 @@ function AnimatedIconBox({
 
 // ── Theme switch flash overlay ───────────────────────────────
 function ThemeFlash({ trigger }: { trigger: number }) {
+  const { colors } = useTheme();
   const flashOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -140,7 +141,7 @@ function ThemeFlash({ trigger }: { trigger: number }) {
   return (
     <Animated.View
       pointerEvents="none"
-      style={[StyleSheet.absoluteFill, { backgroundColor: '#FFFFFF' }, style]}
+      style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }, style]}
     />
   );
 }

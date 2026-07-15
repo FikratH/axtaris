@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, Animated, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 
@@ -12,6 +13,7 @@ const LOGO_TEXT = require('@/assets/axtaris_text_logo_png.png');
 
 export default function SplashScreen() {
   const { colors, typography: t } = useTheme();
+  const { t: tr } = useTranslation();
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
@@ -109,7 +111,7 @@ export default function SplashScreen() {
       <Animated.View style={[styles.textContainer, { opacity: textOpacity }]}>
         <Image source={LOGO_TEXT} style={styles.logoTextImage} resizeMode="contain" />
         <Text style={[styles.tagline, { color: 'rgba(255,255,255,0.5)' }]}>
-          Premium Employment Platform
+          {tr('common.tagline')}
         </Text>
       </Animated.View>
 

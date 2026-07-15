@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 
 export type StorageBucket = 'cv-uploads' | 'avatars' | 'company-media';
@@ -142,7 +143,7 @@ async function localUriToArrayBuffer(uri: string): Promise<ArrayBuffer> {
   const response = await fetch(uri);
 
   if (!response.ok) {
-    throw new Error('Failed to read the selected file');
+    throw new Error(i18n.t('errors.fileReadFailed'));
   }
 
   const blob = await response.blob();
@@ -260,11 +261,11 @@ class FileStorageService {
     const mimeType = options.file.mimeType || inferMimeType(options.file.fileName);
 
     if (!mimeType || !options.allowedMimeTypes.includes(mimeType)) {
-      throw new Error('Unsupported file type');
+      throw new Error(i18n.t('errors.unsupportedFileType'));
     }
 
     if (options.file.fileSize && options.file.fileSize > options.maxSizeBytes) {
-      throw new Error('Selected file exceeds the allowed size limit');
+      throw new Error(i18n.t('errors.fileExceedsSizeLimit'));
     }
 
     const baseName = buildFileName(options.file, `${options.bucket}-${Date.now()}`);

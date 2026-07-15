@@ -17,6 +17,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Chip } from '@/components/ui/Chip';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Vacancy, VacancyStatus } from '@/types/models';
+import { getWorkTypeLabel } from '@/utils/labels';
 import { Plus, Briefcase, Pause, Play, X, Trash2, Users, Eye, Pencil } from 'lucide-react-native';
 
 const statusConfig: Record<VacancyStatus, { variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
@@ -100,7 +101,7 @@ export default function VacanciesScreen() {
               {item.title}
             </Text>
             <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]}>
-              {item.city} · {item.workType.replace('_', ' ')}
+              {item.city} · {getWorkTypeLabel(tr, item.workType)}
             </Text>
           </View>
           <Badge

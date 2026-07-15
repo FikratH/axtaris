@@ -299,6 +299,46 @@ class VacancyService {
     return mapCompany(data as SupabaseCompanyRow);
   }
 
+  async fetchCompanyById(id: string): Promise<Company | null> {
+    if (!id) return null;
+
+    if (shouldUseMockBackend()) {
+      return mockCompanies.find((company) => company.id === id) || null;
+    }
+
+    const { data, error } = await getSupabase()
+      .from('companies')
+      .select(companySelect)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    return mapCompany(data as SupabaseCompanyRow);
+  }
+
+  async fetchCompanyVacancies(companyId: string): Promise<Vacancy[]> {
+    if (!companyId) return [];
+
+    if (shouldUseMockBackend()) {
+      return mockVacancies.filter(
+        (vacancy) => vacancy.companyId === companyId && vacancy.status === 'active'
+      );
+    }
+
+    const { data, error } = await getSupabase()
+      .from('vacancies')
+      .select(vacancySelect)
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+
+    if (error) throw new Error(error.message);
+
+    return ((data || []) as SupabaseVacancyRow[]).map(mapVacancy);
+  }
+
   async fetchVacancyById(id: string): Promise<Vacancy | null> {
     if (!id) return null;
 

@@ -10,7 +10,7 @@ interface BadgeProps {
 }
 
 export function Badge({ label, variant = 'default', size = 'sm', style }: BadgeProps) {
-  const { colors, radius: r } = useTheme();
+  const { colors, radius: r, typography } = useTheme();
 
   const bgColors: Record<string, string> = {
     default: colors.chip,
@@ -47,11 +47,9 @@ export function Badge({ label, variant = 'default', size = 'sm', style }: BadgeP
     >
       <Text
         style={[
+          size === 'sm' ? typography.captionMedium : typography.labelSmall,
           styles.text,
-          {
-            color: textColors[variant],
-            fontSize: size === 'sm' ? 11 : 13,
-          },
+          { color: textColors[variant] },
         ]}
       >
         {label}

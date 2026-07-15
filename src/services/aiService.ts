@@ -1,3 +1,4 @@
+import i18n from '@/i18n';
 import { CandidateProfile } from '@/types/models';
 
 export interface AISuggestion {
@@ -27,9 +28,9 @@ class AIService {
       suggestions.push({
         id: '1',
         type: 'bio',
-        title: 'Profil təsvirini yaxşılaşdırın',
-        description: 'Daha ətraflı profil təsviri işəgötürənlərin diqqətini çəkir.',
-        suggestedText: 'Experienced software engineer with a passion for building scalable applications. Skilled in modern web technologies with a track record of delivering high-quality solutions.',
+        title: i18n.t('ai.suggestion.bioTitle'),
+        description: i18n.t('ai.suggestion.bioDescription'),
+        suggestedText: i18n.t('ai.suggestion.bioSuggested'),
         confidence: 0.9,
       });
     }
@@ -38,8 +39,8 @@ class AIService {
       suggestions.push({
         id: '2',
         type: 'skill',
-        title: 'Daha çox bacarıq əlavə edin',
-        description: 'Ən azı 5 bacarıq əlavə etməyi tövsiyə edirik.',
+        title: i18n.t('ai.suggestion.skillsTitle'),
+        description: i18n.t('ai.suggestion.skillsDescription'),
         confidence: 0.85,
       });
     }
@@ -50,10 +51,10 @@ class AIService {
         suggestions.push({
           id: '3',
           type: 'experience_rewrite',
-          title: 'Təcrübə nailiyyətlərini əlavə edin',
-          description: 'Hər iş təcrübəsinə ən azı 2-3 nailiyyət əlavə edin.',
+          title: i18n.t('ai.suggestion.experienceTitle'),
+          description: i18n.t('ai.suggestion.experienceDescription'),
           originalText: exp.description || '',
-          suggestedText: `${exp.description || ''}\n\nKey achievements:\n• Led cross-functional team initiatives\n• Improved system performance by 30%\n• Mentored junior team members`,
+          suggestedText: `${exp.description || ''}\n\n${i18n.t('ai.suggestion.experienceTemplate')}`,
           confidence: 0.8,
         });
       }
@@ -63,8 +64,10 @@ class AIService {
       suggestions.push({
         id: '4',
         type: 'profile_improvement',
-        title: 'Profilinizi tamamlayın',
-        description: `Profiliniz ${profile.profileCompleteness}% tamamlanıb. Tam profil daha çox iş təklifi almağınıza kömək edir.`,
+        title: i18n.t('ai.suggestion.profileTitle'),
+        description: i18n.t('ai.suggestion.profileDescription', {
+          completeness: profile.profileCompleteness,
+        }),
         confidence: 0.95,
       });
     }

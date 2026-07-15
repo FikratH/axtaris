@@ -1,5 +1,6 @@
 import { AuthChangeEvent, Session, User as SupabaseUser } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
+import i18n from '@/i18n';
 import { User, UserRole } from '@/types/models';
 import { runtimeConfig } from '@/config/runtime';
 import { mockUser, mockEmployerUser } from './mockData';
@@ -77,7 +78,7 @@ class AuthService {
     });
 
     if (error) throw new Error(error.message);
-    if (!data.user) throw new Error('Registration failed');
+    if (!data.user) throw new Error(i18n.t('errors.registrationFailed'));
 
     return { user: toAppUser(data.user) };
   }
@@ -114,7 +115,7 @@ class AuthService {
     });
 
     if (error) throw new Error(error.message);
-    if (!data.user || !data.session) throw new Error('Sign in failed');
+    if (!data.user || !data.session) throw new Error(i18n.t('errors.signInFailed'));
 
     return { user: toAppUser(data.user), token: data.session.access_token };
   }
@@ -200,7 +201,7 @@ class AuthService {
     });
 
     if (error) throw new Error(error.message);
-    if (!data.user) throw new Error('Recovery session could not be restored');
+    if (!data.user) throw new Error(i18n.t('errors.recoverySessionFailed'));
 
     return {
       user: toAppUser(data.user),

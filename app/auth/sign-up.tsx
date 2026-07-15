@@ -86,7 +86,7 @@ export default function SignUpScreen() {
       });
       router.replace({ pathname: '/auth/verify-otp', params: { email: data.email } });
     } catch (err: any) {
-      Alert.alert(tr('common.error'), err.message || 'Registration failed');
+      Alert.alert(tr('common.error'), err.message || tr('errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -133,7 +133,7 @@ export default function SignUpScreen() {
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                placeholder={isEmployer ? 'Leyla Məmmədova' : 'Əli Həsənov'}
+                placeholder={tr('auth.fullNamePlaceholder')}
                 autoCapitalize="words"
                 error={fieldError('fullName')}
               />
@@ -150,7 +150,7 @@ export default function SignUpScreen() {
                   value={value ?? ''}
                   onChangeText={onChange}
                   onBlur={onBlur}
-                  placeholder="Şirkət MMC"
+                  placeholder={tr('employer.companyNamePlaceholder')}
                   autoCapitalize="words"
                   error={fieldError('companyName')}
                 />
@@ -244,9 +244,13 @@ export default function SignUpScreen() {
 
           <Text style={[styles.terms, { color: colors.textTertiary, ...t.caption, marginTop: s.lg }]}>
             {tr('auth.termsPrefix')}{' '}
-            <Text style={{ color: colors.primary }}>{tr('auth.termsLink')}</Text>{' '}
+            <Text style={{ color: colors.primary }} onPress={() => router.push('/legal/terms' as never)}>
+              {tr('auth.termsLink')}
+            </Text>{' '}
             {tr('auth.termsAnd')}{' '}
-            <Text style={{ color: colors.primary }}>{tr('auth.privacyLink')}</Text>
+            <Text style={{ color: colors.primary }} onPress={() => router.push('/legal/privacy' as never)}>
+              {tr('auth.privacyLink')}
+            </Text>
             {tr('auth.termsSuffix') ? ` ${tr('auth.termsSuffix')}` : ''}
           </Text>
         </FadeInView>

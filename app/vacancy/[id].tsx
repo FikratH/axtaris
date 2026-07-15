@@ -31,16 +31,8 @@ import {
   getSubscriptionSummaryLine,
 } from '@/utils/subscriptionPresentation';
 import { safeBack } from '@/utils/navigation';
+import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
 import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star } from 'lucide-react-native';
-
-const workTypeLabels: Record<string, string> = {
-  full_time: 'Full-time',
-  part_time: 'Part-time',
-  remote: 'Remote',
-  hybrid: 'Hybrid',
-  onsite: 'On-site',
-  internship: 'Internship',
-};
 
 export default function VacancyDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -125,9 +117,14 @@ export default function VacancyDetailScreen() {
     );
   }
 
+  const currency = vacancy.salaryCurrency || 'AZN';
   const salary =
-    vacancy.showSalary && vacancy.salaryMin
-      ? `${vacancy.salaryMin}${vacancy.salaryMax ? ` - ${vacancy.salaryMax}` : '+'} ${vacancy.salaryCurrency || 'AZN'}`
+    vacancy.showSalary && (vacancy.salaryMin || vacancy.salaryMax)
+      ? vacancy.salaryMin && vacancy.salaryMax
+        ? `${vacancy.salaryMin} - ${vacancy.salaryMax} ${currency}`
+        : vacancy.salaryMin
+        ? `${vacancy.salaryMin}+ ${currency}`
+        : `≤ ${vacancy.salaryMax} ${currency}`
       : null;
 
   const handleApply = async () => {
@@ -170,7 +167,15 @@ export default function VacancyDetailScreen() {
           <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s.lg }]}> 
             {vacancy.title}
           </Text>
-          <TouchableOpacity activeOpacity={0.7} style={[styles.companyRow, { marginTop: s.sm }]}>
+          <TouchableOpacity
+            activeOpacity={0.7}
+            disabled={!vacancy.company?.id}
+            onPress={() =>
+              vacancy.company?.id &&
+              router.push({ pathname: '/company/[id]', params: { id: vacancy.company.id } } as never)
+            }
+            style={[styles.companyRow, { marginTop: s.sm }]}
+          >
             <Text style={[{ color: colors.primary, ...t.labelMedium }]}>
               {vacancy.company?.name}
             </Text>
@@ -188,13 +193,13 @@ export default function VacancyDetailScreen() {
             </View>
             <View style={[styles.metaItem, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md, padding: s.md, marginLeft: s.sm }]}>
               <Text style={[{ color: colors.textTertiary, ...t.caption }]}>{tr('candidate.jobType')}</Text>
-              <Text style={[{ color: colors.textPrimary, ...t.labelSmall, marginTop: 2 }]}>{workTypeLabels[vacancy.workType]}</Text>
+              <Text style={[{ color: colors.textPrimary, ...t.labelSmall, marginTop: 2 }]}>{getWorkTypeLabel(tr, vacancy.workType)}</Text>
             </View>
           </View>
           <View style={[styles.metaRow, { marginTop: s.sm }]}>
             <View style={[styles.metaItem, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md, padding: s.md }]}>
               <Text style={[{ color: colors.textTertiary, ...t.caption }]}>{tr('candidate.experience')}</Text>
-              <Text style={[{ color: colors.textPrimary, ...t.labelSmall, marginTop: 2 }]}>{vacancy.experienceLevel}</Text>
+              <Text style={[{ color: colors.textPrimary, ...t.labelSmall, marginTop: 2 }]}>{getExperienceLevelLabel(tr, vacancy.experienceLevel)}</Text>
             </View>
             {salary && (
               <View style={[styles.metaItem, { backgroundColor: colors.successLight, borderRadius: r.md, padding: s.md, marginLeft: s.sm }]}>

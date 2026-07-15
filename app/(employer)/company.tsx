@@ -22,6 +22,7 @@ import { CheckCircle2, Clock } from 'lucide-react-native';
 import { useImagePicker } from '@/hooks/useImagePicker';
 import { useEmployerCompany, useEmployerVacancies, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
 import { fileStorageService } from '@/services/fileStorageService';
+import { getVerificationPresentation } from '@/utils/labels';
 
 export default function CompanyScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -108,19 +109,7 @@ export default function CompanyScreen() {
     );
   }
 
-  const verificationLabel =
-    company.verificationStatus === 'verified'
-      ? tr('employer.verified')
-      : company.verificationStatus === 'pending'
-      ? tr('employer.pending_verification')
-      : tr('employer.notVerified');
-
-  const verificationVariant =
-    company.verificationStatus === 'verified'
-      ? 'success'
-      : company.verificationStatus === 'pending'
-      ? 'warning'
-      : ('error' as const);
+  const verification = getVerificationPresentation(tr, company.verificationStatus);
 
   return (
     <ScrollView
@@ -146,8 +135,8 @@ export default function CompanyScreen() {
                 {company.industry}
               </Text>
               <Badge
-                label={verificationLabel}
-                variant={verificationVariant}
+                label={verification.label}
+                variant={verification.variant}
                 style={{ marginTop: s.sm }}
               />
             </View>
@@ -219,18 +208,16 @@ export default function CompanyScreen() {
         </Text>
         <Card padding="md">
           <View style={styles.verificationRow}>
-            <View style={[styles.verificationIcon, { backgroundColor: company.verificationStatus === 'verified' ? colors.successLight : colors.warningLight, borderRadius: r.md }]}>
-              {company.verificationStatus === 'verified'
+            <View style={[styles.verificationIcon, { backgroundColor: verification.tone === 'success' ? colors.successLight : verification.tone === 'error' ? colors.errorLight : colors.warningLight, borderRadius: r.md }]}>
+              {verification.tone === 'success'
                 ? <CheckCircle2 size={20} color={colors.success} strokeWidth={1.8} />
-                : <Clock size={20} color={colors.warning} strokeWidth={1.8} />
+                : <Clock size={20} color={verification.tone === 'error' ? colors.error : colors.warning} strokeWidth={1.8} />
               }
             </View>
             <View style={{ marginLeft: s.md, flex: 1 }}>
-              <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{verificationLabel}</Text>
+              <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{verification.label}</Text>
               <Text style={[{ color: colors.textTertiary, ...t.caption, marginTop: 2 }]}>
-                {company.verificationStatus === 'verified'
-                  ? 'Your company has been verified'
-                  : 'Verification is in progress'}
+                {verification.description}
               </Text>
             </View>
           </View>

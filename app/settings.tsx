@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,49 +14,16 @@ import { useAuthStore } from '@/store/authStore';
 import { languages, changeLanguage, LanguageCode } from '@/i18n';
 import { Card } from '@/components/ui/Card';
 import i18n from '@/i18n';
-import { accountService } from '@/services/accountService';
 import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
-import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, Check, ChevronRight, Sparkles } from 'lucide-react-native';
 
-export default function PreferencesScreen() {
+export default function SettingsScreen() {
   const { colors, spacing: s, typography: t, radius: r, mode, setMode } = useTheme();
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
-  const signOut = useAuthStore((state) => state.signOut);
   const audience = user?.role === 'employer' ? 'employer' : 'candidate';
-
-  const handleDeleteAccount = () => {
-    Alert.alert(tr('settings.deleteAccountConfirmTitle'), tr('settings.deleteAccountConfirmMessage'), [
-      { text: tr('common.cancel'), style: 'cancel' },
-      {
-        text: tr('settings.deleteAccount'),
-        style: 'destructive',
-        onPress: () => {
-          Alert.alert(tr('settings.deleteAccountFinalTitle'), tr('settings.deleteAccountFinalMessage'), [
-            { text: tr('common.cancel'), style: 'cancel' },
-            {
-              text: tr('common.confirm'),
-              style: 'destructive',
-              onPress: () => {
-                void (async () => {
-                  try {
-                    await accountService.deleteAccount();
-                    await signOut();
-                    router.replace('/auth/role-select');
-                    Alert.alert(tr('settings.deleteAccountSuccess'));
-                  } catch (error) {
-                    Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
-                  }
-                })();
-              },
-            },
-          ]);
-        },
-      },
-    ]);
-  };
 
   const currentLang = i18n.language as LanguageCode;
 
@@ -72,15 +38,6 @@ export default function PreferencesScreen() {
     label: lang.nativeLabel,
   }));
 
-  const goBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-      return;
-    }
-
-    router.replace((user?.role === 'employer' ? '/(employer)/settings' : '/(candidate)/profile') as never);
-  };
-
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -90,7 +47,7 @@ export default function PreferencesScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 12, paddingHorizontal: s.xl }]}>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            onPress={goBack}
+            onPress={() => router.back()}
             style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
           >
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
@@ -175,45 +132,6 @@ export default function PreferencesScreen() {
               <Text style={[{ color: colors.textTertiary, ...t.caption, marginTop: 3 }]}>{getSubscriptionSettingsDescription(tr, audience)}</Text>
             </View>
             <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
-          </TouchableOpacity>
-        </Card>
-      </View>
-
-      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>
-          {tr('settings.legal')}
-        </Text>
-        <Card padding="none">
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push('/legal/terms' as never)}
-            style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg, borderBottomWidth: 1, borderBottomColor: colors.divider }]}
-          >
-            <FileText size={18} color={colors.textSecondary} strokeWidth={1.8} style={{ marginRight: 10 }} />
-            <Text style={[{ color: colors.textPrimary, ...t.bodyMedium, flex: 1 }]}>{tr('settings.termsOfService')}</Text>
-            <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => router.push('/legal/privacy' as never)}
-            style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
-          >
-            <ShieldCheck size={18} color={colors.textSecondary} strokeWidth={1.8} style={{ marginRight: 10 }} />
-            <Text style={[{ color: colors.textPrimary, ...t.bodyMedium, flex: 1 }]}>{tr('settings.privacyPolicy')}</Text>
-            <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
-          </TouchableOpacity>
-        </Card>
-      </View>
-
-      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
-        <Card padding="none">
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={handleDeleteAccount}
-            style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
-          >
-            <Trash2 size={18} color={colors.error} strokeWidth={1.8} style={{ marginRight: 10 }} />
-            <Text style={[{ color: colors.error, ...t.bodyMedium, flex: 1 }]}>{tr('settings.deleteAccount')}</Text>
           </TouchableOpacity>
         </Card>
       </View>

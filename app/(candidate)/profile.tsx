@@ -20,6 +20,7 @@ import {
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
 import { removeListItem } from '@/utils/profileSections';
+import { getLanguageLevelLabel } from '@/utils/labels';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -414,7 +415,7 @@ export default function CandidateProfileScreen() {
               <View style={[styles.listItemDot, { backgroundColor: colors.info }]} />
               <View style={{ flex: 1 }}>
                 <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>{lang.language}</Text>
-                <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]}>{lang.level}</Text>
+                <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]}>{getLanguageLevelLabel(tr, lang.level)}</Text>
               </View>
             </TouchableOpacity>
             <View style={styles.listItemTrailing}>

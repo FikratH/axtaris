@@ -12,6 +12,8 @@ export const vacancyQueryKeys = {
   employer: (userId: string) => ['vacancies', 'employer', userId] as const,
   detail: (id: string) => ['vacancies', 'detail', id] as const,
   employerCompany: (userId: string) => ['companies', 'employer', userId] as const,
+  companyDetail: (id: string) => ['companies', 'detail', id] as const,
+  companyVacancies: (id: string) => ['vacancies', 'company', id] as const,
 };
 
 function updateVacancyInList(
@@ -83,6 +85,22 @@ export function useVacancy(id?: string) {
     enabled: !!id,
     queryKey: vacancyQueryKeys.detail(id || 'unknown'),
     queryFn: () => vacancyService.fetchVacancyById(id || ''),
+  });
+}
+
+export function useCompany(id?: string) {
+  return useQuery({
+    enabled: !!id,
+    queryKey: vacancyQueryKeys.companyDetail(id || 'unknown'),
+    queryFn: () => vacancyService.fetchCompanyById(id || ''),
+  });
+}
+
+export function useCompanyVacancies(id?: string) {
+  return useQuery({
+    enabled: !!id,
+    queryKey: vacancyQueryKeys.companyVacancies(id || 'unknown'),
+    queryFn: () => vacancyService.fetchCompanyVacancies(id || ''),
   });
 }
 

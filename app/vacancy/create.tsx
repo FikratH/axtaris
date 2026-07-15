@@ -23,25 +23,13 @@ import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { safeBack } from '@/utils/navigation';
+import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
 import { ChevronLeft } from 'lucide-react-native';
 import { WorkType, ExperienceLevel, VacancyStatus } from '@/types/models';
 
-const workTypes: { key: WorkType; label: string }[] = [
-  { key: 'full_time', label: 'Full-time' },
-  { key: 'part_time', label: 'Part-time' },
-  { key: 'remote', label: 'Remote' },
-  { key: 'hybrid', label: 'Hybrid' },
-  { key: 'onsite', label: 'On-site' },
-  { key: 'internship', label: 'Internship' },
-];
+const workTypes: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
 
-const expLevels: { key: ExperienceLevel; label: string }[] = [
-  { key: 'no_experience', label: 'No experience' },
-  { key: 'junior', label: 'Junior' },
-  { key: 'mid', label: 'Mid' },
-  { key: 'senior', label: 'Senior' },
-  { key: 'lead', label: 'Lead' },
-];
+const expLevels: ExperienceLevel[] = ['no_experience', 'junior', 'mid', 'senior', 'lead', 'executive'];
 
 export default function CreateVacancyScreen() {
   const { colors, typography: t, radius: r, isDark } = useTheme();
@@ -91,6 +79,28 @@ export default function CreateVacancyScreen() {
       return;
     }
 
+    const parseSalary = (v: string) => {
+      const value = v.trim();
+      if (!value) return undefined;
+      if (!/^\d+$/.test(value)) throw new Error(tr('validation.salaryNumber'));
+      return Number.parseInt(value, 10);
+    };
+
+    let parsedMin: number | undefined;
+    let parsedMax: number | undefined;
+    try {
+      parsedMin = parseSalary(salaryMin);
+      parsedMax = parseSalary(salaryMax);
+    } catch (e) {
+      Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error'));
+      return;
+    }
+
+    if (parsedMin !== undefined && parsedMax !== undefined && parsedMin > parsedMax) {
+      Alert.alert(tr('common.error'), tr('validation.salaryRange'));
+      return;
+    }
+
     try {
       await createVacancy.mutateAsync({
         title: title.trim(),
@@ -98,10 +108,10 @@ export default function CreateVacancyScreen() {
         requirements: requirements.split('\n').map((item) => item.trim()).filter(Boolean),
         responsibilities: responsibilities.split('\n').map((item) => item.trim()).filter(Boolean),
         benefits: benefits.split('\n').map((item) => item.trim()).filter(Boolean),
-        salaryMin: salaryMin ? parseInt(salaryMin, 10) : undefined,
-        salaryMax: salaryMax ? parseInt(salaryMax, 10) : undefined,
+        salaryMin: parsedMin,
+        salaryMax: parsedMax,
         salaryCurrency: 'AZN',
-        showSalary: !!(salaryMin || salaryMax),
+        showSalary: !!(parsedMin || parsedMax),
         city: city.trim() || 'Bakı',
         workType,
         experienceLevel,
@@ -113,7 +123,7 @@ export default function CreateVacancyScreen() {
       Alert.alert(
         status === 'draft' ? tr('employer.saveDraft') : tr('employer.publishVacancy'),
         '',
-        [{ text: 'OK', onPress: () => safeBack(router, '/(employer)/vacancies') }]
+        [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/vacancies') }]
       );
     } catch (error: any) {
       Alert.alert(tr('common.error'), error?.message || tr('common.error'));
@@ -149,9 +159,9 @@ export default function CreateVacancyScreen() {
         </View>
 
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-          <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder="e.g. Senior React Native Developer" />
+          <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder={tr('employer.vacancyTitlePlaceholder')} />
           <Input label={tr('employer.vacancyDescription')} value={description} onChangeText={setDescription} placeholder={tr('employer.vacancyDescription')} multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder="Bakı" />
+          <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
@@ -165,14 +175,14 @@ export default function CreateVacancyScreen() {
           <Text style={[{ color: colors.textPrimary, marginBottom: 8 }, t.labelSmall]}>{tr('candidate.jobType')}</Text>
           <View style={styles.chipRow}>
             {workTypes.map((wt) => (
-              <Chip key={wt.key} label={wt.label} selected={workType === wt.key} onPress={() => setWorkType(wt.key)} style={{ marginBottom: 6 }} />
+              <Chip key={wt} label={getWorkTypeLabel(tr, wt)} selected={workType === wt} onPress={() => setWorkType(wt)} style={{ marginBottom: 6 }} />
             ))}
           </View>
 
           <Text style={[{ color: colors.textPrimary, marginTop: 16, marginBottom: 8 }, t.labelSmall]}>{tr('candidate.experience')}</Text>
           <View style={styles.chipRow}>
             {expLevels.map((el) => (
-              <Chip key={el.key} label={el.label} selected={experienceLevel === el.key} onPress={() => setExperienceLevel(el.key)} style={{ marginBottom: 6 }} />
+              <Chip key={el} label={getExperienceLevelLabel(tr, el)} selected={experienceLevel === el} onPress={() => setExperienceLevel(el)} style={{ marginBottom: 6 }} />
             ))}
           </View>
 
@@ -181,9 +191,9 @@ export default function CreateVacancyScreen() {
               label={tr('candidate.skills')}
               value={skillInput}
               onChangeText={setSkillInput}
-              placeholder="Type a skill and press Add"
+              placeholder={tr('employer.skillInputPlaceholder')}
               onSubmitEditing={addSkill}
-              rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>Add</Text>}
+              rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>{tr('common.add')}</Text>}
               onRightIconPress={addSkill}
             />
             {skills.length > 0 && (
@@ -195,9 +205,9 @@ export default function CreateVacancyScreen() {
             )}
           </View>
 
-          <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder="One per line" multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder="One per line" multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder="One per line" multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>

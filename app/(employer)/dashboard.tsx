@@ -20,11 +20,16 @@ import { Badge } from '@/components/ui/Badge';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { StaggeredItem } from '@/components/ui/Animated';
 import {
   getSubscriptionCatalogDescription,
   getSubscriptionCatalogTitle,
   getSubscriptionPlanHighlights,
 } from '@/utils/subscriptionPresentation';
+import {
+  getApplicationStatusPresentation,
+  getVacancyStatusPresentation,
+} from '@/utils/labels';
 import { Bell, Plus, Users, Briefcase, Eye, UserCheck, TrendingUp, ChevronRight } from 'lucide-react-native';
 
 export default function EmployerDashboardScreen() {
@@ -37,13 +42,17 @@ export default function EmployerDashboardScreen() {
   const { data: notifications = [] } = useNotifications(user?.id);
   const { data: vacancies = [], isLoading: vacanciesLoading } = useEmployerVacancies(user?.id);
 
-  const firstName = user?.fullName?.split(' ')[0] || 'User';
+  const firstName = user?.fullName?.split(' ')[0] || tr('common.defaultUserName');
   const hasUnreadNotifications = notifications.some((notification) => !notification.read);
+  const activeVacancies = vacancies.filter((v) => v.status === 'active');
+  const recentApplicants = [...applications]
+    .sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
+    .slice(0, 3);
 
   const analytics = useMemo(() => {
     const now = Date.now();
     const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
-    const totalVacancies = vacancies.length;
+    const totalVacancies = vacancies.filter((v) => v.status === 'active').length;
     const totalApplicants = applications.length;
     const totalViews = vacancies.reduce((sum, vacancy) => sum + (vacancy.viewCount || 0), 0);
     const weeklyApplicants = applications.filter(
@@ -68,10 +77,10 @@ export default function EmployerDashboardScreen() {
   }, [applications, vacancies]);
 
   const stats = [
-    { label: tr('employer.activeVacancies'), value: analytics.totalVacancies, icon: Briefcase, color: colors.primary, bg: isDark ? 'rgba(91,127,214,0.12)' : '#EEF2FF' },
-    { label: tr('employer.totalApplicants'), value: analytics.totalApplicants, icon: Users, color: colors.accent, bg: isDark ? 'rgba(34,211,238,0.12)' : '#E0F7FA' },
-    { label: tr('employer.newApplicants'), value: analytics.weeklyApplicants, icon: TrendingUp, color: colors.success, bg: isDark ? 'rgba(52,211,153,0.12)' : '#ECFDF5' },
-    { label: tr('employer.hired'), value: analytics.hired, icon: UserCheck, color: colors.warning, bg: isDark ? 'rgba(251,191,36,0.12)' : '#FFFBEB' },
+    { label: tr('employer.activeVacancies'), value: analytics.totalVacancies, icon: Briefcase, color: colors.primary, bg: colors.primaryLight },
+    { label: tr('employer.totalApplicants'), value: analytics.totalApplicants, icon: Users, color: colors.accent, bg: colors.accentLight },
+    { label: tr('employer.newApplicants'), value: analytics.weeklyApplicants, icon: TrendingUp, color: colors.success, bg: colors.successLight },
+    { label: tr('employer.hired'), value: analytics.hired, icon: UserCheck, color: colors.warning, bg: colors.warningLight },
   ];
 
   return (
@@ -111,13 +120,18 @@ export default function EmployerDashboardScreen() {
       {/* ── Stats Grid ── */}
       <View style={styles.statsGrid}>
         {stats.map((stat, i) => (
-          <View key={i} style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
+          <StaggeredItem
+            key={i}
+            index={i}
+            staggerDelay={70}
+            style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
+          >
             <View style={[styles.statIcon, { backgroundColor: stat.bg }]}>
               <stat.icon size={18} color={stat.color} strokeWidth={1.8} />
             </View>
             <Text style={[{ color: colors.textPrimary, marginTop: 10 }, t.displaySmall]}>{stat.value}</Text>
             <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={1}>{stat.label}</Text>
-          </View>
+          </StaggeredItem>
         ))}
       </View>
 
@@ -126,7 +140,7 @@ export default function EmployerDashboardScreen() {
         <TouchableOpacity
           onPress={() => router.push('/vacancy/create')}
           activeOpacity={0.7}
-          style={[styles.quickAction, { backgroundColor: isDark ? 'rgba(91,127,214,0.12)' : '#EEF2FF', borderColor: colors.primary + '20' }]}
+          style={[styles.quickAction, { backgroundColor: colors.primaryLight, borderColor: colors.primary + '20' }]}
         >
           <Plus size={20} color={colors.primary} strokeWidth={2} />
           <Text style={[{ color: colors.primary, marginLeft: 8 }, t.labelSmall]}>{tr('employer.createVacancy')}</Text>
@@ -134,7 +148,7 @@ export default function EmployerDashboardScreen() {
         <TouchableOpacity
           onPress={() => router.push('/(employer)/applicants')}
           activeOpacity={0.7}
-          style={[styles.quickAction, { backgroundColor: isDark ? 'rgba(34,211,238,0.12)' : '#E0F7FA', borderColor: colors.accent + '20', marginLeft: 10 }]}
+          style={[styles.quickAction, { backgroundColor: colors.accentLight, borderColor: colors.accent + '20', marginLeft: 10 }]}
         >
           <Users size={20} color={colors.accent} strokeWidth={2} />
           <Text style={[{ color: colors.accent, marginLeft: 8 }, t.labelSmall]}>{tr('employer.viewApplicants')}</Text>
@@ -148,7 +162,7 @@ export default function EmployerDashboardScreen() {
         >
           <Card padding="lg" style={{ borderWidth: 1, borderColor: colors.cardBorder }}>
             <View style={styles.subscriptionCardHeader}>
-              <View style={[styles.subscriptionIcon, { backgroundColor: isDark ? 'rgba(91,127,214,0.16)' : '#EEF2FF' }]}>
+              <View style={[styles.subscriptionIcon, { backgroundColor: colors.primaryLight }]}>
                 <TrendingUp size={18} color={colors.primary} strokeWidth={1.8} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
@@ -181,13 +195,15 @@ export default function EmployerDashboardScreen() {
             ? Array.from({ length: 3 }).map((_, index) => (
                 <VacancyCardSkeleton key={index} />
               ))
-            : applications.slice(0, 3).map((app) => (
+            : recentApplicants.map((app) => {
+                const p = getApplicationStatusPresentation(tr, app.status, 'employer');
+                return (
                 <Card key={app.id} onPress={() => router.push('/(employer)/applicants')} padding="md" style={{ marginBottom: 10 }}>
                   <View style={styles.applicantRow}>
-                    <Avatar uri={app.candidate?.user?.avatarUrl} name={app.candidate?.user?.fullName || 'Candidate'} size={42} />
+                    <Avatar uri={app.candidate?.user?.avatarUrl} name={app.candidate?.user?.fullName || tr('employer.candidateFallback')} size={42} />
                     <View style={{ flex: 1, marginLeft: 12 }}>
                       <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>
-                        {app.candidate?.user?.fullName || 'Candidate'}
+                        {app.candidate?.user?.fullName || tr('employer.candidateFallback')}
                       </Text>
                       <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>
                         {app.vacancy?.title}
@@ -198,14 +214,12 @@ export default function EmployerDashboardScreen() {
                         planCode={app.subscriptionPlan || 'free'}
                         style={{ marginBottom: 6 }}
                       />
-                      <Badge
-                        label={app.status === 'pending' ? tr('employer.pendingReview') : app.status}
-                        variant={app.status === 'pending' ? 'warning' : app.status === 'shortlisted' ? 'success' : 'info'}
-                      />
+                      <Badge label={p.label} variant={p.variant} />
                     </View>
                   </View>
                 </Card>
-              ))}
+                );
+              })}
         </View>
       </View>
 
@@ -221,7 +235,7 @@ export default function EmployerDashboardScreen() {
             ? Array.from({ length: 3 }).map((_, index) => (
                 <VacancyCardSkeleton key={index} />
               ))
-            : vacancies.slice(0, 3).map((vacancy) => (
+            : activeVacancies.slice(0, 3).map((vacancy) => (
                 <Card
                   key={vacancy.id}
                   onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
@@ -242,7 +256,7 @@ export default function EmployerDashboardScreen() {
                         </View>
                       </View>
                     </View>
-                    <Badge label={vacancy.status === 'active' ? 'Active' : vacancy.status} variant="success" />
+                    {(() => { const p = getVacancyStatusPresentation(tr, vacancy.status); return <Badge label={p.label} variant={p.variant} />; })()}
                   </View>
                 </Card>
               ))}

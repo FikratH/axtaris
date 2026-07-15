@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/Input';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { ApplicationStatus } from '@/types/models';
 import { fileStorageService } from '@/services/fileStorageService';
+import { getLanguageLevelLabel } from '@/utils/labels';
 import { safeBack } from '@/utils/navigation';
 import { Briefcase, ChevronLeft, Download, Mail, MapPin } from 'lucide-react-native';
 
@@ -367,7 +368,7 @@ export default function EmployerApplicantDetailScreen() {
               </Text>
               <View style={styles.chipRow}>
                 {candidate.languages.map((item) => (
-                  <Chip key={item.id} label={`${item.language} · ${item.level}`} style={{ marginBottom: 6 }} />
+                  <Chip key={item.id} label={`${item.language} · ${getLanguageLevelLabel(tr, item.level)}`} style={{ marginBottom: 6 }} />
                 ))}
               </View>
             </>

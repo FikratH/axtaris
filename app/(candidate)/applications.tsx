@@ -57,10 +57,10 @@ export default function ApplicationsScreen() {
   };
 
   const renderApplication = ({ item }: { item: Application }) => {
-    const daysAgo = Math.max(
-      1,
-      Math.floor((Date.now() - new Date(item.appliedAt).getTime()) / (1000 * 60 * 60 * 24))
-    );
+    const appliedTime = new Date(item.appliedAt).getTime();
+    const days = Number.isNaN(appliedTime)
+      ? null
+      : Math.floor((Date.now() - appliedTime) / (1000 * 60 * 60 * 24));
 
     return (
       <TouchableOpacity
@@ -97,7 +97,11 @@ export default function ApplicationsScreen() {
             variant={statusVariant[item.status]}
           />
           <Text style={[{ color: colors.textTertiary, ...t.caption }]}>
-            {tr('candidate.daysAgo', { count: daysAgo })}
+            {days === null
+              ? ''
+              : days <= 0
+                ? tr('common.today')
+                : tr('candidate.daysAgo', { count: days })}
           </Text>
         </View>
       </TouchableOpacity>

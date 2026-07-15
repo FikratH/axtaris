@@ -146,10 +146,10 @@ export default function UploadCVScreen() {
               <FileCheck size={28} color={colors.success} strokeWidth={1.5} />
             </View>
             <Text style={[{ color: colors.textPrimary, marginTop: 12 }, t.labelMedium]}>{profile.cvFileName}</Text>
-            <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>CV uploaded successfully</Text>
+            <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>{tr('candidate.cvUploadSuccess')}</Text>
             <View style={{ flexDirection: 'row', marginTop: 20, gap: 10 }}>
-              <Button title="Replace" onPress={handlePick} variant="outline" size="sm" fullWidth={false} loading={uploading || updateProfile.isPending} />
-              <Button title="Remove" onPress={handleRemove} variant="destructive" size="sm" fullWidth={false} loading={updateProfile.isPending} icon={<Trash2 size={14} color="#FFF" strokeWidth={2} />} />
+              <Button title={tr('common.replace')} onPress={handlePick} variant="outline" size="sm" fullWidth={false} loading={uploading || updateProfile.isPending} />
+              <Button title={tr('common.remove')} onPress={handleRemove} variant="destructive" size="sm" fullWidth={false} loading={updateProfile.isPending} icon={<Trash2 size={14} color="#FFF" strokeWidth={2} />} />
             </View>
           </View>
         ) : (
@@ -157,9 +157,9 @@ export default function UploadCVScreen() {
             <View style={[styles.fileIcon, { backgroundColor: colors.primaryLight }]}>
               <FileUp size={32} color={colors.primary} strokeWidth={1.5} />
             </View>
-            <Text style={[{ color: colors.textPrimary, marginTop: 16 }, t.labelMedium]}>Tap to upload your CV</Text>
+            <Text style={[{ color: colors.textPrimary, marginTop: 16 }, t.labelMedium]}>{tr('candidate.tapToUploadCv')}</Text>
             <Text style={[{ color: colors.textTertiary, marginTop: 4, textAlign: 'center' }, t.bodySmall]}>
-              PDF, DOC, DOCX supported{'\n'}Max 10MB
+              {tr('candidate.cvUploadHint')}
             </Text>
           </TouchableOpacity>
         )}

@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { WorkType } from '@/types/models';
+import { getWorkTypeLabel } from '@/utils/labels';
 import { Search as SearchIcon, SlidersHorizontal, SearchX } from 'lucide-react-native';
 
 const cities = ['Bakı', 'Gəncə', 'Sumqayıt', 'Mingəçevir', 'Lənkəran'];
@@ -118,7 +119,7 @@ export default function SearchScreen() {
             {selectedWorkTypes.map((wt) => (
               <Chip
                 key={wt}
-                label={workTypes.find((x) => x.key === wt)?.label || wt}
+                label={workTypes.find((x) => x.key === wt)?.label ?? getWorkTypeLabel(tr, wt)}
                 selected
                 onPress={() => toggleWorkType(wt)}
               />

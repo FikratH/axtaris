@@ -85,6 +85,11 @@ export default function EducationFormScreen() {
       return;
     }
 
+    if (!isCurrent && endDate && endDate < startDate) {
+      Alert.alert(tr('common.error'), tr('validation.dateRange'));
+      return;
+    }
+
     const nextItem: Education = {
       id: item?.id || createLocalItemId('education'),
       degree: degree.trim(),

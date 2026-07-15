@@ -33,6 +33,12 @@ export default {
     tagline: 'Премиальная платформа трудоустройства для Азербайджана',
     deleteItemTitle: 'Удалить элемент?',
     deleteItemMessage: 'Эта информация будет удалена из вашего профиля.',
+    add: 'Добавить',
+    remove: 'Удалить',
+    replace: 'Заменить',
+    defaultUserName: 'Пользователь',
+    today: 'Сегодня',
+    justNow: 'Только что',
   },
   permissions: {
     cameraRequired: 'Для съёмки фото необходим доступ к камере',
@@ -97,6 +103,7 @@ export default {
     termsSuffix: '',
     sessionExpiredTitle: 'Сессия истекла',
     sessionExpiredMessage: 'Войдите снова, чтобы продолжить безопасно.',
+    fullNamePlaceholder: 'Иван Иванов',
   },
   candidate: {
     home: 'Главная',
@@ -173,6 +180,9 @@ export default {
     responsibilities: 'Обязанности',
     benefits: 'Преимущества',
     aboutCompany: 'О компании',
+    cvUploadSuccess: 'Резюме успешно загружено',
+    tapToUploadCv: 'Нажмите, чтобы загрузить резюме',
+    cvUploadHint: 'Поддерживаются PDF, DOC, DOCX\nМаксимум 10 МБ',
   },
   profileCrud: {
     shared: {
@@ -297,6 +307,17 @@ export default {
     rating: 'Рейтинг',
     details: 'Детали',
     founded: 'Основана',
+    candidateFallback: 'Кандидат',
+    verifiedDescription: 'Ваша компания верифицирована',
+    verificationInProgressDescription: 'Верификация в процессе',
+    verificationRejectedDescription: 'Верификация отклонена',
+    verificationNotStartedDescription: 'Компания ещё не верифицирована',
+    skillInputPlaceholder: 'Введите навык и нажмите Добавить',
+    vacancyTitlePlaceholder: 'напр. Senior React Native Developer',
+    onePerLine: 'По одному в строке',
+    companyNamePlaceholder: 'Компания ООО',
+    industryPlaceholder: 'Технологии',
+    aboutPlaceholder: 'О компании...',
     status: {
       active: 'Активна',
       draft: 'Черновик',
@@ -336,6 +357,24 @@ export default {
     signOut: 'Выйти',
     version: 'Версия',
     deleteAccount: 'Удалить аккаунт',
+    termsOfService: 'Условия использования',
+    privacyPolicy: 'Политика конфиденциальности',
+    legal: 'Правовая информация',
+    deleteAccountConfirmTitle: 'Удалить аккаунт?',
+    deleteAccountConfirmMessage:
+      'Это действие необратимо. Все ваши данные будут удалены навсегда.',
+    deleteAccountFinalTitle: 'Финальное подтверждение',
+    deleteAccountFinalMessage: 'Подтвердите окончательное удаление аккаунта.',
+    deleteAccountSuccess: 'Ваш аккаунт удалён',
+  },
+  legal: {
+    termsTitle: 'Условия использования',
+    privacyTitle: 'Политика конфиденциальности',
+    lastUpdated: 'Последнее обновление: 2026',
+    termsBody:
+      'Используя платформу AxtarIS, вы принимаете настоящие условия. Платформа предназначена для соединения соискателей и работодателей.\n\nПользователи обязаны предоставлять достоверную информацию и использовать платформу только в законных целях. Запрещённый контент или злоупотребления могут привести к блокировке аккаунта.\n\nЭтот документ является образцом текста и может измениться до публикации окончательной правовой версии.',
+    privacyBody:
+      'AxtarIS уважает вашу конфиденциальность. Мы собираем только данные, необходимые для предоставления сервиса — профиль, резюме и данные откликов.\n\nВаши данные не продаются третьим лицам. Файлы резюме хранятся безопасно и видны только работодателям, которым вы откликнулись.\n\nВы можете в любой момент удалить аккаунт и данные. Этот документ является образцом текста.',
   },
   ai: {
     assistant: 'AI Помощник',
@@ -346,6 +385,23 @@ export default {
     analyzingProfile: 'Анализ профиля...',
     suggestions: 'Предложения',
     apply_suggestion: 'Применить',
+    heroSubtitle: 'Рекомендации на базе AI, чтобы выделить ваш профиль',
+    applied: 'Применено',
+    suggestion: {
+      bioTitle: 'Улучшите описание профиля',
+      bioDescription: 'Более подробное описание профиля привлекает внимание работодателей.',
+      bioSuggested:
+        'Опытный инженер-программист, увлечённый созданием масштабируемых приложений. Владеет современными веб-технологиями с опытом поставки качественных решений.',
+      skillsTitle: 'Добавьте больше навыков',
+      skillsDescription: 'Рекомендуем добавить не менее 5 навыков.',
+      experienceTitle: 'Добавьте достижения к опыту работы',
+      experienceDescription: 'Добавьте не менее 2-3 достижений к каждому опыту работы.',
+      experienceTemplate:
+        'Ключевые достижения:\n• Руководил межфункциональными инициативами команды\n• Повысил производительность системы на 30%\n• Наставлял младших членов команды',
+      profileTitle: 'Заполните профиль',
+      profileDescription:
+        'Ваш профиль заполнен на {{completeness}}%. Полный профиль помогает получать больше предложений о работе.',
+    },
   },
   validation: {
     required: 'Обязательное поле',
@@ -354,6 +410,25 @@ export default {
     passwordMatch: 'Пароли не совпадают',
     invalidPhone: 'Введите корректный номер телефона',
     fileTooLarge: 'Файл должен быть меньше {{maxSize}}',
+    salaryNumber: 'Зарплата должна быть числом',
+    salaryRange: 'Минимальная зарплата не может быть больше максимальной',
+    dateRange: 'Дата окончания не может быть раньше даты начала',
+  },
+  experienceLevel: {
+    no_experience: 'Без опыта',
+    junior: 'Junior',
+    mid: 'Средний уровень',
+    senior: 'Senior',
+    lead: 'Lead',
+    executive: 'Руководитель',
+  },
+  errors: {
+    registrationFailed: 'Регистрация не удалась',
+    signInFailed: 'Не удалось войти',
+    recoverySessionFailed: 'Не удалось восстановить сессию сброса пароля',
+    unsupportedFileType: 'Неподдерживаемый тип файла',
+    fileExceedsSizeLimit: 'Выбранный файл превышает допустимый размер',
+    fileReadFailed: 'Не удалось прочитать выбранный файл',
   },
   subscription: {
     title: 'Подписка',

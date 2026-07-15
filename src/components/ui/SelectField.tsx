@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { ChevronDown, Check } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme/ThemeContext';
 
 export interface SelectFieldOption<T extends string = string> {
@@ -39,6 +40,7 @@ export function SelectField<T extends string = string>({
   containerStyle,
 }: SelectFieldProps<T>) {
   const { colors, radius: r, spacing: s, typography: t } = useTheme();
+  const { t: tr } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   const selected = useMemo(
@@ -100,7 +102,7 @@ export function SelectField<T extends string = string>({
             <View style={styles.sheetHeader}>
               <Text style={[{ color: colors.textPrimary, ...t.headingSmall }]}>{label || placeholder}</Text>
               <TouchableOpacity onPress={() => setVisible(false)}>
-                <Text style={[{ color: colors.primary, ...t.labelSmall }]}>Bağla</Text>
+                <Text style={[{ color: colors.primary, ...t.labelSmall }]}>{tr('common.close')}</Text>
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: s.lg }}>

@@ -13,19 +13,42 @@ export function OTPInput({ length = 6, onComplete, error = false }: OTPInputProp
   const [values, setValues] = useState<string[]>(Array(length).fill(''));
   const inputs = useRef<(TextInput | null)[]>([]);
 
-  const handleChange = (text: string, index: number) => {
-    const newValues = [...values];
-    newValues[index] = text;
+  const commit = (newValues: string[], focusIndex: number) => {
     setValues(newValues);
-
-    if (text && index < length - 1) {
-      inputs.current[index + 1]?.focus();
-    }
+    inputs.current[Math.max(0, Math.min(focusIndex, length - 1))]?.focus();
 
     if (newValues.every((v) => v.length === 1)) {
       Keyboard.dismiss();
       onComplete(newValues.join(''));
     }
+  };
+
+  const handleChange = (text: string, index: number) => {
+    const digits = text.replace(/\D/g, '');
+    const newValues = [...values];
+
+    // Deletion (empty text)
+    if (digits.length === 0) {
+      newValues[index] = '';
+      setValues(newValues);
+      return;
+    }
+
+    // Single digit typed
+    if (digits.length === 1) {
+      newValues[index] = digits;
+      commit(newValues, index + 1);
+      return;
+    }
+
+    // Pasted / SMS-autofilled multi-digit code: distribute across cells
+    let cursor = index;
+    for (const char of digits.split('')) {
+      if (cursor >= length) break;
+      newValues[cursor] = char;
+      cursor += 1;
+    }
+    commit(newValues, cursor);
   };
 
   const handleKeyPress = (key: string, index: number) => {
@@ -59,7 +82,9 @@ export function OTPInput({ length = 6, onComplete, error = false }: OTPInputProp
               },
             ]}
             keyboardType="number-pad"
-            maxLength={1}
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
+            maxLength={i === 0 ? length : 1}
             value={values[i]}
             onChangeText={(text) => handleChange(text, i)}
             onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, i)}

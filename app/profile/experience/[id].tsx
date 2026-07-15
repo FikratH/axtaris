@@ -130,6 +130,11 @@ export default function ExperienceFormScreen() {
       return;
     }
 
+    if (!isCurrent && endDate && endDate < startDate) {
+      Alert.alert(tr('common.error'), tr('validation.dateRange'));
+      return;
+    }
+
     const nextItem: WorkExperience = {
       id: item?.id || createLocalItemId('experience'),
       jobTitle: jobTitle.trim(),

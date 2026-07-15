@@ -37,7 +37,12 @@ function assertEnv(name, placeholder) {
 
 function uuidFor(key) {
   const hex = createHash('sha1').update(`axtaris-real-seed:${key}`).digest('hex');
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20, 32)}`;
+  // Emit a canonical RFC-4122 v5 UUID: set the version nibble (13th hex) to 5
+  // and the variant nibble (17th hex) to 8/9/a/b. Without these bits the client's
+  // UUID validation used to reject seeded ids and re-insert rows on every save.
+  const version = `5${hex.slice(13, 16)}`;
+  const variant = `${((parseInt(hex[16], 16) & 0x3) | 0x8).toString(16)}${hex.slice(17, 20)}`;
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${version}-${variant}-${hex.slice(20, 32)}`;
 }
 
 function visibilityScore(plan) {

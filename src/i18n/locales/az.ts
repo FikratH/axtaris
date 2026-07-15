@@ -33,6 +33,12 @@ export default {
     tagline: 'Azərbaycan üçün premium məşğulluq platforması',
     deleteItemTitle: 'Element silinsin?',
     deleteItemMessage: 'Bu məlumat profilinizdən silinəcək.',
+    add: 'Əlavə et',
+    remove: 'Sil',
+    replace: 'Dəyişdir',
+    defaultUserName: 'İstifadəçi',
+    today: 'Bu gün',
+    justNow: 'İndicə',
   },
   permissions: {
     cameraRequired: 'Şəkil çəkmək üçün kameraya giriş lazımdır',
@@ -97,6 +103,7 @@ export default {
     termsSuffix: 'qəbul edirsiniz',
     sessionExpiredTitle: 'Sessiya bitdi',
     sessionExpiredMessage: 'Təhlükəsizlik üçün yenidən daxil olun.',
+    fullNamePlaceholder: 'Əli Həsənov',
   },
   candidate: {
     home: 'Ana səhifə',
@@ -173,6 +180,9 @@ export default {
     responsibilities: 'Vəzifələr',
     benefits: 'Üstünlüklər',
     aboutCompany: 'Şirkət haqqında',
+    cvUploadSuccess: 'CV uğurla yükləndi',
+    tapToUploadCv: 'CV yükləmək üçün toxunun',
+    cvUploadHint: 'PDF, DOC, DOCX dəstəklənir\nMaksimum 10MB',
   },
   profileCrud: {
     shared: {
@@ -297,6 +307,17 @@ export default {
     rating: 'Reytinq',
     details: 'Detallar',
     founded: 'Yaradılıb',
+    candidateFallback: 'Namizəd',
+    verifiedDescription: 'Şirkətiniz təsdiqlənib',
+    verificationInProgressDescription: 'Təsdiqləmə prosesi davam edir',
+    verificationRejectedDescription: 'Təsdiqləmə rədd edildi',
+    verificationNotStartedDescription: 'Şirkət hələ təsdiqlənməyib',
+    skillInputPlaceholder: 'Bacarıq yazın və Əlavə et düyməsinə basın',
+    vacancyTitlePlaceholder: 'məs. Senior React Native Developer',
+    onePerLine: 'Hər sətirdə bir',
+    companyNamePlaceholder: 'Şirkət MMC',
+    industryPlaceholder: 'Texnologiya',
+    aboutPlaceholder: 'Şirkət haqqında...',
     status: {
       active: 'Aktiv',
       draft: 'Qaralama',
@@ -336,6 +357,24 @@ export default {
     signOut: 'Çıxış',
     version: 'Versiya',
     deleteAccount: 'Hesabı sil',
+    termsOfService: 'İstifadə şərtləri',
+    privacyPolicy: 'Məxfilik siyasəti',
+    legal: 'Hüquqi',
+    deleteAccountConfirmTitle: 'Hesabı silmək istəyirsiniz?',
+    deleteAccountConfirmMessage:
+      'Bu əməliyyat geri qaytarıla bilməz. Bütün məlumatlarınız həmişəlik silinəcək.',
+    deleteAccountFinalTitle: 'Son təsdiq',
+    deleteAccountFinalMessage: 'Hesabınızı həmişəlik silmək üçün təsdiqləyin.',
+    deleteAccountSuccess: 'Hesabınız silindi',
+  },
+  legal: {
+    termsTitle: 'İstifadə şərtləri',
+    privacyTitle: 'Məxfilik siyasəti',
+    lastUpdated: 'Son yeniləmə: 2026',
+    termsBody:
+      'AxtarIS platformasından istifadə etməklə siz bu şərtləri qəbul edirsiniz. Platforma iş axtaranları və işəgötürənləri birləşdirmək üçün nəzərdə tutulub.\n\nİstifadəçilər dəqiq məlumat təqdim etməli və platformadan yalnız qanuni məqsədlərlə istifadə etməlidir. Qadağan olunmuş məzmun və ya sui-istifadə hesabın dayandırılmasına səbəb ola bilər.\n\nBu sənəd nümunə mətnidir və yekun hüquqi mətn dərc olunana qədər dəyişə bilər.',
+    privacyBody:
+      'AxtarIS gizliliyinizə hörmət edir. Yalnız xidməti təqdim etmək üçün lazım olan məlumatları — profil, CV və müraciət məlumatlarını — toplayırıq.\n\nMəlumatlarınız üçüncü tərəflərə satılmır. CV faylları təhlükəsiz saxlanılır və yalnız müraciət etdiyiniz işəgötürənlər üçün görünür.\n\nİstənilən vaxt hesabınızı və məlumatlarınızı silə bilərsiniz. Bu sənəd nümunə mətnidir.',
   },
   ai: {
     assistant: 'AI Köməkçi',
@@ -346,6 +385,23 @@ export default {
     analyzingProfile: 'Profil təhlil edilir...',
     suggestions: 'Təkliflər',
     apply_suggestion: 'Təklifi tətbiq et',
+    heroSubtitle: 'Profilinizi fərqləndirmək üçün AI tövsiyələri',
+    applied: 'Tətbiq edildi',
+    suggestion: {
+      bioTitle: 'Profil təsvirini yaxşılaşdırın',
+      bioDescription: 'Daha ətraflı profil təsviri işəgötürənlərin diqqətini çəkir.',
+      bioSuggested:
+        'Genişlənə bilən tətbiqlər qurmağa həvəsli təcrübəli proqram mühəndisi. Müasir veb texnologiyalarında bacarıqlı, yüksək keyfiyyətli həllər təqdim etmə təcrübəsinə malikdir.',
+      skillsTitle: 'Daha çox bacarıq əlavə edin',
+      skillsDescription: 'Ən azı 5 bacarıq əlavə etməyi tövsiyə edirik.',
+      experienceTitle: 'Təcrübə nailiyyətlərini əlavə edin',
+      experienceDescription: 'Hər iş təcrübəsinə ən azı 2-3 nailiyyət əlavə edin.',
+      experienceTemplate:
+        'Əsas nailiyyətlər:\n• Çarpaz funksional komanda təşəbbüslərinə rəhbərlik etdim\n• Sistem məhsuldarlığını 30% artırdım\n• Kiçik komanda üzvlərinə mentorluq etdim',
+      profileTitle: 'Profilinizi tamamlayın',
+      profileDescription:
+        'Profiliniz {{completeness}}% tamamlanıb. Tam profil daha çox iş təklifi almağınıza kömək edir.',
+    },
   },
   validation: {
     required: 'Bu sahə məcburidir',
@@ -354,6 +410,25 @@ export default {
     passwordMatch: 'Şifrələr uyğun gəlmir',
     invalidPhone: 'Düzgün telefon nömrəsi daxil edin',
     fileTooLarge: 'Fayl {{maxSize}} kiçik olmalıdır',
+    salaryNumber: 'Maaş rəqəm olmalıdır',
+    salaryRange: 'Minimum maaş maksimumdan böyük ola bilməz',
+    dateRange: 'Bitmə tarixi başlama tarixindən əvvəl ola bilməz',
+  },
+  experienceLevel: {
+    no_experience: 'Təcrübəsiz',
+    junior: 'Junior',
+    mid: 'Orta səviyyə',
+    senior: 'Senior',
+    lead: 'Lead',
+    executive: 'Rəhbər',
+  },
+  errors: {
+    registrationFailed: 'Qeydiyyat alınmadı',
+    signInFailed: 'Daxil olmaq alınmadı',
+    recoverySessionFailed: 'Bərpa sessiyası bərpa edilə bilmədi',
+    unsupportedFileType: 'Dəstəklənməyən fayl növü',
+    fileExceedsSizeLimit: 'Seçilmiş fayl icazə verilən ölçü limitini aşır',
+    fileReadFailed: 'Seçilmiş faylı oxumaq mümkün olmadı',
   },
   subscription: {
     title: 'Abunəlik',

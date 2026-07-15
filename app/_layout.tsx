@@ -158,6 +158,7 @@ function AppContent() {
     const isAuthRoute = firstSegment === 'auth';
     const isResetPasswordRoute = currentPath === 'auth/reset-password';
     const isOnboardingRoute = firstSegment === 'onboarding';
+    const isLegalRoute = (firstSegment as string) === 'legal';
     const isCandidateOnlyRoute =
       firstSegment === '(candidate)' ||
       firstSegment === 'profile';
@@ -178,9 +179,9 @@ function AppContent() {
     }
 
     if (!isAuthenticated || !user) {
-      if (hasOnboarded === false && !isOnboardingRoute && !isRootRoute) {
+      if (hasOnboarded === false && !isOnboardingRoute && !isRootRoute && !isLegalRoute) {
         router.replace('/onboarding');
-      } else if (!isRootRoute && !isAuthRoute && !isOnboardingRoute) {
+      } else if (!isRootRoute && !isAuthRoute && !isOnboardingRoute && !isLegalRoute) {
         router.replace('/auth/role-select');
       }
       return;

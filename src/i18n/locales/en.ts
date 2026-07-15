@@ -33,6 +33,12 @@ export default {
     tagline: 'Premium employment platform for Azerbaijan',
     deleteItemTitle: 'Delete item?',
     deleteItemMessage: 'This item will be removed from your profile.',
+    add: 'Add',
+    remove: 'Remove',
+    replace: 'Replace',
+    defaultUserName: 'there',
+    today: 'Today',
+    justNow: 'Just now',
   },
   permissions: {
     cameraRequired: 'Camera access is needed to take a photo',
@@ -97,6 +103,7 @@ export default {
     termsSuffix: '',
     sessionExpiredTitle: 'Session expired',
     sessionExpiredMessage: 'Please sign in again to continue securely.',
+    fullNamePlaceholder: 'John Smith',
   },
   candidate: {
     home: 'Home',
@@ -173,6 +180,9 @@ export default {
     responsibilities: 'Responsibilities',
     benefits: 'Benefits',
     aboutCompany: 'About company',
+    cvUploadSuccess: 'CV uploaded successfully',
+    tapToUploadCv: 'Tap to upload your CV',
+    cvUploadHint: 'PDF, DOC, DOCX supported\nMax 10MB',
   },
   profileCrud: {
     shared: {
@@ -297,6 +307,17 @@ export default {
     rating: 'Rating',
     details: 'Details',
     founded: 'Founded',
+    candidateFallback: 'Candidate',
+    verifiedDescription: 'Your company has been verified',
+    verificationInProgressDescription: 'Verification is in progress',
+    verificationRejectedDescription: 'Verification was rejected',
+    verificationNotStartedDescription: 'Company is not verified yet',
+    skillInputPlaceholder: 'Type a skill and press Add',
+    vacancyTitlePlaceholder: 'e.g. Senior React Native Developer',
+    onePerLine: 'One per line',
+    companyNamePlaceholder: 'Company LLC',
+    industryPlaceholder: 'Technology',
+    aboutPlaceholder: 'About the company...',
     status: {
       active: 'Active',
       draft: 'Draft',
@@ -336,6 +357,24 @@ export default {
     signOut: 'Sign out',
     version: 'Version',
     deleteAccount: 'Delete account',
+    termsOfService: 'Terms of Service',
+    privacyPolicy: 'Privacy Policy',
+    legal: 'Legal',
+    deleteAccountConfirmTitle: 'Delete your account?',
+    deleteAccountConfirmMessage:
+      'This action cannot be undone. All your data will be permanently deleted.',
+    deleteAccountFinalTitle: 'Final confirmation',
+    deleteAccountFinalMessage: 'Confirm to permanently delete your account.',
+    deleteAccountSuccess: 'Your account has been deleted',
+  },
+  legal: {
+    termsTitle: 'Terms of Service',
+    privacyTitle: 'Privacy Policy',
+    lastUpdated: 'Last updated: 2026',
+    termsBody:
+      'By using the AxtarIS platform you agree to these terms. The platform is designed to connect job seekers with employers.\n\nUsers must provide accurate information and use the platform only for lawful purposes. Prohibited content or abuse may result in account suspension.\n\nThis document is placeholder text and may change before the final legal version is published.',
+    privacyBody:
+      'AxtarIS respects your privacy. We collect only the data needed to provide the service — profile, CV and application details.\n\nYour data is not sold to third parties. CV files are stored securely and are only visible to employers you have applied to.\n\nYou can delete your account and data at any time. This document is placeholder text.',
   },
   ai: {
     assistant: 'AI Assistant',
@@ -346,6 +385,23 @@ export default {
     analyzingProfile: 'Analyzing profile...',
     suggestions: 'Suggestions',
     apply_suggestion: 'Apply suggestion',
+    heroSubtitle: 'AI-powered suggestions to make your profile stand out',
+    applied: 'Applied',
+    suggestion: {
+      bioTitle: 'Improve your profile description',
+      bioDescription: 'A more detailed profile description attracts employers.',
+      bioSuggested:
+        'Experienced software engineer with a passion for building scalable applications. Skilled in modern web technologies with a track record of delivering high-quality solutions.',
+      skillsTitle: 'Add more skills',
+      skillsDescription: 'We recommend adding at least 5 skills.',
+      experienceTitle: 'Add experience achievements',
+      experienceDescription: 'Add at least 2-3 achievements to each work experience.',
+      experienceTemplate:
+        'Key achievements:\n• Led cross-functional team initiatives\n• Improved system performance by 30%\n• Mentored junior team members',
+      profileTitle: 'Complete your profile',
+      profileDescription:
+        'Your profile is {{completeness}}% complete. A complete profile helps you get more job offers.',
+    },
   },
   validation: {
     required: 'This field is required',
@@ -354,6 +410,25 @@ export default {
     passwordMatch: 'Passwords do not match',
     invalidPhone: 'Enter a valid phone number',
     fileTooLarge: 'File must be smaller than {{maxSize}}',
+    salaryNumber: 'Salary must be a number',
+    salaryRange: 'Minimum salary cannot exceed the maximum',
+    dateRange: 'End date cannot be before the start date',
+  },
+  experienceLevel: {
+    no_experience: 'No experience',
+    junior: 'Junior',
+    mid: 'Mid',
+    senior: 'Senior',
+    lead: 'Lead',
+    executive: 'Executive',
+  },
+  errors: {
+    registrationFailed: 'Registration failed',
+    signInFailed: 'Sign in failed',
+    recoverySessionFailed: 'Recovery session could not be restored',
+    unsupportedFileType: 'Unsupported file type',
+    fileExceedsSizeLimit: 'Selected file exceeds the allowed size limit',
+    fileReadFailed: 'Failed to read the selected file',
   },
   subscription: {
     title: 'Subscription',

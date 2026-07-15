@@ -11,6 +11,8 @@ import {
   mockCandidateProfile,
   mockVacancies,
 } from './mockData';
+import i18n from '@/i18n';
+import { dedupeBy } from '@/utils/profileSections';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 import { subscriptionService } from './subscriptionService';
 import {
@@ -228,14 +230,28 @@ function calculateProfileCompleteness(profile: CandidateProfile): number {
 }
 
 function mapCandidateProfile(row: CandidateProfileRow): CandidateProfile {
-  const workExperience = [...(row.work_experiences || [])]
-    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-    .map(mapWorkExperience);
-  const education = [...(row.education || [])]
-    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-    .map(mapEducation);
-  const languages = (row.language_skills || []).map(mapLanguageSkill);
-  const certifications = (row.certifications || []).map(mapCertification);
+  const workExperience = dedupeBy(
+    [...(row.work_experiences || [])]
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(mapWorkExperience),
+    (item) =>
+      `${item.jobTitle}|${item.company}|${item.location ?? ''}|${item.startDate}|${item.endDate ?? ''}|${item.isCurrent}|${item.description ?? ''}`
+  );
+  const education = dedupeBy(
+    [...(row.education || [])]
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(mapEducation),
+    (item) =>
+      `${item.degree}|${item.fieldOfStudy}|${item.institution}|${item.startDate}|${item.endDate ?? ''}|${item.isCurrent}|${item.description ?? ''}`
+  );
+  const languages = dedupeBy(
+    (row.language_skills || []).map(mapLanguageSkill),
+    (item) => `${item.language.trim().toLowerCase()}|${item.level}`
+  );
+  const certifications = dedupeBy(
+    (row.certifications || []).map(mapCertification),
+    (item) => `${item.name}|${item.issuer}|${item.issueDate}|${item.expiryDate ?? ''}|${item.credentialUrl ?? ''}`
+  );
 
   const profile: CandidateProfile = {
     id: row.id,
@@ -322,228 +338,122 @@ function normalizeCandidateProfile(
   };
 }
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+type CandidateChildTable =
+  | 'work_experiences'
+  | 'education'
+  | 'language_skills'
+  | 'certifications';
 
-function isUuid(value: string): boolean {
-  return UUID_PATTERN.test(value);
-}
-
-function getPersistedIds<T extends { id: string }>(items: T[]) {
-  return items.map((item) => item.id).filter(isUuid);
-}
-
-function getRemovedPersistedIds<T extends { id: string }>(
-  currentItems: T[],
-  nextItems: T[]
+/**
+ * Reconcile a candidate child table so it contains exactly `nextItems`.
+ *
+ * We insert the desired rows fresh (letting Postgres mint canonical UUIDs),
+ * then delete every other row for the candidate. Insert-first keeps existing
+ * data intact if the insert fails, and the trailing delete removes any
+ * legacy/duplicate rows — so the table self-heals from previously duplicated
+ * data (e.g. seeded rows whose ids were re-inserted by the old sync logic).
+ */
+async function reconcileChildRows<T>(
+  table: CandidateChildTable,
+  candidateId: string,
+  nextItems: T[],
+  toRow: (item: T, index: number) => Record<string, unknown>
 ) {
-  const nextIds = new Set(getPersistedIds(nextItems));
+  const supabase = getSupabase();
+  const hasItems = nextItems.length > 0;
+  let keepIds: string[] = [];
 
-  return getPersistedIds(currentItems).filter((id) => !nextIds.has(id));
-}
+  if (hasItems) {
+    const { data, error } = await supabase
+      .from(table)
+      .insert(nextItems.map((item, index) => toRow(item, index)))
+      .select('id');
 
-async function deleteRemovedRows(
-  tableName: 'work_experiences' | 'education' | 'language_skills' | 'certifications',
-  removedIds: string[]
-) {
-  if (removedIds.length === 0) return;
+    if (error) throw new Error(error.message);
 
-  const { error } = await getSupabase().from(tableName).delete().in('id', removedIds);
+    keepIds = ((data || []) as Array<{ id: string }>).map((row) => row.id);
 
-  if (error) throw new Error(error.message);
+    // The insert reported success but returned no rows (e.g. a table with an
+    // INSERT policy but no SELECT policy). Refuse to continue — otherwise the
+    // delete below would wipe every existing row for this candidate.
+    if (keepIds.length === 0) {
+      throw new Error(i18n.t('common.error'));
+    }
+  }
+
+  // Delete strategy keys off the caller's intent, not the insert result: when
+  // there are desired items keep the freshly-inserted ids and drop everything
+  // else (self-heals legacy duplicates); when the desired set is empty, clear all.
+  const baseDelete = supabase.from(table).delete().eq('candidate_id', candidateId);
+  const { error: deleteError } = hasItems
+    ? await baseDelete.not('id', 'in', `(${keepIds.join(',')})`)
+    : await baseDelete;
+
+  if (deleteError) throw new Error(deleteError.message);
 }
 
 async function syncWorkExperiences(
   candidateId: string,
-  currentItems: WorkExperience[],
+  _currentItems: WorkExperience[],
   nextItems: WorkExperience[]
 ) {
-  const supabase = getSupabase();
-  await deleteRemovedRows(
-    'work_experiences',
-    getRemovedPersistedIds(currentItems, nextItems)
-  );
-
-  const upsertRows = nextItems
-    .map((item, index) => (isUuid(item.id) ? {
-      id: item.id,
-      candidate_id: candidateId,
-      job_title: item.jobTitle,
-      company: item.company,
-      location: item.location || null,
-      start_date: item.startDate,
-      end_date: item.endDate || null,
-      is_current: item.isCurrent,
-      description: item.description || null,
-      highlights: item.highlights || [],
-      sort_order: index,
-    } : null))
-    .filter(Boolean);
-
-  if (upsertRows.length > 0) {
-    const { error } = await supabase.from('work_experiences').upsert(upsertRows);
-
-    if (error) throw new Error(error.message);
-  }
-
-  const insertRows = nextItems
-    .map((item, index) => (!isUuid(item.id) ? {
-      candidate_id: candidateId,
-      job_title: item.jobTitle,
-      company: item.company,
-      location: item.location || null,
-      start_date: item.startDate,
-      end_date: item.endDate || null,
-      is_current: item.isCurrent,
-      description: item.description || null,
-      highlights: item.highlights || [],
-      sort_order: index,
-    } : null))
-    .filter(Boolean);
-
-  if (insertRows.length > 0) {
-    const { error } = await supabase.from('work_experiences').insert(insertRows);
-
-    if (error) throw new Error(error.message);
-  }
+  await reconcileChildRows('work_experiences', candidateId, nextItems, (item, index) => ({
+    candidate_id: candidateId,
+    job_title: item.jobTitle,
+    company: item.company,
+    location: item.location || null,
+    start_date: item.startDate,
+    end_date: item.endDate || null,
+    is_current: item.isCurrent,
+    description: item.description || null,
+    highlights: item.highlights || [],
+    sort_order: index,
+  }));
 }
 
 async function syncEducation(
   candidateId: string,
-  currentItems: Education[],
+  _currentItems: Education[],
   nextItems: Education[]
 ) {
-  const supabase = getSupabase();
-  await deleteRemovedRows('education', getRemovedPersistedIds(currentItems, nextItems));
-
-  const upsertRows = nextItems
-    .map((item, index) => (isUuid(item.id) ? {
-      id: item.id,
-      candidate_id: candidateId,
-      degree: item.degree,
-      field_of_study: item.fieldOfStudy,
-      institution: item.institution,
-      start_date: item.startDate,
-      end_date: item.endDate || null,
-      is_current: item.isCurrent,
-      description: item.description || null,
-      sort_order: index,
-    } : null))
-    .filter(Boolean);
-
-  if (upsertRows.length > 0) {
-    const { error } = await supabase.from('education').upsert(upsertRows);
-
-    if (error) throw new Error(error.message);
-  }
-
-  const insertRows = nextItems
-    .map((item, index) => (!isUuid(item.id) ? {
-      candidate_id: candidateId,
-      degree: item.degree,
-      field_of_study: item.fieldOfStudy,
-      institution: item.institution,
-      start_date: item.startDate,
-      end_date: item.endDate || null,
-      is_current: item.isCurrent,
-      description: item.description || null,
-      sort_order: index,
-    } : null))
-    .filter(Boolean);
-
-  if (insertRows.length > 0) {
-    const { error } = await supabase.from('education').insert(insertRows);
-
-    if (error) throw new Error(error.message);
-  }
+  await reconcileChildRows('education', candidateId, nextItems, (item, index) => ({
+    candidate_id: candidateId,
+    degree: item.degree,
+    field_of_study: item.fieldOfStudy,
+    institution: item.institution,
+    start_date: item.startDate,
+    end_date: item.endDate || null,
+    is_current: item.isCurrent,
+    description: item.description || null,
+    sort_order: index,
+  }));
 }
 
 async function syncLanguageSkills(
   candidateId: string,
-  currentItems: LanguageSkill[],
+  _currentItems: LanguageSkill[],
   nextItems: LanguageSkill[]
 ) {
-  const supabase = getSupabase();
-  await deleteRemovedRows(
-    'language_skills',
-    getRemovedPersistedIds(currentItems, nextItems)
-  );
-
-  const upsertRows = nextItems
-    .map((item) => (isUuid(item.id) ? {
-      id: item.id,
-      candidate_id: candidateId,
-      language: item.language,
-      level: item.level,
-    } : null))
-    .filter(Boolean);
-
-  if (upsertRows.length > 0) {
-    const { error } = await supabase.from('language_skills').upsert(upsertRows);
-
-    if (error) throw new Error(error.message);
-  }
-
-  const insertRows = nextItems
-    .map((item) => (!isUuid(item.id) ? {
-      candidate_id: candidateId,
-      language: item.language,
-      level: item.level,
-    } : null))
-    .filter(Boolean);
-
-  if (insertRows.length > 0) {
-    const { error } = await supabase.from('language_skills').insert(insertRows);
-
-    if (error) throw new Error(error.message);
-  }
+  await reconcileChildRows('language_skills', candidateId, nextItems, (item) => ({
+    candidate_id: candidateId,
+    language: item.language,
+    level: item.level,
+  }));
 }
 
 async function syncCertifications(
   candidateId: string,
-  currentItems: Certification[],
+  _currentItems: Certification[],
   nextItems: Certification[]
 ) {
-  const supabase = getSupabase();
-  await deleteRemovedRows(
-    'certifications',
-    getRemovedPersistedIds(currentItems, nextItems)
-  );
-
-  const upsertRows = nextItems
-    .map((item) => (isUuid(item.id) ? {
-      id: item.id,
-      candidate_id: candidateId,
-      name: item.name,
-      issuer: item.issuer,
-      issue_date: item.issueDate,
-      expiry_date: item.expiryDate || null,
-      credential_url: item.credentialUrl || null,
-    } : null))
-    .filter(Boolean);
-
-  if (upsertRows.length > 0) {
-    const { error } = await supabase.from('certifications').upsert(upsertRows);
-
-    if (error) throw new Error(error.message);
-  }
-
-  const insertRows = nextItems
-    .map((item) => (!isUuid(item.id) ? {
-      candidate_id: candidateId,
-      name: item.name,
-      issuer: item.issuer,
-      issue_date: item.issueDate,
-      expiry_date: item.expiryDate || null,
-      credential_url: item.credentialUrl || null,
-    } : null))
-    .filter(Boolean);
-
-  if (insertRows.length > 0) {
-    const { error } = await supabase.from('certifications').insert(insertRows);
-
-    if (error) throw new Error(error.message);
-  }
+  await reconcileChildRows('certifications', candidateId, nextItems, (item) => ({
+    candidate_id: candidateId,
+    name: item.name,
+    issuer: item.issuer,
+    issue_date: item.issueDate,
+    expiry_date: item.expiryDate || null,
+    credential_url: item.credentialUrl || null,
+  }));
 }
 
 let mockSavedJobIds: string[] | null = null;

@@ -27,6 +27,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { StaggeredItem } from '@/components/ui/Animated';
 import {
   getSubscriptionActionLabel,
   getSubscriptionPlanLabel,
@@ -69,7 +70,15 @@ export default function CandidateHomeScreen() {
     return Array.from(unique.values());
   }, [vacancies]);
 
-  const firstName = user?.fullName?.split(' ')[0] || 'User';
+  const recommended = useMemo(() => {
+    const skills = profile?.skills ?? [];
+    if (!skills.length) return vacancies.slice(0, 4);
+    const score = (v: (typeof vacancies)[number]) =>
+      v.skills.filter((s) => skills.includes(s)).length;
+    return [...vacancies].sort((a, b) => score(b) - score(a)).slice(0, 4);
+  }, [vacancies, profile?.skills]);
+
+  const firstName = user?.fullName?.split(' ')[0] || tr('common.defaultUserName');
   const completeness = profile?.profileCompleteness || 0;
 
   return (
@@ -118,7 +127,7 @@ export default function CandidateHomeScreen() {
             onPress={() => router.push('/(candidate)/search')}
             style={styles.searchBar}
           >
-            <Search size={18} color="rgba(255,255,255,0.5)" strokeWidth={1.8} />
+            <Search size={18} color="rgba(255,255,255,0.68)" strokeWidth={1.8} />
             <Text style={[styles.searchText, t.bodyMedium]}>
               {tr('candidate.searchPlaceholder')}
             </Text>
@@ -133,7 +142,7 @@ export default function CandidateHomeScreen() {
           onPress={() => router.push('/(candidate)/profile')}
           style={[styles.completionBanner, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
         >
-          <View style={[styles.completionIcon, { backgroundColor: isDark ? 'rgba(91,127,214,0.15)' : '#EEF2FF' }]}>
+          <View style={[styles.completionIcon, { backgroundColor: colors.primaryLight }]}>
             <Sparkles size={20} color={colors.primary} strokeWidth={1.8} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -152,7 +161,7 @@ export default function CandidateHomeScreen() {
           onPress={() => router.push('/subscription' as never)}
           style={[styles.subscriptionBanner, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
         >
-          <View style={[styles.subscriptionIcon, { backgroundColor: isDark ? 'rgba(91,127,214,0.16)' : '#EEF2FF' }]}> 
+          <View style={[styles.subscriptionIcon, { backgroundColor: colors.primaryLight }]}>
             <Sparkles size={20} color={colors.primary} strokeWidth={1.8} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
@@ -201,7 +210,7 @@ export default function CandidateHomeScreen() {
           />
         ) : (
           <FlatList
-            data={vacancies.slice(0, 4)}
+            data={recommended}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
@@ -238,14 +247,14 @@ export default function CandidateHomeScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.push('/(candidate)/search')}
+              onPress={() => router.push({ pathname: '/company/[id]', params: { id: item.id } } as never)}
               style={[styles.companyCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
             >
-              <Avatar name={item.name} size={44} />
+              <Avatar name={item.name} uri={item.logoUrl} size={44} />
               <Text style={[{ color: colors.textPrimary, marginTop: 8, textAlign: 'center' }, t.labelSmall]} numberOfLines={1}>
                 {item.name}
               </Text>
-              <View style={[styles.companyBadge, { backgroundColor: isDark ? 'rgba(52,211,153,0.12)' : '#ECFDF5' }]}>
+              <View style={[styles.companyBadge, { backgroundColor: colors.successLight }]}>
                 <TrendingUp size={10} color={colors.success} strokeWidth={2} />
                 <Text style={[{ color: colors.success, marginLeft: 3 }, t.caption]}>{item.vacancyCount}</Text>
               </View>
@@ -268,14 +277,15 @@ export default function CandidateHomeScreen() {
               <VacancyCardSkeleton key={index} />
             ))
           ) : (
-            vacancies.slice(0, 4).map((vacancy) => (
-              <VacancyCard
-                key={vacancy.id}
-                vacancy={vacancy}
-                onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
-                onSave={() => toggleSave.mutate(vacancy.id)}
-                saved={savedJobIds.includes(vacancy.id)}
-              />
+            vacancies.slice(0, 4).map((vacancy, index) => (
+              <StaggeredItem key={vacancy.id} index={index} staggerDelay={60}>
+                <VacancyCard
+                  vacancy={vacancy}
+                  onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
+                  onSave={() => toggleSave.mutate(vacancy.id)}
+                  saved={savedJobIds.includes(vacancy.id)}
+                />
+              </StaggeredItem>
             ))
           )}
         </View>
@@ -299,7 +309,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greeting: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.82)',
   },
   headerTitle: {
     color: '#FFFFFF',
@@ -325,7 +335,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.08)',
   },
   searchText: {
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.68)',
     marginLeft: 10,
   },
   completionBanner: {

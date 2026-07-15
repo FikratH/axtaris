@@ -68,7 +68,7 @@ export default function EditProfileScreen() {
         portfolioUrl,
       });
 
-      Alert.alert(tr('common.save'), '', [{ text: 'OK', onPress: () => safeBack(router, '/(candidate)/profile') }]);
+      Alert.alert(tr('common.save'), '', [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(candidate)/profile') }]);
     } catch (error) {
       Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
     }
@@ -127,9 +127,9 @@ export default function EditProfileScreen() {
         </View>
 
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-          <Input label={tr('candidate.jobTitle')} value={title} onChangeText={setTitle} placeholder="Senior Frontend Developer" />
-          <Input label="Bio" value={bio} onChangeText={setBio} placeholder={tr('candidate.description')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <Input label={tr('candidate.location')} value={location} onChangeText={setLocation} placeholder="Bakı" />
+          <Input label={tr('candidate.jobTitle')} value={title} onChangeText={setTitle} placeholder={tr('profileCrud.experience.jobTitlePlaceholder')} />
+          <Input label={tr('candidate.bio')} value={bio} onChangeText={setBio} placeholder={tr('candidate.description')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <Input label={tr('candidate.location')} value={location} onChangeText={setLocation} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
           <Input label={tr('candidate.expectedSalary')} value={expectedSalary} onChangeText={setExpectedSalary} placeholder="3000" keyboardType="numeric" />
           <Input label={tr('candidate.portfolio')} value={portfolioUrl} onChangeText={setPortfolioUrl} placeholder="https://yoursite.com" keyboardType="url" autoCapitalize="none" />
 

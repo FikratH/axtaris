@@ -164,14 +164,23 @@ export default function ApplicantsScreen() {
               <Button
                 title={tr('employer.reject')}
                 onPress={() =>
-                  updateStatus.mutate({
-                    applicationId: item.id,
-                    status: 'rejected',
-                  })
+                  updateStatus.mutate(
+                    {
+                      applicationId: item.id,
+                      status: 'rejected',
+                    },
+                    {
+                      onError: (e) =>
+                        Alert.alert(
+                          tr('common.error'),
+                          e instanceof Error ? e.message : tr('common.error')
+                        ),
+                    }
+                  )
                 }
                 variant="outline"
                 size="sm"
-                disabled={item.status === 'rejected' || updateStatus.isPending}
+                disabled={item.status === 'rejected' || (updateStatus.isPending && updateStatus.variables?.applicationId === item.id)}
               />
             </View>
           </View>
@@ -179,14 +188,23 @@ export default function ApplicantsScreen() {
             <Button
               title={tr('employer.shortlist')}
               onPress={() =>
-                updateStatus.mutate({
-                  applicationId: item.id,
-                  status: 'shortlisted',
-                })
+                updateStatus.mutate(
+                  {
+                    applicationId: item.id,
+                    status: 'shortlisted',
+                  },
+                  {
+                    onError: (e) =>
+                      Alert.alert(
+                        tr('common.error'),
+                        e instanceof Error ? e.message : tr('common.error')
+                      ),
+                  }
+                )
               }
               variant="primary"
               size="sm"
-              disabled={item.status === 'shortlisted' || updateStatus.isPending}
+              disabled={item.status === 'shortlisted' || (updateStatus.isPending && updateStatus.variables?.applicationId === item.id)}
             />
           </View>
         </View>

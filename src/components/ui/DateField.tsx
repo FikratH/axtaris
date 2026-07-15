@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { CalendarDays } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/theme/ThemeContext';
 
 interface DateFieldProps {
@@ -50,6 +51,7 @@ export function DateField({
   maximumYear = new Date().getFullYear() + 5,
 }: DateFieldProps) {
   const { colors, radius: r, spacing: s, typography: t } = useTheme();
+  const { t: tr } = useTranslation();
   const [visible, setVisible] = useState(false);
 
   const parsedDate = useMemo(() => {
@@ -146,7 +148,7 @@ export function DateField({
             <View style={styles.sheetHeader}>
               <Text style={[{ color: colors.textPrimary, ...t.headingSmall }]}>{label || placeholder}</Text>
               <TouchableOpacity onPress={() => setVisible(false)}>
-                <Text style={[{ color: colors.primary, ...t.labelSmall }]}>Bağla</Text>
+                <Text style={[{ color: colors.primary, ...t.labelSmall }]}>{tr('common.close')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.columnsRow}>
@@ -216,7 +218,7 @@ export function DateField({
                 { backgroundColor: colors.buttonPrimary, borderRadius: r.lg, marginTop: s.lg },
               ]}
             >
-              <Text style={[{ color: '#FFFFFF', ...t.labelMedium }]}>Təsdiqlə</Text>
+              <Text style={[{ color: '#FFFFFF', ...t.labelMedium }]}>{tr('common.confirm')}</Text>
             </TouchableOpacity>
           </View>
         </View>

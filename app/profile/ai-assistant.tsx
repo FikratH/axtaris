@@ -127,7 +127,7 @@ export default function AIAssistantScreen() {
           {tr('ai.improveProfile')}
         </Text>
         <Text style={[{ color: colors.textSecondary, marginTop: 4, textAlign: 'center' }, t.bodySmall]}>
-          AI-powered suggestions to make your profile stand out
+          {tr('ai.heroSubtitle')}
         </Text>
       </View>
 
@@ -175,7 +175,7 @@ export default function AIAssistantScreen() {
                       </TouchableOpacity>
                     )}
                     {isApplied && (
-                      <Text style={[{ color: colors.success, marginTop: 8 }, t.captionMedium]}>Applied</Text>
+                      <Text style={[{ color: colors.success, marginTop: 8 }, t.captionMedium]}>{tr('ai.applied')}</Text>
                     )}
                   </View>
                 );

@@ -16,14 +16,15 @@ interface AvatarProps {
 export function Avatar({ uri, name, size = 44, style, onPress, editable = false }: AvatarProps) {
   const { colors, radius: r } = useTheme();
   const [imageFailed, setImageFailed] = useState(false);
-  const initials = name
-    ? name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : '?';
+  const initials =
+    name
+      ?.trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || '?';
 
   const borderRadius = size * 0.28;
   const resolvedSource =

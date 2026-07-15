@@ -605,7 +605,7 @@ RETURNS INTEGER AS $$
 BEGIN
   RETURN CASE plan_code
     WHEN 'free' THEN 3
-    WHEN 'pro' THEN 7
+    WHEN 'pro' THEN 10
     ELSE NULL
   END;
 END;

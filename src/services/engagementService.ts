@@ -10,6 +10,7 @@ import {
   User,
   WorkExperience,
 } from '@/types/models';
+import { dedupeBy } from '@/utils/profileSections';
 import {
   mockEmployerUser,
 } from './mockData';
@@ -226,12 +227,20 @@ function mapCertification(row: CertificationRow): Certification {
 }
 
 function mapCandidateProfile(row: CandidateProfileRow): CandidateProfile & { user?: User } {
-  const workExperience = [...(row.work_experiences || [])]
-    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-    .map(mapWorkExperience);
-  const education = [...(row.education || [])]
-    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-    .map(mapEducation);
+  const workExperience = dedupeBy(
+    [...(row.work_experiences || [])]
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(mapWorkExperience),
+    (item) =>
+      `${item.jobTitle}|${item.company}|${item.location ?? ''}|${item.startDate}|${item.endDate ?? ''}|${item.isCurrent}|${item.description ?? ''}`
+  );
+  const education = dedupeBy(
+    [...(row.education || [])]
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(mapEducation),
+    (item) =>
+      `${item.degree}|${item.fieldOfStudy}|${item.institution}|${item.startDate}|${item.endDate ?? ''}|${item.isCurrent}|${item.description ?? ''}`
+  );
 
   return {
     id: row.id,
@@ -244,8 +253,14 @@ function mapCandidateProfile(row: CandidateProfileRow): CandidateProfile & { use
     skills: row.skills || [],
     workExperience,
     education,
-    languages: (row.language_skills || []).map(mapLanguageSkill),
-    certifications: (row.certifications || []).map(mapCertification),
+    languages: dedupeBy(
+      (row.language_skills || []).map(mapLanguageSkill),
+      (item) => `${item.language.trim().toLowerCase()}|${item.level}`
+    ),
+    certifications: dedupeBy(
+      (row.certifications || []).map(mapCertification),
+      (item) => `${item.name}|${item.issuer}|${item.issueDate}|${item.expiryDate ?? ''}|${item.credentialUrl ?? ''}`
+    ),
     portfolioUrl: row.portfolio_url || undefined,
     cvUrl: row.cv_url || undefined,
     cvFileName: row.cv_file_name || undefined,
