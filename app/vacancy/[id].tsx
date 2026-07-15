@@ -15,11 +15,13 @@ import { useAuthStore } from '@/store/authStore';
 import {
   useApplyToVacancy,
   useCandidateApplications,
+  useCandidateProfile,
   useSavedJobIds,
   useToggleSavedJob,
 } from '@/hooks/useCandidateVacancyActions';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
 import { useVacancy } from '@/hooks/useVacancyQueries';
+import { useGuestGate } from '@/hooks/useGuestGate';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -32,6 +34,8 @@ import {
 } from '@/utils/subscriptionPresentation';
 import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
+import { computeJobMatch } from '@/utils/jobMatch';
+import { MatchBadge } from '@/components/ui/MatchBadge';
 import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star } from 'lucide-react-native';
 
 export default function VacancyDetailScreen() {
@@ -47,7 +51,9 @@ export default function VacancyDetailScreen() {
   const toggleSave = useToggleSavedJob(user?.id);
   const { data: applications = [] } = useCandidateApplications(user?.id);
   const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
+  const { data: profile } = useCandidateProfile(isEmployer ? undefined : user?.id);
   const applyToVacancy = useApplyToVacancy(user?.id);
+  const { requireAuth } = useGuestGate();
   const {
     data: vacancy,
     isLoading,
@@ -127,8 +133,10 @@ export default function VacancyDetailScreen() {
         : `≤ ${vacancy.salaryMax} ${currency}`
       : null;
 
+  const jobMatch = !isEmployer && profile ? computeJobMatch(profile, vacancy) : null;
+
   const handleApply = async () => {
-    if (!id) return;
+    if (!id || !requireAuth()) return;
 
     try {
       await applyToVacancy.mutateAsync(id);
@@ -152,7 +160,9 @@ export default function VacancyDetailScreen() {
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => id && toggleSave.mutate(id)}
+            onPress={() => {
+              if (requireAuth() && id) toggleSave.mutate(id);
+            }}
             style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
           >
             {saved
@@ -230,6 +240,27 @@ export default function VacancyDetailScreen() {
             </>
           )}
         </View>
+
+        {jobMatch && jobMatch.score >= 40 && jobMatch.reasons.length > 0 && (
+          <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
+            <View style={{ backgroundColor: colors.primaryLight, borderRadius: r.lg, padding: s.lg }}>
+              <View style={styles.matchHeader}>
+                <Text style={[{ color: colors.textPrimary }, t.headingSmall]}>{tr('match.title')}</Text>
+                <MatchBadge score={jobMatch.score} minScore={0} />
+              </View>
+              <View style={{ marginTop: s.md, gap: 8 }}>
+                {jobMatch.reasons.map((reason) => (
+                  <View key={reason} style={styles.matchReason}>
+                    <CheckCircle2 size={15} color={colors.success} strokeWidth={2} />
+                    <Text style={[{ color: colors.textSecondary, marginLeft: 8, flex: 1 }, t.bodySmall]}>
+                      {tr(`match.reasons.${reason}`, { count: jobMatch.matchedSkills.length })}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
 
         <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
           <Text style={[{ color: colors.textPrimary, ...t.headingSmall, marginBottom: s.md }]}>
@@ -412,6 +443,15 @@ const styles = StyleSheet.create({
     height: 30,
   },
   section: {},
+  matchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  matchReason: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   bulletItem: {
     flexDirection: 'row',
     marginBottom: 8,

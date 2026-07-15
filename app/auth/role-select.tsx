@@ -17,10 +17,12 @@ export default function RoleSelectScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const setSelectedRole = useAuthStore((s) => s.setSelectedRole);
+  const setGuestRole = useAuthStore((s) => s.setGuestRole);
 
   const handleSelectRole = (role: 'candidate' | 'employer') => {
     setSelectedRole(role);
-    router.push('/auth/sign-in');
+    setGuestRole(role);
+    router.replace(role === 'employer' ? '/(employer)/dashboard' : '/(candidate)/home');
   };
 
   return (
@@ -100,6 +102,17 @@ export default function RoleSelectScreen() {
         </TouchableOpacity>
         </ScaleInView>
       </View>
+
+      <TouchableOpacity
+        onPress={() => router.push('/auth/sign-in')}
+        activeOpacity={0.7}
+        style={[styles.signInLink, { paddingBottom: insets.bottom + 24 }]}
+      >
+        <Text style={[{ color: colors.textSecondary }, t.bodySmall]}>
+          {tr('auth.hasAccount')}{' '}
+          <Text style={{ color: colors.primary }}>{tr('auth.signIn')}</Text>
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -128,6 +141,11 @@ const styles = StyleSheet.create({
   title: {},
   subtitle: {},
   cardsContainer: {},
+  signInLink: {
+    marginTop: 'auto',
+    alignItems: 'center',
+    paddingTop: 24,
+  },
   roleCard: {
     borderWidth: 1,
     position: 'relative',

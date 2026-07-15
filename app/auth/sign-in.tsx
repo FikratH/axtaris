@@ -59,7 +59,7 @@ export default function SignInScreen() {
         password: data.password,
         role: selectedRole || undefined,
       });
-      await completeAuthentication(result.user, result.token);
+      await completeAuthentication(result.user, result.token, result.refreshToken);
 
       if (result.user.role === 'employer') {
         router.replace('/(employer)/dashboard');

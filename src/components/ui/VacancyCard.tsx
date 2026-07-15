@@ -6,6 +6,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { Vacancy, WorkType } from '@/types/models';
 import { Avatar } from './Avatar';
 import { Badge } from './Badge';
+import { MatchBadge } from './MatchBadge';
 import { useTranslation } from 'react-i18next';
 import { Bookmark, BookmarkCheck, MapPin, Clock, Users } from 'lucide-react-native';
 
@@ -15,6 +16,7 @@ interface VacancyCardProps {
   onSave?: () => void;
   saved?: boolean;
   compact?: boolean;
+  matchScore?: number;
 }
 
 const workTypeTranslationKeys: Record<WorkType, string> = {
@@ -68,7 +70,7 @@ function AnimatedSaveButton({
   );
 }
 
-export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: VacancyCardProps) {
+export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchScore }: VacancyCardProps) {
   const { colors, radius: r, spacing: s, typography: t, elevation: e, isDark } = useTheme();
   const { t: tr } = useTranslation();
 
@@ -106,6 +108,7 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact }: Vacanc
           <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>
             {vacancy.company?.name}
           </Text>
+          {matchScore !== undefined && <MatchBadge score={matchScore} style={{ marginTop: 6 }} />}
         </View>
         {onSave && (
           <AnimatedSaveButton saved={saved} onPress={onSave} colors={colors} />

@@ -24,6 +24,7 @@ export interface SignInParams {
 }
 
 function resolveMockRole(email: string, role?: UserRole): UserRole {
+  if (email.includes('admin')) return 'admin';
   if (role && role !== 'admin') return role;
   if (email.includes('employer') || email.includes('hr')) return 'employer';
   return 'candidate';
@@ -83,7 +84,9 @@ class AuthService {
     return { user: toAppUser(data.user) };
   }
 
-  async signIn(params: SignInParams): Promise<{ user: User; token: string | null }> {
+  async signIn(
+    params: SignInParams
+  ): Promise<{ user: User; token: string | null; refreshToken: string | null }> {
     if (USE_MOCK_AUTH) {
       await this.delay();
       const role = resolveMockRole(params.email, params.role);
@@ -96,17 +99,17 @@ class AuthService {
           fullName: mockEmployerUser.fullName,
           updatedAt: new Date().toISOString(),
         };
-        return { user, token: 'mock-token-employer' };
+        return { user, token: 'mock-token-employer', refreshToken: 'mock-refresh-employer' };
       }
       const user = {
-        ...mockUser,
+        ...(role === 'admin' ? mockUser : mockUser),
         email: params.email,
         role,
         emailVerified: true,
-        fullName: mockUser.fullName,
+        fullName: role === 'admin' ? 'AxtarIS Admin' : mockUser.fullName,
         updatedAt: new Date().toISOString(),
       };
-      return { user, token: 'mock-token-candidate' };
+      return { user, token: `mock-token-${role}`, refreshToken: `mock-refresh-${role}` };
     }
 
     const { data, error } = await getSupabase().auth.signInWithPassword({
@@ -117,14 +120,18 @@ class AuthService {
     if (error) throw new Error(error.message);
     if (!data.user || !data.session) throw new Error(i18n.t('errors.signInFailed'));
 
-    return { user: toAppUser(data.user), token: data.session.access_token };
+    return {
+      user: toAppUser(data.user),
+      token: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+    };
   }
 
   async verifyOTP(
     email: string,
     code: string,
     fallbackUser?: User
-  ): Promise<{ user: User; token: string | null } | null> {
+  ): Promise<{ user: User; token: string | null; refreshToken: string | null } | null> {
     if (USE_MOCK_AUTH) {
       await this.delay();
       if (code !== '123456') return null;
@@ -142,6 +149,7 @@ class AuthService {
           updatedAt: now,
         },
         token: `mock-token-${role}`,
+        refreshToken: `mock-refresh-${role}`,
       };
     }
 
@@ -157,6 +165,7 @@ class AuthService {
     return {
       user: toAppUser(data.user),
       token: data.session?.access_token || null,
+      refreshToken: data.session?.refresh_token || null,
     };
   }
 
@@ -189,10 +198,10 @@ class AuthService {
   async restoreRecoverySession(
     accessToken: string,
     refreshToken: string
-  ): Promise<{ user: User; token: string | null }> {
+  ): Promise<{ user: User; token: string | null; refreshToken: string | null }> {
     if (USE_MOCK_AUTH) {
       await this.delay();
-      return { user: mockUser, token: 'mock-token-candidate' };
+      return { user: mockUser, token: 'mock-token-candidate', refreshToken: 'mock-refresh-candidate' };
     }
 
     const { data, error } = await getSupabase().auth.setSession({
@@ -206,6 +215,7 @@ class AuthService {
     return {
       user: toAppUser(data.user),
       token: data.session?.access_token || null,
+      refreshToken: data.session?.refresh_token || null,
     };
   }
 

@@ -14,10 +14,12 @@ import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import {
+  useCandidateProfile,
   useSavedJobIds,
   useToggleSavedJob,
 } from '@/hooks/useCandidateVacancyActions';
 import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
+import { rankVacanciesByMatch } from '@/utils/jobMatch';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { Chip } from '@/components/ui/Chip';
@@ -38,6 +40,7 @@ export default function SearchScreen() {
 
   const user = useAuthStore((s) => s.user);
   const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
+  const { data: profile } = useCandidateProfile(user?.id);
   const toggleSave = useToggleSavedJob(user?.id);
   const {
     data: allVacancies = [],
@@ -76,8 +79,8 @@ export default function SearchScreen() {
     if (selectedCity) {
       results = results.filter((v) => v.city === selectedCity);
     }
-    return results;
-  }, [query, selectedWorkTypes, selectedCity, allVacancies]);
+    return rankVacanciesByMatch(profile, results);
+  }, [query, selectedWorkTypes, selectedCity, allVacancies, profile]);
 
   const toggleWorkType = (wt: WorkType) => {
     setSelectedWorkTypes((prev) =>
@@ -140,6 +143,7 @@ export default function SearchScreen() {
             onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
             onSave={() => toggleSave.mutate(item.id)}
             saved={savedJobIds.includes(item.id)}
+            matchScore={item.match.score}
           />
         )}
         keyExtractor={(item) => item.id}

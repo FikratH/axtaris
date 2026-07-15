@@ -1,5 +1,6 @@
 import i18n from '@/i18n';
 import { CandidateProfile } from '@/types/models';
+import { getSupabase, shouldUseMockBackend } from './supabase';
 
 export interface AISuggestion {
   id: string;
@@ -103,6 +104,13 @@ class AIService {
   }
 
   async rewriteExperience(description: string): Promise<string> {
+    const ai = await this.callAssistant(
+      'You rewrite work-experience descriptions into 3-4 strong, quantified resume bullet points. Return only the bullets, each on its own line starting with "• ". No preamble, no markdown headers.',
+      `Rewrite this into impactful resume bullet points:\n${description}`,
+      250
+    );
+    if (ai) return ai;
+
     await this.simulateDelay();
 
     const bullets = description
@@ -117,6 +125,57 @@ class AIService {
       });
 
     return bullets.join('\n');
+  }
+
+  /**
+   * Generate a professional bio via the ChatGPT proxy Edge Function.
+   * Falls back to the localized template when AI is unavailable (mock mode,
+   * function not deployed, or OPENAI_API_KEY not set).
+   */
+  async generateBio(profile: CandidateProfile): Promise<string> {
+    const ai = await this.callAssistant(
+      'You write concise, professional, first-person job-seeker bios. 2-3 sentences, no markdown, no surrounding quotes. Reply in the language that best matches the provided title and skills.',
+      `Write a professional bio. Title: ${profile.title || 'professional'}. Location: ${profile.location || 'Azerbaijan'}. Skills: ${profile.skills.slice(0, 8).join(', ') || 'various'}. Years of experience entries: ${profile.workExperience.length}.`,
+      180
+    );
+    return ai || i18n.t('ai.suggestion.bioSuggested');
+  }
+
+  /** A short, encouraging "why you fit" note for a vacancy (or null if AI is off). */
+  async explainMatch(
+    profile: CandidateProfile,
+    vacancyTitle: string,
+    matchedSkills: string[]
+  ): Promise<string | null> {
+    return this.callAssistant(
+      'You write a 1-2 sentence encouraging note explaining why a candidate fits a job. Use second person ("You..."). No markdown.',
+      `Job: ${vacancyTitle}. Candidate title: ${profile.title || 'professional'}. Matching skills: ${matchedSkills.join(', ') || 'several relevant skills'}.`,
+      120
+    );
+  }
+
+  /**
+   * Server-side ChatGPT call. Returns the model text, or null when AI is not
+   * available so callers can fall back to their built-in behavior.
+   */
+  private async callAssistant(
+    system: string,
+    prompt: string,
+    maxTokens = 400
+  ): Promise<string | null> {
+    if (shouldUseMockBackend()) return null;
+
+    try {
+      const { data, error } = await getSupabase().functions.invoke<{ text?: string; error?: string }>(
+        'ai-assist',
+        { body: { system, prompt, maxTokens } }
+      );
+      if (error) return null;
+      const text = data?.text?.trim();
+      return text && text.length > 0 ? text : null;
+    } catch {
+      return null;
+    }
   }
 
   async buildResumeSummary(profile: CandidateProfile): Promise<AIResumeResult> {

@@ -10,6 +10,7 @@ import { loadSavedLanguage } from '@/i18n';
 import { useAuthStore } from '@/store/authStore';
 import { useAppStore } from '@/store/appStore';
 import { authService, toAppUser, USE_MOCK_AUTH } from '@/services/authService';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 
@@ -40,7 +41,10 @@ function AppContent() {
   const user = useAuthStore((s) => s.user);
   const pendingVerification = useAuthStore((s) => s.pendingVerification);
   const sessionExpired = useAuthStore((s) => s.sessionExpired);
+  const guestRole = useAuthStore((s) => s.guestRole);
   const hasOnboarded = useAppStore((s) => s.hasCompletedOnboarding);
+
+  usePushNotifications(user?.id, user?.role);
 
   useEffect(() => {
     loadSavedLanguage();
@@ -70,7 +74,8 @@ function AppContent() {
       ) {
         await completeAuthentication(
           toAppUser(session.user),
-          session.access_token || null
+          session.access_token || null,
+          session.refresh_token || null
         );
         return;
       }
@@ -90,6 +95,7 @@ function AppContent() {
 
     const bootstrap = async () => {
       await useAppStore.getState().loadOnboardingStatus();
+      await useAuthStore.getState().loadAccounts();
 
       await loadSession();
 
@@ -159,6 +165,7 @@ function AppContent() {
     const isResetPasswordRoute = currentPath === 'auth/reset-password';
     const isOnboardingRoute = firstSegment === 'onboarding';
     const isLegalRoute = (firstSegment as string) === 'legal';
+    const isAdminOnlyRoute = (firstSegment as string) === '(admin)';
     const isCandidateOnlyRoute =
       firstSegment === '(candidate)' ||
       firstSegment === 'profile';
@@ -179,6 +186,21 @@ function AppContent() {
     }
 
     if (!isAuthenticated || !user) {
+      // Guest browsing: let an unauthenticated visitor explore the interface
+      // they chose on role-select. Auth-gated actions prompt sign-in in-screen.
+      if (guestRole && !isAuthRoute) {
+        const guestHome = guestRole === 'employer' ? '/(employer)/dashboard' : '/(candidate)/home';
+        const sharedRoute = firstSegment === 'vacancy' || firstSegment === 'company' || isLegalRoute;
+        const allowedForGuest =
+          sharedRoute ||
+          (guestRole === 'candidate' && isCandidateOnlyRoute) ||
+          (guestRole === 'employer' && isEmployerOnlyRoute);
+        if (!allowedForGuest) {
+          router.replace(guestHome as never);
+        }
+        return;
+      }
+
       if (hasOnboarded === false && !isOnboardingRoute && !isRootRoute && !isLegalRoute) {
         router.replace('/onboarding');
       } else if (!isRootRoute && !isAuthRoute && !isOnboardingRoute && !isLegalRoute) {
@@ -187,25 +209,34 @@ function AppContent() {
       return;
     }
 
+    const homeForRole: string =
+      user.role === 'admin'
+        ? '/(admin)/dashboard'
+        : user.role === 'employer'
+        ? '/(employer)/dashboard'
+        : '/(candidate)/home';
+
     if (isCandidateOnlyRoute && user.role !== 'candidate') {
-      router.replace('/(employer)/dashboard');
+      router.replace(homeForRole as never);
       return;
     }
 
     if (isEmployerOnlyRoute && user.role !== 'employer') {
-      router.replace('/(candidate)/home');
+      router.replace(homeForRole as never);
+      return;
+    }
+
+    if (isAdminOnlyRoute && user.role !== 'admin') {
+      router.replace(homeForRole as never);
       return;
     }
 
     if ((isAuthRoute && !isResetPasswordRoute) || isOnboardingRoute) {
-      router.replace(
-        user.role === 'employer'
-          ? '/(employer)/dashboard'
-          : '/(candidate)/home'
-      );
+      router.replace(homeForRole as never);
     }
   }, [
     authStatus,
+    guestRole,
     hasOnboarded,
     isAuthenticated,
     isLoading,

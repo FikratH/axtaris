@@ -53,7 +53,7 @@ export default function VerifyOTPScreen() {
         pendingVerification?.user
       );
       if (verified) {
-        await completeAuthentication(verified.user, verified.token);
+        await completeAuthentication(verified.user, verified.token, verified.refreshToken);
 
         if (verified.user.role === 'employer') {
           router.replace('/(employer)/dashboard');

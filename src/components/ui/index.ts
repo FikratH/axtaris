@@ -17,3 +17,4 @@ export { DateField } from './DateField';
 export { SwipeableRow } from './SwipeableRow';
 export { FadeInView, ScaleInView, StaggeredItem, PressableScale } from './Animated';
 export { SubscriptionPill } from './SubscriptionPill';
+export { MatchBadge } from './MatchBadge';

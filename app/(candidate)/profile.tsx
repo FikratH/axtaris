@@ -182,9 +182,26 @@ export default function CandidateProfileScreen() {
     });
   };
 
+  if (!user) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
+        <Text style={[{ color: colors.textPrimary, textAlign: 'center' }, t.headingSmall]}>
+          {tr('guest.title')}
+        </Text>
+        <Text style={[{ color: colors.textSecondary, marginTop: 8, textAlign: 'center', maxWidth: 300 }, t.bodyMedium]}>
+          {tr('guest.subtitle')}
+        </Text>
+        <View style={{ marginTop: 24, width: '100%', maxWidth: 320, gap: 10 }}>
+          <Button title={tr('auth.signIn')} onPress={() => router.push('/auth/sign-in')} size="lg" />
+          <Button title={tr('auth.createAccount')} onPress={() => router.push('/auth/sign-up')} variant="outline" size="md" />
+        </View>
+      </View>
+    );
+  }
+
   if (isLoading) {
     return (
-      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[{ color: colors.textSecondary, marginTop: 12 }, t.bodyMedium]}>
           {tr('common.loading')}

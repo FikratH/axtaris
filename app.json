@@ -40,7 +40,8 @@
       "expo-font",
       "expo-secure-store",
       "expo-document-picker",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true

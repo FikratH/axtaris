@@ -126,7 +126,7 @@ export default function ResetPasswordScreen() {
 
         if (cancelled) return;
 
-        await completeAuthentication(restored.user, restored.token);
+        await completeAuthentication(restored.user, restored.token, restored.refreshToken);
         setIsSessionReady(true);
       } catch (error) {
         if (cancelled) return;

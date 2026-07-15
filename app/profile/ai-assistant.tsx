@@ -53,8 +53,9 @@ export default function AIAssistantScreen() {
   const applySuggestion = async (s: AISuggestion) => {
     if (!profile) return;
 
-    if (s.type === 'bio' && s.suggestedText) {
-      await updateProfile.mutateAsync({ bio: s.suggestedText });
+    if (s.type === 'bio') {
+      const bio = await aiService.generateBio(profile);
+      await updateProfile.mutateAsync({ bio });
     }
     if (s.type === 'skill') {
       await updateProfile.mutateAsync({

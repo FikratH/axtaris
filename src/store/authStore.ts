@@ -15,6 +15,16 @@ interface PendingVerificationState {
   user: User;
 }
 
+export interface StoredAccount {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  avatarUrl?: string;
+  token: string | null;
+  refreshToken?: string | null;
+}
+
 interface AuthState {
   user: User | null;
   token: string | null;
@@ -25,9 +35,12 @@ interface AuthState {
   pendingVerification: PendingVerificationState | null;
   sessionExpired: boolean;
   isSigningOut: boolean;
+  guestRole: UserRole | null;
+  accounts: StoredAccount[];
   setSelectedRole: (role: UserRole | null) => void;
+  setGuestRole: (role: UserRole | null) => void;
   updateUser: (updates: Partial<User>) => Promise<void>;
-  completeAuthentication: (user: User, token: string | null) => Promise<void>;
+  completeAuthentication: (user: User, token: string | null, refreshToken?: string | null) => Promise<void>;
   refreshAuthentication: (user: User, token: string | null) => Promise<void>;
   setPendingVerification: (pending: PendingVerificationState | null) => Promise<void>;
   clearPendingVerification: () => Promise<void>;
@@ -36,11 +49,34 @@ interface AuthState {
   clearSessionExpired: () => void;
   signOut: () => Promise<void>;
   loadSession: () => Promise<void>;
+  loadAccounts: () => Promise<void>;
+  switchAccount: (account: StoredAccount) => Promise<boolean>;
+  removeAccount: (id: string) => Promise<void>;
 }
 
 const TOKEN_KEY = 'axtaris_auth_token';
 const USER_KEY = 'axtaris_user';
 const PENDING_VERIFICATION_KEY = 'axtaris_pending_verification';
+const ACCOUNTS_KEY = 'axtaris_accounts';
+
+function parseAccounts(value: string | null): StoredAccount[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (a): a is StoredAccount =>
+        !!a && typeof a.id === 'string' && typeof a.email === 'string' && isValidRole(a.role)
+    );
+  } catch {
+    return [];
+  }
+}
+
+function upsertAccount(accounts: StoredAccount[], account: StoredAccount): StoredAccount[] {
+  const rest = accounts.filter((a) => a.id !== account.id);
+  return [account, ...rest].slice(0, 8);
+}
 
 function isValidRole(value: unknown): value is UserRole {
   return value === 'candidate' || value === 'employer' || value === 'admin';
@@ -106,8 +142,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   pendingVerification: null,
   sessionExpired: false,
   isSigningOut: false,
+  guestRole: null,
+  accounts: [],
 
   setSelectedRole: (role) => set({ selectedRole: role }),
+
+  setGuestRole: (role) => set({ guestRole: role }),
 
   updateUser: async (updates) => {
     const currentUser = get().user;
@@ -130,11 +170,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
   },
 
-  completeAuthentication: async (user, token) => {
+  completeAuthentication: async (user, token, refreshToken) => {
+    const account: StoredAccount = {
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+      token,
+      refreshToken: refreshToken ?? null,
+    };
+    const nextAccounts = upsertAccount(get().accounts, account);
+
     await Promise.all([
       storage.setItem(USER_KEY, JSON.stringify(user)),
       token ? storage.setItem(TOKEN_KEY, token) : storage.removeItem(TOKEN_KEY),
       storage.removeItem(PENDING_VERIFICATION_KEY),
+      storage.setItem(ACCOUNTS_KEY, JSON.stringify(nextAccounts)),
     ]);
 
     set({
@@ -147,6 +199,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       pendingVerification: null,
       sessionExpired: false,
       isSigningOut: false,
+      guestRole: null,
+      accounts: nextAccounts,
     });
   },
 
@@ -371,5 +425,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isSigningOut: false,
       });
     }
+  },
+
+  loadAccounts: async () => {
+    const stored = await storage.getItem(ACCOUNTS_KEY);
+    set({ accounts: parseAccounts(stored) });
+  },
+
+  switchAccount: async (account) => {
+    if (account.id === get().user?.id) return true;
+
+    if (USE_MOCK_AUTH) {
+      const user: User = {
+        id: account.id,
+        email: account.email,
+        role: account.role,
+        fullName: account.fullName,
+        avatarUrl: account.avatarUrl,
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await get().completeAuthentication(user, account.token, account.refreshToken);
+      return true;
+    }
+
+    if (!account.refreshToken) return false;
+
+    try {
+      const restored = await authService.restoreRecoverySession(
+        account.token || '',
+        account.refreshToken
+      );
+      await get().completeAuthentication(restored.user, restored.token, account.refreshToken);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  removeAccount: async (id) => {
+    const nextAccounts = get().accounts.filter((a) => a.id !== id);
+    await storage.setItem(ACCOUNTS_KEY, JSON.stringify(nextAccounts));
+    set({ accounts: nextAccounts });
   },
 }));

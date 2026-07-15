@@ -238,6 +238,31 @@ export interface ModerationFlag {
   reviewedAt?: string;
 }
 
+export interface PlatformStats {
+  totalUsers: number;
+  candidates: number;
+  employers: number;
+  admins: number;
+  totalCompanies: number;
+  verifiedCompanies: number;
+  pendingVerificationCompanies: number;
+  totalVacancies: number;
+  activeVacancies: number;
+  pendingModerationVacancies: number;
+  totalApplications: number;
+  openFlags: number;
+}
+
+export interface AdminUserSummary {
+  id: string;
+  email: string;
+  role: UserRole;
+  fullName: string;
+  avatarUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface AnalyticsSummary {
   totalVacancies: number;
   totalApplicants: number;

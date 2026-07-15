@@ -28,6 +28,7 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { StaggeredItem } from '@/components/ui/Animated';
+import { rankVacanciesByMatch } from '@/utils/jobMatch';
 import {
   getSubscriptionActionLabel,
   getSubscriptionPlanLabel,
@@ -70,13 +71,10 @@ export default function CandidateHomeScreen() {
     return Array.from(unique.values());
   }, [vacancies]);
 
-  const recommended = useMemo(() => {
-    const skills = profile?.skills ?? [];
-    if (!skills.length) return vacancies.slice(0, 4);
-    const score = (v: (typeof vacancies)[number]) =>
-      v.skills.filter((s) => skills.includes(s)).length;
-    return [...vacancies].sort((a, b) => score(b) - score(a)).slice(0, 4);
-  }, [vacancies, profile?.skills]);
+  const recommended = useMemo(
+    () => rankVacanciesByMatch(profile, vacancies).slice(0, 4),
+    [vacancies, profile]
+  );
 
   const firstName = user?.fullName?.split(' ')[0] || tr('common.defaultUserName');
   const completeness = profile?.profileCompleteness || 0;
@@ -222,6 +220,7 @@ export default function CandidateHomeScreen() {
                   onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
                   onSave={() => toggleSave.mutate(item.id)}
                   saved={savedJobIds.includes(item.id)}
+                  matchScore={item.match.score}
                   compact
                 />
               </View>

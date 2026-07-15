@@ -14,10 +14,12 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { languages, changeLanguage, LanguageCode } from '@/i18n';
 import { Card } from '@/components/ui/Card';
+import { Avatar } from '@/components/ui/Avatar';
 import i18n from '@/i18n';
 import { accountService } from '@/services/accountService';
+import { StoredAccount } from '@/store/authStore';
 import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
-import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2, UserPlus, X } from 'lucide-react-native';
 
 export default function PreferencesScreen() {
   const { colors, spacing: s, typography: t, radius: r, mode, setMode } = useTheme();
@@ -26,7 +28,27 @@ export default function PreferencesScreen() {
   const insets = useSafeAreaInsets();
   const user = useAuthStore((state) => state.user);
   const signOut = useAuthStore((state) => state.signOut);
+  const accounts = useAuthStore((state) => state.accounts);
+  const switchAccount = useAuthStore((state) => state.switchAccount);
+  const removeAccount = useAuthStore((state) => state.removeAccount);
   const audience = user?.role === 'employer' ? 'employer' : 'candidate';
+
+  const handleSwitchAccount = async (account: StoredAccount) => {
+    if (account.id === user?.id) return;
+    const ok = await switchAccount(account);
+    if (ok) {
+      const home =
+        account.role === 'admin'
+          ? '/(admin)/dashboard'
+          : account.role === 'employer'
+          ? '/(employer)/dashboard'
+          : '/(candidate)/home';
+      router.replace(home as never);
+    } else {
+      Alert.alert(tr('settings.switchFailed'));
+      router.push('/auth/sign-in');
+    }
+  };
 
   const handleDeleteAccount = () => {
     Alert.alert(tr('settings.deleteAccountConfirmTitle'), tr('settings.deleteAccountConfirmMessage'), [
@@ -181,6 +203,47 @@ export default function PreferencesScreen() {
 
       <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
         <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>
+          {tr('settings.accounts')}
+        </Text>
+        <Card padding="none">
+          {accounts.map((account) => {
+            const isCurrent = account.id === user?.id;
+            return (
+              <TouchableOpacity
+                key={account.id}
+                activeOpacity={0.7}
+                disabled={isCurrent}
+                onPress={() => handleSwitchAccount(account)}
+                style={[styles.accountRow, { paddingHorizontal: s.lg, paddingVertical: s.md, borderBottomWidth: 1, borderBottomColor: colors.divider }]}
+              >
+                <Avatar uri={account.avatarUrl} name={account.fullName} size={40} />
+                <View style={{ flex: 1, marginLeft: s.md }}>
+                  <Text style={[{ color: colors.textPrimary }, t.labelSmall]} numberOfLines={1}>{account.fullName}</Text>
+                  <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={1}>{account.email}</Text>
+                </View>
+                {isCurrent ? (
+                  <Check size={18} color={colors.primary} strokeWidth={2.5} />
+                ) : (
+                  <TouchableOpacity onPress={() => removeAccount(account.id)} hitSlop={8} style={{ padding: 6 }}>
+                    <X size={16} color={colors.textTertiary} strokeWidth={2} />
+                  </TouchableOpacity>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push('/auth/sign-in')}
+            style={[styles.accountRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
+          >
+            <UserPlus size={18} color={colors.primary} strokeWidth={1.8} style={{ marginRight: 10 }} />
+            <Text style={[{ color: colors.primary, ...t.bodyMedium, flex: 1 }]}>{tr('settings.addAccount')}</Text>
+          </TouchableOpacity>
+        </Card>
+      </View>
+
+      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>
           {tr('settings.legal')}
         </Text>
         <Card padding="none">
@@ -229,4 +292,5 @@ const styles = StyleSheet.create({
   section: {},
   sectionTitle: {},
   optionRow: { flexDirection: 'row', alignItems: 'center' },
+  accountRow: { flexDirection: 'row', alignItems: 'center' },
 });
