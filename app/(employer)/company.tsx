@@ -67,9 +67,22 @@ export default function CompanyScreen() {
     }
   };
 
+  if (!user) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
+        <EmptyState
+          title={tr('guest.title')}
+          subtitle={tr('guest.subtitle')}
+          actionTitle={tr('auth.signIn')}
+          onAction={() => router.push('/auth/sign-in')}
+        />
+      </View>
+    );
+  }
+
   if (isLoading) {
     return (
-      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[{ color: colors.textSecondary, marginTop: s.md }, t.bodyMedium]}>{tr('common.loading')}</Text>
       </View>

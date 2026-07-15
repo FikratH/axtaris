@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Sparkles } from 'lucide-react-native';
+import { Target } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { matchTier } from '@/utils/jobMatch';
@@ -29,7 +29,7 @@ export function MatchBadge({ score, style, minScore = 40 }: MatchBadgeProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: background }, style]}>
-      <Sparkles size={11} color={color} strokeWidth={2} />
+      <Target size={11} color={color} strokeWidth={2} />
       <Text style={[styles.text, { color }]}>{tr('match.badge', { score })}</Text>
     </View>
   );

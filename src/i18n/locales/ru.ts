@@ -107,6 +107,7 @@ export default {
   },
   auth: {
     signIn: 'Войти',
+    selectCountry: 'Выберите страну',
     signUp: 'Регистрация',
     email: 'Эл. почта',
     password: 'Пароль',
@@ -663,6 +664,8 @@ export default {
   },
   guest: {
     signInRequiredTitle: 'Требуется аккаунт',
+    switchToEmployer: 'Перейти к работодателю',
+    switchToCandidate: 'Перейти к соискателю',
     signInRequiredMessage: 'Войдите или создайте аккаунт, чтобы продолжить.',
     browsing: 'Гостевой режим',
     title: 'Войдите в аккаунт',

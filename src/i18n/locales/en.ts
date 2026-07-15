@@ -107,6 +107,7 @@ export default {
   },
   auth: {
     signIn: 'Sign in',
+    selectCountry: 'Select country',
     signUp: 'Sign up',
     email: 'Email',
     password: 'Password',
@@ -663,6 +664,8 @@ export default {
   },
   guest: {
     signInRequiredTitle: 'Account required',
+    switchToEmployer: 'Switch to employer view',
+    switchToCandidate: 'Switch to candidate view',
     signInRequiredMessage: 'Sign in or create an account to continue.',
     browsing: 'Guest mode',
     title: 'Sign in to your account',

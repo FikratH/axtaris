@@ -3,7 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, ChevronLeft, Crown, Sparkles, Zap } from 'lucide-react-native';
+import { Check, ChevronLeft, Crown, Star, Zap } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
@@ -31,8 +31,8 @@ import {
 } from '@/utils/subscriptionPresentation';
 import { safeBack } from '@/utils/navigation';
 
-const iconMap: Record<SubscriptionPlanCode, typeof Sparkles> = {
-  free: Sparkles,
+const iconMap: Record<SubscriptionPlanCode, typeof Star> = {
+  free: Star,
   pro: Zap,
   premium: Crown,
 };

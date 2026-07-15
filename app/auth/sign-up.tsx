@@ -17,6 +17,7 @@ import {
 import { useFieldError } from '@/hooks/useFormValidation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInput } from '@/components/ui/PhoneInput';
 import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Eye, EyeOff } from 'lucide-react-native';
 import { FadeInView } from '@/components/ui/Animated';
@@ -170,15 +171,11 @@ export default function SignUpScreen() {
           <Controller
             control={control}
             name="phone"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <Input
+            render={({ field: { onChange, value } }) => (
+              <PhoneInput
                 label={tr('auth.phone')}
                 value={value ?? ''}
                 onChangeText={onChange}
-                onBlur={onBlur}
-                placeholder="+994 50 123 45 67"
-                keyboardType="phone-pad"
-                hint={tr('validation.invalidPhone')}
                 error={fieldError('phone')}
               />
             )}

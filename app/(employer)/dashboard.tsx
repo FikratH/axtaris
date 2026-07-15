@@ -15,6 +15,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useEmployerApplications, useNotifications } from '@/hooks/useEngagementQueries';
 import { useEmployerVacancies } from '@/hooks/useVacancyQueries';
 import { Card } from '@/components/ui/Card';
+import { GuestRoleSwitch } from '@/components/GuestRoleSwitch';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -116,6 +117,8 @@ export default function EmployerDashboardScreen() {
           </TouchableOpacity>
         </View>
       </LinearGradient>
+
+      <GuestRoleSwitch />
 
       {/* ── Stats Grid ── */}
       <View style={styles.statsGrid}>

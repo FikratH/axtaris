@@ -21,7 +21,7 @@ import {
   getSubscriptionPlanLabel,
   getSubscriptionSummaryLine,
 } from '@/utils/subscriptionPresentation';
-import { FileText, Sparkles, MessageCircle } from 'lucide-react-native';
+import { FileText, Crown, MessageCircle } from 'lucide-react-native';
 import { useStartApplicationChat } from '@/hooks/useChat';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
@@ -168,7 +168,7 @@ export default function ApplicationsScreen() {
           <Card padding="lg" style={{ borderWidth: 1, borderColor: colors.cardBorder }}>
             <View style={styles.upsellHeader}>
               <View style={[styles.upsellIcon, { backgroundColor: colors.primaryLight, borderRadius: r.full }]}>
-                <Sparkles size={18} color={colors.primary} strokeWidth={1.8} />
+                <Crown size={18} color={colors.primary} strokeWidth={1.8} />
               </View>
               <View style={{ flex: 1, marginLeft: s.md }}>
                 <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>

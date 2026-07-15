@@ -17,7 +17,7 @@ import { aiService } from '@/services/aiService';
 import { shouldUseMockBackend } from '@/services/supabase';
 import { useResumeDraftStore } from '@/store/resumeDraftStore';
 import { safeBack } from '@/utils/navigation';
-import { ChevronLeft, FileUp, FileCheck, Trash2, Sparkles } from 'lucide-react-native';
+import { ChevronLeft, FileUp, FileCheck, Trash2, Wand2 } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 
 /** PDFs and DOCX carry embedded text we can parse; legacy .doc does not. */
@@ -227,7 +227,7 @@ export default function UploadCVScreen() {
                   variant="secondary"
                   size="sm"
                   loading={parsing}
-                  icon={<Sparkles size={14} color={colors.primary} strokeWidth={2} />}
+                  icon={<Wand2 size={14} color={colors.primary} strokeWidth={2} />}
                 />
               ) : null}
               <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>

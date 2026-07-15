@@ -25,6 +25,7 @@ import { useGuestGate } from '@/hooks/useGuestGate';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Avatar } from '@/components/ui/Avatar';
+import { GuestRoleSwitch } from '@/components/GuestRoleSwitch';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
@@ -35,7 +36,7 @@ import {
   getSubscriptionPlanLabel,
   getSubscriptionSummaryLine,
 } from '@/utils/subscriptionPresentation';
-import { Search, Bell, TrendingUp, Sparkles } from 'lucide-react-native';
+import { Search, Bell, TrendingUp, Star } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -120,7 +121,7 @@ export default function CandidateHomeScreen() {
               activeOpacity={0.8}
               style={{ marginLeft: 10 }}
             >
-              <Avatar name={user?.fullName} size={40} />
+              <Avatar name={user?.fullName} uri={user?.avatarUrl} size={40} />
             </TouchableOpacity>
           </View>
 
@@ -138,6 +139,8 @@ export default function CandidateHomeScreen() {
         </View>
       </LinearGradient>
 
+      <GuestRoleSwitch />
+
       {/* ── Profile Completion Banner ── */}
       {completeness < 100 && (
         <TouchableOpacity
@@ -146,7 +149,7 @@ export default function CandidateHomeScreen() {
           style={[styles.completionBanner, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
         >
           <View style={[styles.completionIcon, { backgroundColor: colors.primaryLight }]}>
-            <Sparkles size={20} color={colors.primary} strokeWidth={1.8} />
+            <Star size={20} color={colors.primary} strokeWidth={1.8} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>{tr('candidate.completeProfile')}</Text>
@@ -165,7 +168,7 @@ export default function CandidateHomeScreen() {
           style={[styles.subscriptionBanner, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
         >
           <View style={[styles.subscriptionIcon, { backgroundColor: colors.primaryLight }]}>
-            <Sparkles size={20} color={colors.primary} strokeWidth={1.8} />
+            <Star size={20} color={colors.primary} strokeWidth={1.8} />
           </View>
           <View style={{ flex: 1, marginLeft: 12 }}>
             <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>

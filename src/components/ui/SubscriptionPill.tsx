@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { Crown, Sparkles, Zap } from 'lucide-react-native';
+import { Crown, Star, Zap } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { SubscriptionAudience, SubscriptionPlanCode } from '@/types/models';
@@ -12,8 +12,8 @@ interface SubscriptionPillProps {
   style?: ViewStyle;
 }
 
-const iconMap: Record<SubscriptionPlanCode, typeof Sparkles> = {
-  free: Sparkles,
+const iconMap: Record<SubscriptionPlanCode, typeof Star> = {
+  free: Star,
   pro: Zap,
   premium: Crown,
 };

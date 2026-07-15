@@ -107,6 +107,7 @@ export default {
   },
   auth: {
     signIn: 'Daxil ol',
+    selectCountry: 'Ölkə seçin',
     signUp: 'Qeydiyyat',
     email: 'E-poçt',
     password: 'Şifrə',
@@ -663,6 +664,8 @@ export default {
   },
   guest: {
     signInRequiredTitle: 'Hesab tələb olunur',
+    switchToEmployer: 'İşəgötürən görünüşünə keç',
+    switchToCandidate: 'Namizəd görünüşünə keç',
     signInRequiredMessage: 'Davam etmək üçün daxil olun və ya hesab yaradın.',
     browsing: 'Qonaq rejimi',
     title: 'Hesabınıza daxil olun',

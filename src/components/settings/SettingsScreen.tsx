@@ -13,7 +13,7 @@ import i18n from '@/i18n';
 import { accountService } from '@/services/accountService';
 import { StoredAccount } from '@/store/authStore';
 import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
-import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2, UserPlus, X, LogOut, LifeBuoy } from 'lucide-react-native';
+import { ChevronLeft, Check, ChevronRight, Crown, FileText, ShieldCheck, Trash2, UserPlus, X, LogOut, LifeBuoy } from 'lucide-react-native';
 import { useStartSupportChat } from '@/hooks/useChat';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
 
@@ -52,7 +52,9 @@ export function SettingsScreen({ showBackButton = true }: { showBackButton?: boo
           : '/(candidate)/home';
       router.replace(home as never);
     } else {
-      Alert.alert(tr('settings.switchFailed'));
+      // On web the prior session's refresh token isn't persisted (by design),
+      // so we can't silently restore it — send the user to re-authenticate this
+      // account instead of showing a scary error every time.
       setAddingAccount(true);
       router.push('/auth/sign-in');
     }
@@ -228,7 +230,7 @@ export function SettingsScreen({ showBackButton = true }: { showBackButton?: boo
             onPress={() => router.push('/subscription' as never)}
             style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
           >
-            <Sparkles size={18} color={colors.primary} strokeWidth={1.8} style={{ marginRight: 10 }} />
+            <Crown size={18} color={colors.primary} strokeWidth={1.8} style={{ marginRight: 10 }} />
             <View style={{ flex: 1 }}>
               <Text style={[{ color: colors.textPrimary, ...t.bodyMedium }]}>{tr('subscription.managePlan')}</Text>
               <Text style={[{ color: colors.textTertiary, ...t.caption, marginTop: 3 }]}>{getSubscriptionSettingsDescription(tr, audience)}</Text>

@@ -20,6 +20,14 @@ export default function VerifyOTPScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const pendingVerification = useAuthStore((st) => st.pendingVerification);
   const completeAuthentication = useAuthStore((st) => st.completeAuthentication);
+  const clearPendingVerification = useAuthStore((st) => st.clearPendingVerification);
+
+  const handleBack = () => {
+    // Clear the pending-verification state first, otherwise the root guard
+    // immediately routes back here (that's why "back" appeared broken).
+    void clearPendingVerification();
+    safeBack(router, '/auth/sign-up');
+  };
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -91,7 +99,7 @@ export default function VerifyOTPScreen() {
       ]}
     >
       <TouchableOpacity
-        onPress={() => safeBack(router, '/auth/sign-up')}
+        onPress={handleBack}
         style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
       >
         <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />

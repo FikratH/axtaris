@@ -16,7 +16,7 @@ import {
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
 import { safeBack } from '@/utils/navigation';
-import { ChevronLeft, Sparkles, Lightbulb, Zap, CheckCircle2 } from 'lucide-react-native';
+import { ChevronLeft, Wand2, Lightbulb, Zap, CheckCircle2 } from 'lucide-react-native';
 
 export default function AIAssistantScreen() {
   const { colors, typography: t, isDark } = useTheme();
@@ -141,7 +141,7 @@ export default function AIAssistantScreen() {
       </View>
 
       <View style={[styles.heroBanner, { backgroundColor: isDark ? 'rgba(91,127,214,0.12)' : '#EEF2FF' }]}>
-        <Sparkles size={28} color={colors.primary} strokeWidth={1.5} />
+        <Wand2 size={28} color={colors.primary} strokeWidth={1.5} />
         <Text style={[{ color: colors.textPrimary, marginTop: 12 }, t.headingSmall]}>
           {tr('ai.improveProfile')}
         </Text>

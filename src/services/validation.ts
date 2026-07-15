@@ -13,7 +13,9 @@ const phoneField = z
   .string()
   .optional()
   .refine(
-    (val) => !val || /^\+?994\s?\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$/.test(val.replace(/\s/g, '')),
+    // International E.164-ish: optional +, 8–15 digits (the country picker
+    // produces "+<dial><national>", e.g. +994501234567).
+    (val) => !val || /^\+?\d{8,15}$/.test(val.replace(/[^\d+]/g, '')),
     { message: 'validation.invalidPhone' }
   );
 
