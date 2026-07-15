@@ -6,6 +6,22 @@ export type ExperienceLevel = 'no_experience' | 'junior' | 'mid' | 'senior' | 'l
 export type VerificationStatus = 'not_verified' | 'pending' | 'verified' | 'rejected';
 export type ModerationStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
 export type SubscriptionPlanCode = 'free' | 'pro' | 'premium';
+
+export interface FinancePlanBreakdown {
+  plan: SubscriptionPlanCode;
+  subscribers: number;
+  mrr: number;
+}
+
+export interface FinanceStats {
+  currency: string;
+  mrr: number;
+  arr: number;
+  arpu: number;
+  payingSubscribers: number;
+  activeSubscriptions: number;
+  byPlan: FinancePlanBreakdown[];
+}
 export type SubscriptionStatus = 'active' | 'canceled' | 'expired';
 export type SubscriptionAudience = 'candidate' | 'employer';
 

@@ -5,6 +5,7 @@ import { adminService } from '@/services/adminService';
 export const adminQueryKeys = {
   root: ['admin'] as const,
   stats: ['admin', 'stats'] as const,
+  finance: ['admin', 'finance'] as const,
   users: (search: string) => ['admin', 'users', search] as const,
   moderationVacancies: ['admin', 'moderation', 'vacancies'] as const,
   companies: ['admin', 'companies'] as const,
@@ -13,6 +14,10 @@ export const adminQueryKeys = {
 
 export function usePlatformStats() {
   return useQuery({ queryKey: adminQueryKeys.stats, queryFn: () => adminService.fetchPlatformStats() });
+}
+
+export function useAdminFinance() {
+  return useQuery({ queryKey: adminQueryKeys.finance, queryFn: () => adminService.fetchFinanceStats() });
 }
 
 export function useAdminUsers(search = '') {

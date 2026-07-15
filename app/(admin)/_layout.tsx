@@ -4,7 +4,7 @@ import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, ShieldCheck, Users, Building2 } from 'lucide-react-native';
+import { LayoutDashboard, ShieldCheck, Users, Building2, Wallet } from 'lucide-react-native';
 
 export default function AdminLayout() {
   const { colors } = useTheme();
@@ -63,6 +63,13 @@ export default function AdminLayout() {
         options={{
           title: tr('admin.companies'),
           tabBarIcon: ({ color }) => <Building2 size={22} color={color} strokeWidth={1.8} />,
+        }}
+      />
+      <Tabs.Screen
+        name="finance"
+        options={{
+          title: tr('admin.financeTab'),
+          tabBarIcon: ({ color }) => <Wallet size={22} color={color} strokeWidth={1.8} />,
         }}
       />
     </Tabs>

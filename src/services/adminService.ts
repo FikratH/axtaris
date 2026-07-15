@@ -1,8 +1,10 @@
 import {
   AdminUserSummary,
   Company,
+  FinanceStats,
   ModerationFlag,
   PlatformStats,
+  SubscriptionPlanCode,
   UserRole,
   Vacancy,
   VacancyStatus,
@@ -137,6 +139,60 @@ class AdminService {
       pendingModerationVacancies,
       totalApplications,
       openFlags,
+    };
+  }
+
+  async fetchFinanceStats(): Promise<FinanceStats> {
+    if (shouldUseMockBackend()) {
+      const byPlan = [
+        { plan: 'pro' as SubscriptionPlanCode, subscribers: 3, mrr: 27 },
+        { plan: 'premium' as SubscriptionPlanCode, subscribers: 1, mrr: 19 },
+      ];
+      const mrr = byPlan.reduce((sum, p) => sum + p.mrr, 0);
+      const paying = byPlan.reduce((sum, p) => sum + p.subscribers, 0);
+      return {
+        currency: 'AZN',
+        mrr,
+        arr: mrr * 12,
+        arpu: paying ? Math.round(mrr / paying) : 0,
+        payingSubscribers: paying,
+        activeSubscriptions: paying + 3,
+        byPlan,
+      };
+    }
+
+    // Revenue is derived from active candidate subscriptions. For large volumes
+    // this should move to a SQL aggregate/RPC; the row cap keeps it bounded.
+    const { data, error } = await getSupabase()
+      .from('candidate_subscriptions')
+      .select('plan, price_amount, status')
+      .eq('status', 'active')
+      .limit(10000);
+
+    if (error) throw new Error(error.message);
+
+    const rows = (data || []) as { plan: SubscriptionPlanCode; price_amount: number | null }[];
+    const activeSubscriptions = rows.length;
+    const paidRows = rows.filter((r) => (r.price_amount || 0) > 0);
+    const mrr = paidRows.reduce((sum, r) => sum + (r.price_amount || 0), 0);
+    const payingSubscribers = paidRows.length;
+
+    const planMap = new Map<SubscriptionPlanCode, { subscribers: number; mrr: number }>();
+    for (const r of paidRows) {
+      const cur = planMap.get(r.plan) || { subscribers: 0, mrr: 0 };
+      cur.subscribers += 1;
+      cur.mrr += r.price_amount || 0;
+      planMap.set(r.plan, cur);
+    }
+
+    return {
+      currency: 'AZN',
+      mrr,
+      arr: mrr * 12,
+      arpu: payingSubscribers ? Math.round(mrr / payingSubscribers) : 0,
+      payingSubscribers,
+      activeSubscriptions,
+      byPlan: Array.from(planMap.entries()).map(([plan, v]) => ({ plan, ...v })),
     };
   }
 
