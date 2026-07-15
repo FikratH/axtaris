@@ -22,6 +22,13 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    // Server-to-server only: the caller (DB trigger / backend) must present the
+    // shared secret. If PUSH_SECRET is unset, refuse everything (safe default).
+    const secret = Deno.env.get('PUSH_SECRET');
+    if (!secret || req.headers.get('x-push-secret') !== secret) {
+      return json({ error: 'Unauthorized' }, 401);
+    }
+
     const { userId, title, body, data } = await req.json();
     if (!userId || !title) return json({ error: 'userId and title are required' }, 400);
 

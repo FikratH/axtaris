@@ -39,6 +39,39 @@ these are the genuinely-remaining steps.
 
 ---
 
+## 🔌 New feature setup (AI / Push / Admin)
+
+### 1. ChatGPT (OpenAI) — where to paste your token
+The key stays **server-side** (never in the app bundle). Paste it as a Supabase
+Edge Function secret, then deploy the proxy:
+```bash
+supabase secrets set OPENAI_API_KEY=sk-your-key-here      # <-- paste your token here
+supabase secrets set OPENAI_MODEL=gpt-4o-mini             # optional (this is the default, cost-effective)
+supabase functions deploy ai-assist
+```
+Once set, the AI Assistant generates real bios / rewrites experience. Until then
+it gracefully falls back to the localized built-in text. Cost control: `gpt-4o-mini`,
+capped output tokens, and only signed-in users can call it.
+
+### 2. Push notifications
+```bash
+supabase functions deploy send-push
+```
+The app registers each device's Expo push token on sign-in (native builds; web is a
+safe no-op). To fire a push automatically whenever an in-app notification is created,
+add a trigger on `public.notifications` that calls `send-push` via `net.http_post`
+(pg_net). Web push (Netlify) is a separate future item.
+
+### 3. Admin panel access
+The `is_admin()` RLS migration is applied. Promote a user to admin:
+```sql
+UPDATE public.profiles SET role = 'admin' WHERE email = 'you@example.com';
+```
+They'll be routed to the `(admin)` section (dashboard KPIs, moderation queue, user &
+company management). In dev/mock mode, signing in with any `admin@…` email works.
+
+---
+
 ## 🚀 Deploy steps required (code is ready — just needs applying)
 
 1. **Apply the new DB migration** to the Supabase project:

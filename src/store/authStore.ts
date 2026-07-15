@@ -1,7 +1,9 @@
+import { Platform } from 'react-native';
 import { create } from 'zustand';
 import { storage } from '@/utils/storage';
 import { User, UserRole } from '@/types/models';
 import { authService, USE_MOCK_AUTH } from '@/services/authService';
+import { clearPushToken } from '@/services/pushService';
 
 export type AuthStatus =
   | 'loading'
@@ -171,14 +173,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   completeAuthentication: async (user, token, refreshToken) => {
+    // On web `storage` falls back to plaintext localStorage, so never persist
+    // session tokens for the background account list there — keep only display
+    // fields. Native uses encrypted SecureStore, so instant switching is safe.
+    const isWeb = Platform.OS === 'web';
     const account: StoredAccount = {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
       role: user.role,
       avatarUrl: user.avatarUrl,
-      token,
-      refreshToken: refreshToken ?? null,
+      token: isWeb ? null : token,
+      refreshToken: isWeb ? null : refreshToken ?? null,
     };
     const nextAccounts = upsertAccount(get().accounts, account);
 
@@ -303,7 +309,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearSessionExpired: () => set({ sessionExpired: false }),
 
   signOut: async () => {
+    const previousUserId = get().user?.id;
     set({ isSigningOut: true, sessionExpired: false });
+
+    // Clear the push token while we still have a valid session (RLS-permitted),
+    // so a signed-out device stops receiving the previous user's notifications.
+    if (previousUserId) {
+      await clearPushToken(previousUserId);
+    }
 
     try {
       await authService.signOut();
@@ -457,7 +470,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         account.token || '',
         account.refreshToken
       );
-      await get().completeAuthentication(restored.user, restored.token, account.refreshToken);
+      // Persist the ROTATED refresh token, not the consumed one, or the next
+      // switch would replay a used token and trip Supabase reuse-detection.
+      await get().completeAuthentication(restored.user, restored.token, restored.refreshToken);
       return true;
     } catch {
       return false;

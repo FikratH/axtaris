@@ -181,8 +181,12 @@ class AIService {
   async buildResumeSummary(profile: CandidateProfile): Promise<AIResumeResult> {
     await this.simulateDelay();
 
-    const yearsExp = profile.workExperience.length > 0 ? 
-      Math.max(1, new Date().getFullYear() - new Date(profile.workExperience[profile.workExperience.length - 1].startDate).getFullYear()) : 0;
+    const currentYear = new Date().getFullYear();
+    const yearsExp = profile.workExperience.reduce((max, exp) => {
+      const start = new Date(exp.startDate).getFullYear();
+      if (Number.isNaN(start)) return max;
+      return Math.max(max, currentYear - start);
+    }, 0);
 
     return {
       summary: `Results-driven ${profile.title || 'professional'} with ${yearsExp}+ years of experience. Proven track record in ${profile.skills.slice(0, 3).join(', ')}. Seeking to leverage expertise in a challenging new role.`,

@@ -40,6 +40,14 @@ Deno.serve(async (req) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
 
+    // Per-user daily quota to prevent using this as a free general-purpose LLM.
+    const dailyLimit = Number(Deno.env.get('AI_DAILY_LIMIT') || '30');
+    const { data: allowed, error: quotaError } = await supabase.rpc('consume_ai_quota', {
+      daily_limit: dailyLimit,
+    });
+    if (quotaError) return json({ error: quotaError.message }, 500);
+    if (allowed === false) return json({ error: 'Daily AI limit reached' }, 429);
+
     const apiKey = Deno.env.get('OPENAI_API_KEY');
     if (!apiKey) return json({ error: 'OPENAI_API_KEY is not configured' }, 503);
 

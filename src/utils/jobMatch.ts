@@ -40,6 +40,7 @@ function inferCandidateLevel(profile: CandidateProfile): number {
     if (Number.isNaN(start)) return max;
     return Math.max(max, new Date().getFullYear() - start);
   }, 0);
+  if (years >= 12) return 5;
   if (years >= 8) return 4;
   if (years >= 5) return 3;
   if (years >= 2) return 2;

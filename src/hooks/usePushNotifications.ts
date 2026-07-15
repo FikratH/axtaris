@@ -13,7 +13,10 @@ export function usePushNotifications(userId?: string, role?: UserRole) {
   const registeredFor = useRef<string | null>(null);
 
   useEffect(() => {
-    if (Platform.OS === 'web' || !userId) return;
+    if (Platform.OS === 'web' || !userId) {
+      registeredFor.current = null;
+      return;
+    }
 
     if (registeredFor.current !== userId) {
       registeredFor.current = userId;
