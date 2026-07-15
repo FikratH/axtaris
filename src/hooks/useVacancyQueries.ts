@@ -49,6 +49,14 @@ export function useEmployerVacancies(userId?: string) {
   });
 }
 
+export function useTopCompanies(limit = 12) {
+  return useQuery({
+    queryKey: ['companies', 'top', limit] as const,
+    queryFn: () => vacancyService.fetchTopCompanies(limit),
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
 export function useEmployerCompany(userId?: string) {
   return useQuery({
     enabled: !!userId,

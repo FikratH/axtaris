@@ -1,4 +1,4 @@
-import { Company, ExperienceLevel, ScreeningQuestion, Vacancy, VacancyStatus, WorkType } from '@/types/models';
+import { Company, ExperienceLevel, ScreeningQuestion, TopCompany, Vacancy, VacancyStatus, WorkType } from '@/types/models';
 import { mockCompanies, mockVacancies } from './mockData';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 
@@ -150,6 +150,18 @@ export function mapCompany(row: SupabaseCompanyRow): Company {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+// "Top companies" ranking: verified employers first, then by rating, then by
+// how actively they're hiring (active vacancy count).
+function sortTopCompanies(a: TopCompany, b: TopCompany): number {
+  const av = a.verificationStatus === 'verified' ? 1 : 0;
+  const bv = b.verificationStatus === 'verified' ? 1 : 0;
+  if (av !== bv) return bv - av;
+  const ar = a.rating || 0;
+  const br = b.rating || 0;
+  if (ar !== br) return br - ar;
+  return b.activeVacancyCount - a.activeVacancyCount;
 }
 
 export function mapVacancy(row: SupabaseVacancyRow): Vacancy {
@@ -360,6 +372,37 @@ class VacancyService {
     if (!data) return null;
 
     return mapVacancy(data as SupabaseVacancyRow);
+  }
+
+  async fetchTopCompanies(limit = 12): Promise<TopCompany[]> {
+    if (shouldUseMockBackend()) {
+      return mockCompanies
+        .map((c) => ({
+          ...c,
+          activeVacancyCount: mockVacancies.filter((v) => v.companyId === c.id && v.status === 'active').length,
+        }))
+        .sort(sortTopCompanies)
+        .slice(0, limit);
+    }
+
+    const supa = getSupabase();
+    const [companiesRes, vacanciesRes] = await Promise.all([
+      supa.from('companies').select(companySelect).limit(200),
+      supa.from('vacancies').select('company_id').eq('status', 'active').limit(5000),
+    ]);
+
+    if (companiesRes.error) throw new Error(companiesRes.error.message);
+    if (vacanciesRes.error) throw new Error(vacanciesRes.error.message);
+
+    const counts = new Map<string, number>();
+    ((vacanciesRes.data || []) as { company_id: string }[]).forEach((row) => {
+      counts.set(row.company_id, (counts.get(row.company_id) || 0) + 1);
+    });
+
+    return ((companiesRes.data || []) as SupabaseCompanyRow[])
+      .map((row) => ({ ...mapCompany(row), activeVacancyCount: counts.get(row.id) || 0 }))
+      .sort(sortTopCompanies)
+      .slice(0, limit);
   }
 
   async createVacancy(input: VacancyMutationInput): Promise<Vacancy> {

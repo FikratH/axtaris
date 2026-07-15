@@ -192,7 +192,11 @@ function AppContent() {
       // they chose on role-select. Auth-gated actions prompt sign-in in-screen.
       if (guestRole && !isAuthRoute) {
         const guestHome = guestRole === 'employer' ? '/(employer)/dashboard' : '/(candidate)/home';
-        const sharedRoute = firstSegment === 'vacancy' || firstSegment === 'company' || isLegalRoute;
+        const sharedRoute =
+          firstSegment === 'vacancy' ||
+          firstSegment === 'company' ||
+          (firstSegment as string) === 'companies' ||
+          isLegalRoute;
         const allowedForGuest =
           sharedRoute ||
           (guestRole === 'candidate' && isCandidateOnlyRoute) ||

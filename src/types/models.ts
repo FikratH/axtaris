@@ -7,6 +7,10 @@ export type VerificationStatus = 'not_verified' | 'pending' | 'verified' | 'reje
 export type ModerationStatus = 'pending' | 'approved' | 'rejected' | 'flagged';
 export type SubscriptionPlanCode = 'free' | 'pro' | 'premium';
 
+export interface TopCompany extends Company {
+  activeVacancyCount: number;
+}
+
 export interface FinancePlanBreakdown {
   plan: SubscriptionPlanCode;
   subscribers: number;

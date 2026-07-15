@@ -20,7 +20,7 @@ import {
   useToggleSavedJob,
 } from '@/hooks/useCandidateVacancyActions';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
-import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
+import { useCandidateVacancies, useTopCompanies } from '@/hooks/useVacancyQueries';
 import { useGuestGate } from '@/hooks/useGuestGate';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
@@ -36,7 +36,7 @@ import {
   getSubscriptionPlanLabel,
   getSubscriptionSummaryLine,
 } from '@/utils/subscriptionPresentation';
-import { Search, Bell, TrendingUp, Star } from 'lucide-react-native';
+import { Search, Bell, TrendingUp, Star, BadgeCheck } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -61,21 +61,7 @@ export default function CandidateHomeScreen() {
     refetch,
   } = useCandidateVacancies();
 
-  const companies = useMemo(() => {
-    const unique = new Map<string, NonNullable<(typeof vacancies)[number]['company']> & { vacancyCount: number }>();
-
-    vacancies.forEach((vacancy) => {
-      if (vacancy.company) {
-        const existing = unique.get(vacancy.company.id);
-        unique.set(vacancy.company.id, {
-          ...vacancy.company,
-          vacancyCount: (existing?.vacancyCount || 0) + 1,
-        });
-      }
-    });
-
-    return Array.from(unique.values());
-  }, [vacancies]);
+  const { data: companies = [] } = useTopCompanies();
 
   const recommended = useMemo(
     () => rankVacanciesByMatch(profile, vacancies).slice(0, 4),
@@ -243,7 +229,7 @@ export default function CandidateHomeScreen() {
         <SectionHeader
           title={tr('candidate.topCompanies')}
           actionTitle={tr('common.seeAll')}
-          onAction={() => {}}
+          onAction={() => router.push('/companies' as never)}
         />
         <FlatList
           data={companies}
@@ -261,9 +247,13 @@ export default function CandidateHomeScreen() {
               <Text style={[{ color: colors.textPrimary, marginTop: 8, textAlign: 'center' }, t.labelSmall]} numberOfLines={1}>
                 {item.name}
               </Text>
-              <View style={[styles.companyBadge, { backgroundColor: colors.successLight }]}>
-                <TrendingUp size={10} color={colors.success} strokeWidth={2} />
-                <Text style={[{ color: colors.success, marginLeft: 3 }, t.caption]}>{item.vacancyCount}</Text>
+              <View style={[styles.companyBadge, { backgroundColor: item.verificationStatus === 'verified' ? colors.primaryLight : colors.successLight }]}>
+                {item.verificationStatus === 'verified' ? (
+                  <BadgeCheck size={10} color={colors.primary} strokeWidth={2} />
+                ) : (
+                  <TrendingUp size={10} color={colors.success} strokeWidth={2} />
+                )}
+                <Text style={[{ color: item.verificationStatus === 'verified' ? colors.primary : colors.success, marginLeft: 3 }, t.caption]}>{item.activeVacancyCount}</Text>
               </View>
             </TouchableOpacity>
           )}

@@ -147,6 +147,7 @@ export default {
     home: 'Ana səhifə',
     autofillFromCv: 'CV-dən doldur',
     parsingCv: 'CV oxunur…',
+    activeJobs: '{{count}} aktiv vakansiya',
     search: 'Axtarış',
     saved: 'Saxlanılmış',
     applications: 'Müraciətlər',

@@ -147,6 +147,7 @@ export default {
     home: 'Главная',
     autofillFromCv: 'Заполнить из резюме',
     parsingCv: 'Чтение резюме…',
+    activeJobs: '{{count}} активных вакансий',
     search: 'Поиск',
     saved: 'Сохранённые',
     applications: 'Отклики',

@@ -147,6 +147,7 @@ export default {
     home: 'Home',
     autofillFromCv: 'Auto-fill from CV',
     parsingCv: 'Reading your CV…',
+    activeJobs: '{{count}} active jobs',
     search: 'Search',
     saved: 'Saved',
     applications: 'Applications',
