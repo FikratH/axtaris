@@ -154,6 +154,17 @@ export interface EmployerProfile {
   updatedAt: string;
 }
 
+export interface ScreeningQuestion {
+  id: string;
+  question: string;
+  required: boolean;
+}
+
+export interface ScreeningAnswer {
+  question: string;
+  answer: string;
+}
+
 export interface Vacancy {
   id: string;
   title: string;
@@ -178,6 +189,7 @@ export interface Vacancy {
   createdAt: string;
   updatedAt: string;
   expiresAt?: string;
+  screeningQuestions?: ScreeningQuestion[];
 }
 
 export interface Application {
@@ -191,6 +203,7 @@ export interface Application {
   cvUrl?: string;
   employerNotes?: string;
   employerRating?: number;
+  screeningAnswers?: ScreeningAnswer[];
   vacancy?: Vacancy;
   candidate?: CandidateProfile & { user?: User };
   appliedAt: string;

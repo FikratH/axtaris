@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -68,7 +69,7 @@ export default function ApplicantsScreen() {
     ? allApplications
     : allApplications.filter((a) => a.status === filter);
 
-  const handleOpenCv = async (application: Application) => {
+  const handleOpenCv = (application: Application) => {
     const cvUrl = application.cvUrl || application.candidate?.cvUrl;
 
     if (!cvUrl) {
@@ -76,30 +77,10 @@ export default function ApplicantsScreen() {
       return;
     }
 
-    setOpeningCvId(application.id);
-
-    try {
-      const resolvedUrl = await fileStorageService.resolveFileUrl(cvUrl);
-
-      if (!resolvedUrl) {
-        throw new Error(tr('common.notAvailable'));
-      }
-
-      const canOpen = await Linking.canOpenURL(resolvedUrl);
-
-      if (!canOpen) {
-        throw new Error(tr('common.error'));
-      }
-
-      await Linking.openURL(resolvedUrl);
-    } catch (error) {
-      Alert.alert(
-        tr('common.error'),
-        error instanceof Error ? error.message : tr('common.error')
-      );
-    } finally {
-      setOpeningCvId(null);
-    }
+    router.push({
+      pathname: '/cv-preview',
+      params: { ref: cvUrl, name: application.candidate?.user?.fullName || tr('cv.title') },
+    } as never);
   };
 
   const renderApplicant = ({ item }: { item: Application }) => {

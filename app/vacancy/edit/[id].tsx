@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -26,8 +18,11 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
-import { ChevronLeft } from 'lucide-react-native';
-import { ExperienceLevel, VacancyStatus, WorkType } from '@/types/models';
+import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { getSuggestions } from '@/data/suggestions';
+import { createLocalItemId } from '@/utils/profileSections';
+import { ChevronLeft, X } from 'lucide-react-native';
+import { ExperienceLevel, VacancyStatus, WorkType, ScreeningQuestion } from '@/types/models';
 
 const workTypes: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
 
@@ -54,7 +49,8 @@ function parseOptionalAmount(value: string): number | undefined {
 
 export default function EditVacancyScreen() {
   const { colors, typography: t } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
+  const lang = i18n.language as 'az' | 'ru' | 'en';
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -75,6 +71,20 @@ export default function EditVacancyScreen() {
   const [requirements, setRequirements] = useState('');
   const [responsibilities, setResponsibilities] = useState('');
   const [benefits, setBenefits] = useState('');
+  const [screeningQuestions, setScreeningQuestions] = useState<ScreeningQuestion[]>([]);
+  const [questionInput, setQuestionInput] = useState('');
+
+  const addQuestion = () => {
+    const q = questionInput.trim();
+    if (!q) return;
+    setScreeningQuestions((cur) => [...cur, { id: createLocalItemId('question'), question: q, required: true }]);
+    setQuestionInput('');
+  };
+  const removeQuestion = (qid: string) => setScreeningQuestions((cur) => cur.filter((x) => x.id !== qid));
+  const toggleRequired = (qid: string) =>
+    setScreeningQuestions((cur) => cur.map((x) => (x.id === qid ? { ...x, required: !x.required } : x)));
+  const appendLine = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) =>
+    setter((cur) => (cur.trim() ? `${cur.trim()}\n${value}` : value));
 
   useEffect(() => {
     if (!vacancy) return;
@@ -90,6 +100,7 @@ export default function EditVacancyScreen() {
     setRequirements(joinLines(vacancy.requirements));
     setResponsibilities(joinLines(vacancy.responsibilities));
     setBenefits(joinLines(vacancy.benefits));
+    setScreeningQuestions(vacancy.screeningQuestions || []);
   }, [vacancy]);
 
   const addSkill = () => {
@@ -153,6 +164,7 @@ export default function EditVacancyScreen() {
           skills,
           companyId,
           status,
+          screeningQuestions,
         },
       });
 
@@ -250,8 +262,37 @@ export default function EditVacancyScreen() {
           </View>
 
           <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <SuggestionChips suggestions={getSuggestions('requirements', lang)} onSelect={appendLine(setRequirements)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <SuggestionChips suggestions={getSuggestions('responsibilities', lang)} onSelect={appendLine(setResponsibilities)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <SuggestionChips suggestions={getSuggestions('benefits', lang)} onSelect={appendLine(setBenefits)} title={tr('common.suggestions')} />
+
+          <Text style={[{ color: colors.textPrimary, marginTop: 20, marginBottom: 4 }, t.labelSmall]}>{tr('employer.screeningQuestions')}</Text>
+          <Text style={[{ color: colors.textTertiary, marginBottom: 8 }, t.caption]}>{tr('employer.screeningQuestionsHint')}</Text>
+          {screeningQuestions.map((q) => (
+            <View key={q.id} style={[styles.questionRow, { borderColor: colors.cardBorder }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[{ color: colors.textPrimary }, t.bodySmall]}>{q.question}</Text>
+                <TouchableOpacity onPress={() => toggleRequired(q.id)} style={{ marginTop: 6 }}>
+                  <Text style={[{ color: q.required ? colors.primary : colors.textTertiary }, t.caption]}>
+                    {q.required ? `● ${tr('employer.questionRequired')}` : `○ ${tr('employer.questionOptional')}`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={() => removeQuestion(q.id)} hitSlop={8} style={{ padding: 4 }}>
+                <X size={16} color={colors.textTertiary} strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+          ))}
+          <Input
+            value={questionInput}
+            onChangeText={setQuestionInput}
+            placeholder={tr('employer.addQuestion')}
+            onSubmitEditing={addQuestion}
+            rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>{tr('common.add')}</Text>}
+            onRightIconPress={addQuestion}
+          />
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>
@@ -292,4 +333,12 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   formCard: { borderRadius: 14, borderWidth: 1, padding: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  questionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+  },
 });

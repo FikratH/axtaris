@@ -1,15 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus } from 'lucide-react-native';
@@ -18,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { safeBack } from '@/utils/navigation';
 import { Button, Chip, DateField, EmptyState, Input } from '@/components/ui';
+import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { getSuggestions } from '@/data/suggestions';
 import {
   useCandidateProfile,
   useUpdateCandidateProfile,
@@ -27,7 +20,7 @@ import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profi
 
 export default function ExperienceFormScreen() {
   const { colors, typography: t } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -216,11 +209,21 @@ export default function ExperienceFormScreen() {
             onChangeText={setJobTitle}
             placeholder={tr('profileCrud.experience.jobTitlePlaceholder')}
           />
+          <SuggestionChips
+            suggestions={getSuggestions('jobTitles', i18n.language as 'az' | 'ru' | 'en')}
+            query={jobTitle}
+            onSelect={setJobTitle}
+          />
           <Input
             label={tr('candidate.company')}
             value={company}
             onChangeText={setCompany}
             placeholder={tr('profileCrud.experience.companyPlaceholder')}
+          />
+          <SuggestionChips
+            suggestions={getSuggestions('companies', i18n.language as 'az' | 'ru' | 'en')}
+            query={company}
+            onSelect={setCompany}
           />
           <Input
             label={tr('candidate.location')}
@@ -286,6 +289,16 @@ export default function ExperienceFormScreen() {
               />
             ))}
           </View>
+          <SuggestionChips
+            suggestions={getSuggestions('achievements', i18n.language as 'az' | 'ru' | 'en')}
+            query={highlightInput}
+            exclude={highlights}
+            title={tr('common.suggestions')}
+            onSelect={(v) => {
+              setHighlights((current) => (current.includes(v) ? current : [...current, v]));
+              setHighlightInput('');
+            }}
+          />
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>

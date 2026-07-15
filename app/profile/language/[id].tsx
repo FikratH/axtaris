@@ -1,15 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -18,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { safeBack } from '@/utils/navigation';
 import { Button, EmptyState, Input, SelectField } from '@/components/ui';
+import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { getSuggestions } from '@/data/suggestions';
 import {
   useCandidateProfile,
   useUpdateCandidateProfile,
@@ -27,7 +20,7 @@ import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profi
 
 export default function LanguageFormScreen() {
   const { colors, typography: t } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -162,6 +155,11 @@ export default function LanguageFormScreen() {
             value={language}
             onChangeText={setLanguage}
             placeholder={tr('profileCrud.language.languagePlaceholder')}
+          />
+          <SuggestionChips
+            suggestions={getSuggestions('languages', i18n.language as 'az' | 'ru' | 'en')}
+            query={language}
+            onSelect={setLanguage}
           />
           <SelectField
             label={tr('profileCrud.language.proficiencyLabel')}

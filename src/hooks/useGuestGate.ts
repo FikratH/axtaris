@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';

@@ -1,15 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -18,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { safeBack } from '@/utils/navigation';
 import { Button, Chip, DateField, EmptyState, Input } from '@/components/ui';
+import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { getSuggestions } from '@/data/suggestions';
 import {
   useCandidateProfile,
   useUpdateCandidateProfile,
@@ -27,7 +20,7 @@ import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profi
 
 export default function EducationFormScreen() {
   const { colors, typography: t } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -182,7 +175,17 @@ export default function EducationFormScreen() {
 
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}> 
           <Input label={tr('candidate.degree')} value={degree} onChangeText={setDegree} placeholder={tr('profileCrud.education.degreePlaceholder')} />
+          <SuggestionChips
+            suggestions={getSuggestions('degrees', i18n.language as 'az' | 'ru' | 'en')}
+            query={degree}
+            onSelect={setDegree}
+          />
           <Input label={tr('candidate.fieldOfStudy')} value={fieldOfStudy} onChangeText={setFieldOfStudy} placeholder={tr('profileCrud.education.fieldOfStudyPlaceholder')} />
+          <SuggestionChips
+            suggestions={getSuggestions('fieldsOfStudy', i18n.language as 'az' | 'ru' | 'en')}
+            query={fieldOfStudy}
+            onSelect={setFieldOfStudy}
+          />
           <Input label={tr('candidate.school')} value={institution} onChangeText={setInstitution} placeholder={tr('profileCrud.education.institutionPlaceholder')} />
           <DateField label={tr('candidate.startDate')} value={startDate} onChange={setStartDate} placeholder={tr('profileCrud.shared.selectDate')} maximumYear={new Date().getFullYear()} />
           {!isCurrent ? <DateField label={tr('candidate.endDate')} value={endDate} onChange={setEndDate} placeholder={tr('profileCrud.shared.selectDate')} maximumYear={new Date().getFullYear()} /> : null}

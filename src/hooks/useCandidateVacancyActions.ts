@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Application, CandidateProfile } from '@/types/models';
+import { Application, CandidateProfile, ScreeningAnswer } from '@/types/models';
 import {
   candidateVacancyService,
   CandidateProfileMutationInput,
@@ -90,8 +90,8 @@ export function useApplyToVacancy(userId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (vacancyId: string) =>
-      candidateVacancyService.applyToVacancy(userId || '', vacancyId),
+    mutationFn: ({ vacancyId, answers }: { vacancyId: string; answers?: ScreeningAnswer[] }) =>
+      candidateVacancyService.applyToVacancy(userId || '', vacancyId, answers),
     onSuccess: (application) => {
       if (!userId) return;
 

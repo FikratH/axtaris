@@ -1,4 +1,4 @@
-import { Company, ExperienceLevel, Vacancy, VacancyStatus, WorkType } from '@/types/models';
+import { Company, ExperienceLevel, ScreeningQuestion, Vacancy, VacancyStatus, WorkType } from '@/types/models';
 import { mockCompanies, mockVacancies } from './mockData';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 
@@ -41,6 +41,7 @@ export interface SupabaseVacancyRow {
   view_count: number | null;
   response_rate: number | null;
   expires_at: string | null;
+  screening_questions: ScreeningQuestion[] | null;
   created_at: string;
   updated_at: string;
   companies: SupabaseCompanyRow | SupabaseCompanyRow[] | null;
@@ -62,6 +63,7 @@ export interface VacancyMutationInput {
   skills: string[];
   companyId: string;
   status: VacancyStatus;
+  screeningQuestions: ScreeningQuestion[];
 }
 
 export interface CompanyMutationInput {
@@ -115,6 +117,7 @@ export const vacancySelect = `
   view_count,
   response_rate,
   expires_at,
+  screening_questions,
   created_at,
   updated_at,
   companies (
@@ -176,6 +179,7 @@ export function mapVacancy(row: SupabaseVacancyRow): Vacancy {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     expiresAt: row.expires_at || undefined,
+    screeningQuestions: row.screening_questions || [],
   };
 }
 
@@ -380,6 +384,7 @@ class VacancyService {
         companyId: input.companyId,
         company: company || undefined,
         status: input.status,
+        screeningQuestions: input.screeningQuestions,
         applicantCount: 0,
         viewCount: 0,
         createdAt: new Date().toISOString(),
@@ -405,6 +410,7 @@ class VacancyService {
         skills: input.skills,
         company_id: input.companyId,
         status: input.status,
+        screening_questions: input.screeningQuestions,
       })
       .select(vacancySelect)
       .single();
@@ -447,6 +453,7 @@ class VacancyService {
         companyId: input.companyId,
         company: company || vacancy.company,
         status: input.status,
+        screeningQuestions: input.screeningQuestions,
         updatedAt: new Date().toISOString(),
       });
 
@@ -471,6 +478,7 @@ class VacancyService {
         skills: input.skills,
         company_id: input.companyId,
         status: input.status,
+        screening_questions: input.screeningQuestions,
       })
       .eq('id', id)
       .select(vacancySelect)

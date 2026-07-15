@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -76,6 +77,14 @@ export default function UploadCVScreen() {
     }
   };
 
+  const handlePreview = () => {
+    if (!profile?.cvUrl) return;
+    router.push({
+      pathname: '/cv-preview',
+      params: { ref: profile.cvUrl, name: profile.cvFileName || tr('cv.title') },
+    } as never);
+  };
+
   const handleRemove = async () => {
     if (!profile?.cvUrl) {
       return;
@@ -147,9 +156,12 @@ export default function UploadCVScreen() {
             </View>
             <Text style={[{ color: colors.textPrimary, marginTop: 12 }, t.labelMedium]}>{profile.cvFileName}</Text>
             <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>{tr('candidate.cvUploadSuccess')}</Text>
-            <View style={{ flexDirection: 'row', marginTop: 20, gap: 10 }}>
-              <Button title={tr('common.replace')} onPress={handlePick} variant="outline" size="sm" fullWidth={false} loading={uploading || updateProfile.isPending} />
-              <Button title={tr('common.remove')} onPress={handleRemove} variant="destructive" size="sm" fullWidth={false} loading={updateProfile.isPending} icon={<Trash2 size={14} color="#FFF" strokeWidth={2} />} />
+            <View style={{ marginTop: 20, gap: 10, alignSelf: 'stretch' }}>
+              <Button title={tr('cv.preview')} onPress={handlePreview} variant="primary" size="sm" />
+              <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>
+                <Button title={tr('common.replace')} onPress={handlePick} variant="outline" size="sm" fullWidth={false} loading={uploading || updateProfile.isPending} />
+                <Button title={tr('common.remove')} onPress={handleRemove} variant="destructive" size="sm" fullWidth={false} loading={updateProfile.isPending} icon={<Trash2 size={14} color="#FFF" strokeWidth={2} />} />
+              </View>
             </View>
           </View>
         ) : (

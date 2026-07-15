@@ -1,12 +1,8 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert } from '@/utils/dialog';
+import { Input } from '@/components/ui/Input';
+import { ScreeningAnswer } from '@/types/models';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -35,12 +31,13 @@ import {
 import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
 import { computeJobMatch } from '@/utils/jobMatch';
+import { aiService } from '@/services/aiService';
 import { MatchBadge } from '@/components/ui/MatchBadge';
-import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star } from 'lucide-react-native';
+import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Languages as LanguagesIcon } from 'lucide-react-native';
 
 export default function VacancyDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
@@ -60,6 +57,16 @@ export default function VacancyDetailScreen() {
     isError,
     refetch,
   } = useVacancy(id);
+
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translating, setTranslating] = useState(false);
+  const [translation, setTranslation] = useState<{
+    description?: string;
+    requirements?: string[];
+    responsibilities?: string[];
+  } | null>(null);
 
   const applied = applications.some((application) => application.vacancyId === (id || ''));
   const saved = savedJobIds.includes(id || '');
@@ -135,16 +142,83 @@ export default function VacancyDetailScreen() {
 
   const jobMatch = !isEmployer && profile ? computeJobMatch(profile, vacancy) : null;
 
-  const handleApply = async () => {
-    if (!id || !requireAuth()) return;
-
+  const submitApplication = async (screeningAnswers: ScreeningAnswer[]) => {
+    if (!id) return;
     try {
-      await applyToVacancy.mutateAsync(id);
+      await applyToVacancy.mutateAsync({ vacancyId: id, answers: screeningAnswers });
+      setShowApplyModal(false);
       Alert.alert(tr('candidate.applied'));
     } catch (error: any) {
       Alert.alert(tr('common.error'), error?.message || tr('common.error'));
     }
   };
+
+  const handleApply = async () => {
+    if (!id || !requireAuth()) return;
+
+    if (vacancy.screeningQuestions && vacancy.screeningQuestions.length > 0) {
+      setAnswers({});
+      setShowApplyModal(true);
+      return;
+    }
+
+    await submitApplication([]);
+  };
+
+  const handleSubmitAnswers = () => {
+    const questions = vacancy.screeningQuestions || [];
+    const missing = questions.find((q) => q.required && !(answers[q.id] || '').trim());
+    if (missing) {
+      Alert.alert(tr('common.error'), tr('apply.answerRequired'));
+      return;
+    }
+    const screeningAnswers: ScreeningAnswer[] = questions.map((q) => ({
+      question: q.question,
+      answer: (answers[q.id] || '').trim(),
+    }));
+    void submitApplication(screeningAnswers);
+  };
+
+  const targetLanguageName =
+    i18n.language === 'az' ? 'Azerbaijani' : i18n.language === 'ru' ? 'Russian' : 'English';
+
+  const handleTranslate = async () => {
+    if (translation) {
+      setShowTranslation((v) => !v);
+      return;
+    }
+    setTranslating(true);
+    try {
+      const [d, req, resp] = await Promise.all([
+        aiService.translateText(vacancy.description, targetLanguageName),
+        aiService.translateText(vacancy.requirements.join('\n'), targetLanguageName),
+        aiService.translateText(vacancy.responsibilities.join('\n'), targetLanguageName),
+      ]);
+      if (!d && !req && !resp) {
+        Alert.alert(tr('ai.translateUnavailable'));
+        return;
+      }
+      setTranslation({
+        description: d || undefined,
+        requirements: req ? req.split('\n').map((x) => x.trim()).filter(Boolean) : undefined,
+        responsibilities: resp ? resp.split('\n').map((x) => x.trim()).filter(Boolean) : undefined,
+      });
+      setShowTranslation(true);
+    } catch {
+      Alert.alert(tr('common.error'));
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const descriptionText =
+    showTranslation && translation?.description ? translation.description : vacancy.description;
+  const requirementsList =
+    showTranslation && translation?.requirements ? translation.requirements : vacancy.requirements;
+  const responsibilitiesList =
+    showTranslation && translation?.responsibilities
+      ? translation.responsibilities
+      : vacancy.responsibilities;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -263,11 +337,28 @@ export default function VacancyDetailScreen() {
         )}
 
         <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
-          <Text style={[{ color: colors.textPrimary, ...t.headingSmall, marginBottom: s.md }]}>
-            {tr('candidate.description')}
-          </Text>
-          <Text style={[{ color: colors.textSecondary, ...t.bodyMedium, lineHeight: 24 }]}>
-            {vacancy.description}
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[{ color: colors.textPrimary, ...t.headingSmall }]}>
+              {tr('candidate.description')}
+            </Text>
+            <TouchableOpacity
+              onPress={handleTranslate}
+              disabled={translating}
+              activeOpacity={0.7}
+              style={[styles.translateBtn, { backgroundColor: colors.primaryLight, borderRadius: r.sm }]}
+            >
+              {translating ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <LanguagesIcon size={14} color={colors.primary} strokeWidth={2} />
+              )}
+              <Text style={[{ color: colors.primary, marginLeft: 6 }, t.caption]}>
+                {showTranslation ? tr('ai.showOriginal') : tr('ai.translate')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={[{ color: colors.textSecondary, ...t.bodyMedium, lineHeight: 24, marginTop: s.md }]}>
+            {descriptionText}
           </Text>
         </View>
 
@@ -275,7 +366,7 @@ export default function VacancyDetailScreen() {
           <Text style={[{ color: colors.textPrimary, ...t.headingSmall, marginBottom: s.md }]}>
             {tr('candidate.requirements')}
           </Text>
-          {vacancy.requirements.map((req, i) => (
+          {requirementsList.map((req, i) => (
             <View key={i} style={styles.bulletItem}>
               <Text style={[{ color: colors.primary, ...t.bodyMedium }]}>•</Text>
               <Text style={[{ color: colors.textSecondary, ...t.bodyMedium, marginLeft: s.sm, flex: 1 }]}>
@@ -289,7 +380,7 @@ export default function VacancyDetailScreen() {
           <Text style={[{ color: colors.textPrimary, ...t.headingSmall, marginBottom: s.md }]}>
             {tr('candidate.responsibilities')}
           </Text>
-          {vacancy.responsibilities.map((resp, i) => (
+          {responsibilitiesList.map((resp, i) => (
             <View key={i} style={styles.bulletItem}>
               <Text style={[{ color: colors.primary, ...t.bodyMedium }]}>•</Text>
               <Text style={[{ color: colors.textSecondary, ...t.bodyMedium, marginLeft: s.sm, flex: 1 }]}>
@@ -396,6 +487,34 @@ export default function VacancyDetailScreen() {
           </View>
         )}
       </View>
+
+      <Modal visible={showApplyModal} transparent animationType="slide" onRequestClose={() => setShowApplyModal(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBackdrop}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, paddingBottom: insets.bottom + 16 }]}>
+            <Text style={[{ color: colors.textPrimary, marginBottom: 4 }, t.headingSmall]}>{tr('apply.answerQuestions')}</Text>
+            <Text style={[{ color: colors.textTertiary, marginBottom: 12 }, t.caption]}>{tr('apply.answerQuestionsHint')}</Text>
+            <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              {(vacancy.screeningQuestions || []).map((q, idx) => (
+                <View key={q.id} style={{ marginBottom: 12 }}>
+                  <Input
+                    label={`${idx + 1}. ${q.question}${q.required ? ' *' : ''}`}
+                    value={answers[q.id] || ''}
+                    onChangeText={(v) => setAnswers((cur) => ({ ...cur, [q.id]: v }))}
+                    placeholder={tr('apply.yourAnswer')}
+                    multiline
+                    numberOfLines={2}
+                    style={{ minHeight: 56, textAlignVertical: 'top' }}
+                  />
+                </View>
+              ))}
+            </ScrollView>
+            <View style={{ gap: 10, marginTop: 8 }}>
+              <Button title={tr('candidate.applyNow')} onPress={handleSubmitAnswers} loading={applyToVacancy.isPending} size="lg" />
+              <Button title={tr('common.cancel')} onPress={() => setShowApplyModal(false)} variant="ghost" size="md" />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -403,6 +522,18 @@ export default function VacancyDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  modalBackdrop: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalCard: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   topBar: {
     flexDirection: 'row',
@@ -443,6 +574,17 @@ const styles = StyleSheet.create({
     height: 30,
   },
   section: {},
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  translateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   matchHeader: {
     flexDirection: 'row',
     alignItems: 'center',

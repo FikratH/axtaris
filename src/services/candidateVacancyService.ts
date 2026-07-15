@@ -4,6 +4,7 @@ import {
   Certification,
   Education,
   LanguageSkill,
+  ScreeningAnswer,
   SubscriptionPlanCode,
   WorkExperience,
 } from '@/types/models';
@@ -117,6 +118,7 @@ interface SupabaseApplicationRow {
   visibility_score?: number;
   cover_letter: string | null;
   cv_url: string | null;
+  screening_answers: ScreeningAnswer[] | null;
   applied_at: string;
   reviewed_at: string | null;
   updated_at: string;
@@ -142,6 +144,7 @@ function mapApplication(row: SupabaseApplicationRow): Application {
     visibilityScore: row.visibility_score,
     coverLetter: row.cover_letter || undefined,
     cvUrl: row.cv_url || undefined,
+    screeningAnswers: row.screening_answers || [],
     vacancy: vacancyRow ? mapVacancy(vacancyRow) : undefined,
     appliedAt: row.applied_at,
     reviewedAt: row.reviewed_at || undefined,
@@ -685,6 +688,7 @@ class CandidateVacancyService {
         visibility_score,
         cover_letter,
         cv_url,
+        screening_answers,
         applied_at,
         reviewed_at,
         updated_at,
@@ -700,10 +704,16 @@ class CandidateVacancyService {
     return ((data || []) as SupabaseApplicationRow[]).map(mapApplication);
   }
 
-  async applyToVacancy(userId: string, vacancyId: string): Promise<Application> {
+  async applyToVacancy(
+    userId: string,
+    vacancyId: string,
+    answers?: ScreeningAnswer[]
+  ): Promise<Application> {
     if (!userId || !vacancyId) {
       throw new Error('User and vacancy are required');
     }
+
+    const screeningAnswers = answers && answers.length > 0 ? answers : [];
 
     const subscriptionSummary = await subscriptionService.fetchCandidateSubscriptionSummary(userId);
 
@@ -743,6 +753,7 @@ class CandidateVacancyService {
         visibilityScore: subscriptionSummary.visibilityScore,
         vacancy,
         cvUrl: mockCandidateProfile.cvUrl,
+        screeningAnswers,
         appliedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
@@ -764,6 +775,7 @@ class CandidateVacancyService {
         vacancy_id: vacancyId,
         candidate_id: profile.id,
         cv_url: profile.cvUrl || null,
+        screening_answers: screeningAnswers,
       })
       .select(`
         id,
@@ -774,6 +786,7 @@ class CandidateVacancyService {
         visibility_score,
         cover_letter,
         cv_url,
+        screening_answers,
         applied_at,
         reviewed_at,
         updated_at,

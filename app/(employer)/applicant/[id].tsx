@@ -1,13 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import {
-  Alert,
-  Linking,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -95,36 +88,16 @@ export default function EmployerApplicantDetailScreen() {
     setEmployerRating(application?.employerRating);
   }, [application?.id, application?.employerNotes, application?.employerRating]);
 
-  const handleOpenCv = async () => {
+  const handleOpenCv = () => {
     if (!cvUrl) {
       Alert.alert(tr('common.error'), tr('common.notAvailable'));
       return;
     }
 
-    setOpeningCv(true);
-
-    try {
-      const resolvedUrl = await fileStorageService.resolveFileUrl(cvUrl);
-
-      if (!resolvedUrl) {
-        throw new Error(tr('common.notAvailable'));
-      }
-
-      const canOpen = await Linking.canOpenURL(resolvedUrl);
-
-      if (!canOpen) {
-        throw new Error(tr('common.error'));
-      }
-
-      await Linking.openURL(resolvedUrl);
-    } catch (error) {
-      Alert.alert(
-        tr('common.error'),
-        error instanceof Error ? error.message : tr('common.error')
-      );
-    } finally {
-      setOpeningCv(false);
-    }
+    router.push({
+      pathname: '/cv-preview',
+      params: { ref: cvUrl, name: candidate?.user?.fullName || tr('cv.title') },
+    } as never);
   };
 
   const handleStatusChange = async (status: ApplicationStatus) => {
@@ -299,6 +272,22 @@ export default function EmployerApplicantDetailScreen() {
           size="md"
         />
       </Card>
+
+      {application.screeningAnswers && application.screeningAnswers.length > 0 ? (
+        <Card padding="md" style={{ marginTop: s.md }}>
+          <Text style={[{ color: colors.textPrimary, marginBottom: s.sm }, t.labelMedium]}>
+            {tr('employer.screeningAnswers')}
+          </Text>
+          {application.screeningAnswers.map((qa, idx) => (
+            <View key={idx} style={{ marginBottom: s.md }}>
+              <Text style={[{ color: colors.textSecondary }, t.caption]}>{qa.question}</Text>
+              <Text style={[{ color: colors.textPrimary, marginTop: 2, lineHeight: 20 }, t.bodySmall]}>
+                {qa.answer || tr('common.notAvailable')}
+              </Text>
+            </View>
+          ))}
+        </Card>
+      ) : null}
 
       {candidate?.bio ? (
         <Card padding="md" style={{ marginTop: s.md }}>

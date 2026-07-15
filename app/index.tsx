@@ -159,6 +159,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     letterSpacing: 1,
     textTransform: 'uppercase',
+    textAlign: 'center',
+    maxWidth: 300,
+    lineHeight: 20,
   },
   bottomIndicator: {
     position: 'absolute',

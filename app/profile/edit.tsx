@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -9,6 +10,8 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
+import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { getSuggestions } from '@/data/suggestions';
 import {
   useCandidateProfile,
   useUpdateCandidateProfile,
@@ -18,7 +21,7 @@ import { ChevronLeft, Plus } from 'lucide-react-native';
 
 export default function EditProfileScreen() {
   const { colors, typography: t } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
@@ -147,6 +150,16 @@ export default function EditProfileScreen() {
               <Chip key={sk} label={sk} selected onPress={() => setSkills(skills.filter((s) => s !== sk))} style={{ marginBottom: 6 }} />
             ))}
           </View>
+          <SuggestionChips
+            suggestions={getSuggestions('skills', i18n.language as 'az' | 'ru' | 'en')}
+            query={skillInput}
+            exclude={skills}
+            title={tr('common.suggestions')}
+            onSelect={(v) => {
+              if (!skills.includes(v)) setSkills([...skills, v]);
+              setSkillInput('');
+            }}
+          />
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>

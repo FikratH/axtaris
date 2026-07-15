@@ -1,12 +1,6 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -19,7 +13,7 @@ import i18n from '@/i18n';
 import { accountService } from '@/services/accountService';
 import { StoredAccount } from '@/store/authStore';
 import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
-import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2, UserPlus, X } from 'lucide-react-native';
+import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2, UserPlus, X, LogOut } from 'lucide-react-native';
 
 export default function PreferencesScreen() {
   const { colors, spacing: s, typography: t, radius: r, mode, setMode } = useTheme();
@@ -48,6 +42,11 @@ export default function PreferencesScreen() {
       Alert.alert(tr('settings.switchFailed'));
       router.push('/auth/sign-in');
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/auth/role-select');
   };
 
   const handleDeleteAccount = () => {
@@ -270,6 +269,14 @@ export default function PreferencesScreen() {
 
       <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
         <Card padding="none">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleSignOut}
+            style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg, borderBottomWidth: 1, borderBottomColor: colors.divider }]}
+          >
+            <LogOut size={18} color={colors.textSecondary} strokeWidth={1.8} style={{ marginRight: 10 }} />
+            <Text style={[{ color: colors.textPrimary, ...t.bodyMedium, flex: 1 }]}>{tr('settings.signOut')}</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleDeleteAccount}

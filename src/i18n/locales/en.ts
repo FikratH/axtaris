@@ -1,5 +1,12 @@
 export default {
+  cv: {
+    title: 'CV',
+    preview: 'Preview CV',
+    openCv: 'Open CV',
+    openExternalHint: 'Open the document in your device viewer.',
+  },
   common: {
+    suggestions: 'Suggestions',
     appName: 'AxtarIS',
     loading: 'Loading...',
     error: 'Something went wrong',
@@ -125,7 +132,7 @@ export default {
     partTime: 'Part-time',
     remote: 'Remote',
     hybrid: 'Hybrid',
-    onsite: 'On-site',
+    onsite: 'At workplace',
     internship: 'Internship',
     noSavedJobs: 'No saved jobs',
     noSavedJobsDesc: 'Save jobs you\'re interested in',
@@ -245,7 +252,19 @@ export default {
       credentialUrlPlaceholder: 'https://credential-link.com',
     },
   },
+  apply: {
+    answerQuestions: 'Answer a few questions',
+    answerQuestionsHint: 'The employer asks applicants to answer these before applying.',
+    yourAnswer: 'Your answer',
+    answerRequired: 'Please answer all required questions.',
+  },
   employer: {
+    screeningQuestions: 'Screening questions (optional)',
+    screeningQuestionsHint: 'Ask applicants to answer these when they apply.',
+    addQuestion: 'Add a question',
+    questionRequired: 'Required',
+    questionOptional: 'Optional',
+    screeningAnswers: 'Screening answers',
     dashboard: 'Dashboard',
     vacancies: 'Vacancies',
     applicants: 'Applicants',
@@ -383,6 +402,9 @@ export default {
       'AxtarIS respects your privacy. We collect only the data needed to provide the service — profile, CV and application details.\n\nYour data is not sold to third parties. CV files are stored securely and are only visible to employers you have applied to.\n\nYou can delete your account and data at any time. This document is placeholder text.',
   },
   ai: {
+    translate: 'Translate',
+    showOriginal: 'Show original',
+    translateUnavailable: 'Translation is unavailable right now.',
     assistant: 'AI Assistant',
     improveProfile: 'Improve profile',
     buildResume: 'Build resume',

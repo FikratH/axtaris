@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Pressable, ActivityIndicator } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
-import { Bell, Settings, MapPin, Upload, Wand2, Briefcase, GraduationCap, Languages, Award, LogOut, Plus, Trash2 } from 'lucide-react-native';
+import { Bell, Settings, MapPin, Upload, Wand2, Briefcase, GraduationCap, Languages, Award, Plus, Trash2 } from 'lucide-react-native';
 import { useImagePicker } from '@/hooks/useImagePicker';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
 import { fileStorageService } from '@/services/fileStorageService';
@@ -39,7 +31,6 @@ export default function CandidateProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((st) => st.user);
-  const signOut = useAuthStore((st) => st.signOut);
   const updateUser = useAuthStore((st) => st.updateUser);
   const {
     data: profile,
@@ -82,11 +73,6 @@ export default function CandidateProfileScreen() {
         );
       }
     }
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace('/auth/role-select');
   };
 
   const confirmDelete = (onConfirm: () => void) => {
@@ -470,15 +456,6 @@ export default function CandidateProfileScreen() {
         ))}
       </View>
 
-      {/* ── Sign Out ── */}
-      <TouchableOpacity
-        onPress={handleSignOut}
-        activeOpacity={0.7}
-        style={[styles.signOutBtn, { borderColor: colors.error + '30' }]}
-      >
-        <LogOut size={18} color={colors.error} strokeWidth={1.8} />
-        <Text style={[{ color: colors.error, marginLeft: 10 }, t.labelMedium]}>{tr('settings.signOut')}</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }

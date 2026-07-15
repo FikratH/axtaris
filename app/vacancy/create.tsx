@@ -1,14 +1,6 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -24,8 +16,11 @@ import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
-import { ChevronLeft } from 'lucide-react-native';
-import { WorkType, ExperienceLevel, VacancyStatus } from '@/types/models';
+import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { getSuggestions } from '@/data/suggestions';
+import { createLocalItemId } from '@/utils/profileSections';
+import { ChevronLeft, X } from 'lucide-react-native';
+import { WorkType, ExperienceLevel, VacancyStatus, ScreeningQuestion } from '@/types/models';
 
 const workTypes: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
 
@@ -33,7 +28,8 @@ const expLevels: ExperienceLevel[] = ['no_experience', 'junior', 'mid', 'senior'
 
 export default function CreateVacancyScreen() {
   const { colors, typography: t, radius: r, isDark } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
+  const lang = i18n.language as 'az' | 'ru' | 'en';
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
@@ -52,6 +48,23 @@ export default function CreateVacancyScreen() {
   const [requirements, setRequirements] = useState('');
   const [responsibilities, setResponsibilities] = useState('');
   const [benefits, setBenefits] = useState('');
+  const [screeningQuestions, setScreeningQuestions] = useState<ScreeningQuestion[]>([]);
+  const [questionInput, setQuestionInput] = useState('');
+
+  const addQuestion = () => {
+    const q = questionInput.trim();
+    if (!q) return;
+    setScreeningQuestions((cur) => [...cur, { id: createLocalItemId('question'), question: q, required: true }]);
+    setQuestionInput('');
+  };
+  const removeQuestion = (id: string) =>
+    setScreeningQuestions((cur) => cur.filter((x) => x.id !== id));
+  const toggleRequired = (id: string) =>
+    setScreeningQuestions((cur) => cur.map((x) => (x.id === id ? { ...x, required: !x.required } : x)));
+
+  const appendLine = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) =>
+    setter((cur) => (cur.trim() ? `${cur.trim()}\n${value}` : value));
+
   const addSkill = () => {
     const trimmed = skillInput.trim();
     if (trimmed && !skills.includes(trimmed)) {
@@ -118,6 +131,7 @@ export default function CreateVacancyScreen() {
         skills,
         companyId: company.id,
         status,
+        screeningQuestions,
       });
 
       Alert.alert(
@@ -162,6 +176,7 @@ export default function CreateVacancyScreen() {
           <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder={tr('employer.vacancyTitlePlaceholder')} />
           <Input label={tr('employer.vacancyDescription')} value={description} onChangeText={setDescription} placeholder={tr('employer.vacancyDescription')} multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
           <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
+          <SuggestionChips suggestions={getSuggestions('cities', lang)} query={city} onSelect={setCity} />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
@@ -203,11 +218,50 @@ export default function CreateVacancyScreen() {
                 ))}
               </View>
             )}
+            <SuggestionChips
+              suggestions={getSuggestions('skills', lang)}
+              query={skillInput}
+              exclude={skills}
+              title={tr('common.suggestions')}
+              onSelect={(v) => {
+                if (!skills.includes(v)) setSkills([...skills, v]);
+                setSkillInput('');
+              }}
+            />
           </View>
 
           <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <SuggestionChips suggestions={getSuggestions('requirements', lang)} onSelect={appendLine(setRequirements)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <SuggestionChips suggestions={getSuggestions('responsibilities', lang)} onSelect={appendLine(setResponsibilities)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
+          <SuggestionChips suggestions={getSuggestions('benefits', lang)} onSelect={appendLine(setBenefits)} title={tr('common.suggestions')} />
+
+          <Text style={[{ color: colors.textPrimary, marginTop: 20, marginBottom: 4 }, t.labelSmall]}>{tr('employer.screeningQuestions')}</Text>
+          <Text style={[{ color: colors.textTertiary, marginBottom: 8 }, t.caption]}>{tr('employer.screeningQuestionsHint')}</Text>
+          {screeningQuestions.map((q) => (
+            <View key={q.id} style={[styles.questionRow, { borderColor: colors.cardBorder, borderRadius: r.md }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[{ color: colors.textPrimary }, t.bodySmall]}>{q.question}</Text>
+                <TouchableOpacity onPress={() => toggleRequired(q.id)} style={{ marginTop: 6 }}>
+                  <Text style={[{ color: q.required ? colors.primary : colors.textTertiary }, t.caption]}>
+                    {q.required ? `● ${tr('employer.questionRequired')}` : `○ ${tr('employer.questionOptional')}`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity onPress={() => removeQuestion(q.id)} hitSlop={8} style={{ padding: 4 }}>
+                <X size={16} color={colors.textTertiary} strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+          ))}
+          <Input
+            value={questionInput}
+            onChangeText={setQuestionInput}
+            placeholder={tr('employer.addQuestion')}
+            onSubmitEditing={addQuestion}
+            rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>{tr('common.add')}</Text>}
+            onRightIconPress={addQuestion}
+          />
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>
@@ -237,4 +291,11 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   formCard: { borderRadius: 14, borderWidth: 1, padding: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  questionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 8,
+  },
 });

@@ -1,5 +1,12 @@
 export default {
+  cv: {
+    title: 'Резюме',
+    preview: 'Просмотр резюме',
+    openCv: 'Открыть резюме',
+    openExternalHint: 'Откройте документ в приложении устройства.',
+  },
   common: {
+    suggestions: 'Предложения',
     appName: 'AxtarIS',
     loading: 'Загрузка...',
     error: 'Произошла ошибка',
@@ -125,7 +132,7 @@ export default {
     partTime: 'Частичная занятость',
     remote: 'Удалённо',
     hybrid: 'Гибрид',
-    onsite: 'В офисе',
+    onsite: 'На месте работы',
     internship: 'Стажировка',
     noSavedJobs: 'Нет сохранённых вакансий',
     noSavedJobsDesc: 'Сохраняйте понравившиеся вакансии',
@@ -245,7 +252,19 @@ export default {
       credentialUrlPlaceholder: 'https://credential-link.com',
     },
   },
+  apply: {
+    answerQuestions: 'Ответьте на несколько вопросов',
+    answerQuestionsHint: 'Работодатель просит кандидатов ответить на них перед откликом.',
+    yourAnswer: 'Ваш ответ',
+    answerRequired: 'Пожалуйста, ответьте на все обязательные вопросы.',
+  },
   employer: {
+    screeningQuestions: 'Отборочные вопросы (необязательно)',
+    screeningQuestionsHint: 'Попросите кандидатов ответить на них при отклике.',
+    addQuestion: 'Добавить вопрос',
+    questionRequired: 'Обязательно',
+    questionOptional: 'Необязательно',
+    screeningAnswers: 'Ответы кандидата',
     dashboard: 'Панель',
     vacancies: 'Вакансии',
     applicants: 'Кандидаты',
@@ -383,6 +402,9 @@ export default {
       'AxtarIS уважает вашу конфиденциальность. Мы собираем только данные, необходимые для предоставления сервиса — профиль, резюме и данные откликов.\n\nВаши данные не продаются третьим лицам. Файлы резюме хранятся безопасно и видны только работодателям, которым вы откликнулись.\n\nВы можете в любой момент удалить аккаунт и данные. Этот документ является образцом текста.',
   },
   ai: {
+    translate: 'Перевести',
+    showOriginal: 'Показать оригинал',
+    translateUnavailable: 'Перевод сейчас недоступен.',
     assistant: 'AI Помощник',
     improveProfile: 'Улучшить профиль',
     buildResume: 'Создать резюме',

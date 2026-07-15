@@ -1,4 +1,5 @@
 import { CandidateProfile, ExperienceLevel, Vacancy } from '@/types/models';
+import { normalizeCity, normalizeSkill } from '@/utils/normalize';
 
 /**
  * Transparent, weighted job-matching.
@@ -31,7 +32,6 @@ const experienceOrder: Record<ExperienceLevel, number> = {
   executive: 5,
 };
 
-const norm = (value: string) => value.trim().toLowerCase();
 
 function inferCandidateLevel(profile: CandidateProfile): number {
   if (profile.workExperience.length === 0) return 0;
@@ -55,8 +55,8 @@ export function computeJobMatch(
   const reasons: MatchReason[] = [];
   if (!profile) return { score: 0, matchedSkills: [], reasons };
 
-  const candidateSkills = new Set(profile.skills.map(norm));
-  const matchedSkills = vacancy.skills.filter((skill) => candidateSkills.has(norm(skill)));
+  const candidateSkills = new Set(profile.skills.map(normalizeSkill));
+  const matchedSkills = vacancy.skills.filter((skill) => candidateSkills.has(normalizeSkill(skill)));
 
   // Skills — the dominant signal
   const skillsRatio = vacancy.skills.length > 0 ? matchedSkills.length / vacancy.skills.length : 0.4;
@@ -64,7 +64,7 @@ export function computeJobMatch(
   if (matchedSkills.length > 0) reasons.push('skills');
 
   // Location (remote effectively matches everywhere)
-  if (profile.location && norm(profile.location) === norm(vacancy.city)) {
+  if (profile.location && normalizeCity(profile.location) === normalizeCity(vacancy.city)) {
     score += WEIGHTS.location;
     reasons.push('location');
   } else if (vacancy.workType === 'remote') {

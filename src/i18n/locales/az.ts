@@ -1,5 +1,12 @@
 export default {
+  cv: {
+    title: 'CV',
+    preview: 'CV-yə bax',
+    openCv: 'CV-ni aç',
+    openExternalHint: 'Sənədi cihazınızın göstəricisində açın.',
+  },
   common: {
+    suggestions: 'Təkliflər',
     appName: 'AxtarIS',
     loading: 'Yüklənir...',
     error: 'Xəta baş verdi',
@@ -125,7 +132,7 @@ export default {
     partTime: 'Yarım iş günü',
     remote: 'Uzaqdan',
     hybrid: 'Hibrid',
-    onsite: 'Ofisdə',
+    onsite: 'İş yerində',
     internship: 'Təcrübə proqramı',
     noSavedJobs: 'Saxlanılmış vakansiya yoxdur',
     noSavedJobsDesc: 'Bəyəndiyiniz vakansiyaları saxlayın',
@@ -245,7 +252,19 @@ export default {
       credentialUrlPlaceholder: 'https://credential-link.com',
     },
   },
+  apply: {
+    answerQuestions: 'Bir neçə suala cavab verin',
+    answerQuestionsHint: 'İşəgötürən müraciətdən əvvəl bu suallara cavab verməyi xahiş edir.',
+    yourAnswer: 'Cavabınız',
+    answerRequired: 'Zəhmət olmasa bütün mütləq suallara cavab verin.',
+  },
   employer: {
+    screeningQuestions: 'Seçim sualları (istəyə bağlı)',
+    screeningQuestionsHint: 'Namizədlərdən müraciət edərkən bunlara cavab verməyi istəyin.',
+    addQuestion: 'Sual əlavə edin',
+    questionRequired: 'Mütləq',
+    questionOptional: 'İstəyə bağlı',
+    screeningAnswers: 'Sual cavabları',
     dashboard: 'İdarə paneli',
     vacancies: 'Vakansiyalar',
     applicants: 'Namizədlər',
@@ -383,6 +402,9 @@ export default {
       'AxtarIS gizliliyinizə hörmət edir. Yalnız xidməti təqdim etmək üçün lazım olan məlumatları — profil, CV və müraciət məlumatlarını — toplayırıq.\n\nMəlumatlarınız üçüncü tərəflərə satılmır. CV faylları təhlükəsiz saxlanılır və yalnız müraciət etdiyiniz işəgötürənlər üçün görünür.\n\nİstənilən vaxt hesabınızı və məlumatlarınızı silə bilərsiniz. Bu sənəd nümunə mətnidir.',
   },
   ai: {
+    translate: 'Tərcümə et',
+    showOriginal: 'Orijinalı göstər',
+    translateUnavailable: 'Tərcümə hazırda əlçatan deyil.',
     assistant: 'AI Köməkçi',
     improveProfile: 'Profili yaxşılaşdır',
     buildResume: 'CV yarat',

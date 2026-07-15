@@ -155,6 +155,20 @@ class AIService {
   }
 
   /**
+   * Translate free text into a target language via the ChatGPT proxy.
+   * Returns null when AI is unavailable (mock mode / no key / not signed in).
+   */
+  async translateText(text: string, targetLanguageName: string): Promise<string | null> {
+    const trimmed = text?.trim();
+    if (!trimmed) return null;
+    return this.callAssistant(
+      `You are a professional translator. Translate the user's text into ${targetLanguageName}. Preserve meaning, tone, and line breaks exactly. If a line is already in ${targetLanguageName}, keep it. Return ONLY the translation — no preamble, no quotes, no notes.`,
+      trimmed,
+      Math.min(1200, Math.ceil(trimmed.length / 2) + 220)
+    );
+  }
+
+  /**
    * Server-side ChatGPT call. Returns the model text, or null when AI is not
    * available so callers can fall back to their built-in behavior.
    */

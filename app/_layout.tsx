@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { Alert } from 'react-native';
 import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,6 +11,8 @@ import { useAppStore } from '@/store/appStore';
 import { authService, toAppUser, USE_MOCK_AUTH } from '@/services/authService';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useTranslation } from 'react-i18next';
+import { Alert } from '@/utils/dialog';
+import { DialogHost } from '@/components/ui/DialogHost';
 import '@/i18n';
 
 const queryClient = new QueryClient({
@@ -257,6 +258,7 @@ function AppContent() {
           animation: 'slide_from_right',
         }}
       />
+      <DialogHost />
     </>
   );
 }
