@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { Input } from '@/components/ui/Input';
@@ -32,6 +32,7 @@ import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
 import { computeJobMatch } from '@/utils/jobMatch';
 import { aiService } from '@/services/aiService';
+import { analyticsService } from '@/services/analyticsService';
 import { MatchBadge } from '@/components/ui/MatchBadge';
 import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Languages as LanguagesIcon } from 'lucide-react-native';
 
@@ -67,6 +68,10 @@ export default function VacancyDetailScreen() {
     requirements?: string[];
     responsibilities?: string[];
   } | null>(null);
+
+  useEffect(() => {
+    if (id) analyticsService.track('vacancy_view', { vacancyId: id }, user?.id);
+  }, [id, user?.id]);
 
   const applied = applications.some((application) => application.vacancyId === (id || ''));
   const saved = savedJobIds.includes(id || '');

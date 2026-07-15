@@ -196,6 +196,33 @@ class AdminService {
     };
   }
 
+  async fetchEngagement(days = 30): Promise<{ event: string; count: number }[]> {
+    const events = ['vacancy_view', 'application_submit', 'message_sent', 'vacancy_publish'];
+
+    if (shouldUseMockBackend()) {
+      return [
+        { event: 'vacancy_view', count: 128 },
+        { event: 'application_submit', count: 34 },
+        { event: 'message_sent', count: 57 },
+        { event: 'vacancy_publish', count: 9 },
+      ];
+    }
+
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    return Promise.all(
+      events.map(async (event) => {
+        const { count, error } = await getSupabase()
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('event', event)
+          .gte('created_at', since);
+        if (error) throw new Error(error.message);
+        return { event, count: count || 0 };
+      })
+    );
+  }
+
   async fetchUsers(search?: string): Promise<AdminUserSummary[]> {
     if (shouldUseMockBackend()) {
       return [mockUser, mockEmployerUser].map((u) => ({

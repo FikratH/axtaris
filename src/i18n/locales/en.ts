@@ -1,4 +1,15 @@
 export default {
+  chat: {
+    title: 'Chat',
+    messages: 'Messages',
+    message: 'Message',
+    support: 'Support',
+    messagePlaceholder: 'Type a message…',
+    empty: 'No messages yet. Say hello!',
+    noMessages: 'No messages yet',
+    emptyListTitle: 'No conversations yet',
+    emptyListSubtitle: 'Messages with employers and candidates appear here.',
+  },
   cv: {
     title: 'CV',
     preview: 'Preview CV',
@@ -364,6 +375,7 @@ export default {
   },
   settings: {
     title: 'Settings',
+    contactSupport: 'Contact support',
     language: 'Language',
     theme: 'Appearance',
     themeLight: 'Light',
@@ -643,6 +655,14 @@ export default {
     noRevenue: 'No paid subscriptions yet.',
     subscribersCount: '{{count}} subscribers',
     financeNote: 'Based on {{active}} active subscriptions. Estimated from subscription prices.',
+    engagement: 'Engagement (30 days)',
+    viewToApply: 'View → apply',
+    evt: {
+      vacancy_view: 'Job views',
+      application_submit: 'Applications',
+      message_sent: 'Messages sent',
+      vacancy_publish: 'Vacancies published',
+    },
     panel: 'Admin panel',
     dashboard: 'Dashboard',
     moderation: 'Moderation',

@@ -19,6 +19,7 @@ import {
   UserCog,
   LogOut,
   Settings,
+  MessageCircle,
 } from 'lucide-react-native';
 
 export default function AdminDashboardScreen() {
@@ -66,7 +67,10 @@ export default function AdminDashboardScreen() {
             <Text style={[styles.title, t.headingLarge]}>{tr('admin.panel')}</Text>
             <Text style={[styles.subtitle, t.bodySmall]}>{tr('admin.overview')}</Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/preferences' as never)} style={styles.headerBtn}>
+          <TouchableOpacity onPress={() => router.push('/messages' as never)} style={styles.headerBtn}>
+            <MessageCircle size={19} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/preferences' as never)} style={[styles.headerBtn, { marginLeft: 8 }]}>
             <Settings size={19} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleSignOut} style={[styles.headerBtn, { marginLeft: 8 }]}>

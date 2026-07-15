@@ -20,7 +20,7 @@ import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Application, ApplicationStatus } from '@/types/models';
 import { fileStorageService } from '@/services/fileStorageService';
-import { Users as UsersIcon } from 'lucide-react-native';
+import { Users as UsersIcon, MessageCircle } from 'lucide-react-native';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -208,9 +208,17 @@ export default function ApplicantsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
       <View style={[styles.header, { paddingHorizontal: s.xl }]}>
-        <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}>
-          {tr('employer.applicants')}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}>
+            {tr('employer.applicants')}
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/messages' as never)}
+            style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' }}
+          >
+            <MessageCircle size={20} color={colors.textPrimary} strokeWidth={1.8} />
+          </TouchableOpacity>
+        </View>
         <View style={[styles.filterRow, { marginTop: s.md, gap: 8 }]}>
           {filters.map((f) => (
             <Chip

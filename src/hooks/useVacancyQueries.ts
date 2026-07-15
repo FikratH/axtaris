@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Company, Vacancy, VacancyStatus } from '@/types/models';
+import { analyticsService } from '@/services/analyticsService';
 import {
   vacancyService,
   VacancyMutationInput,
@@ -111,6 +112,10 @@ export function useCreateVacancy(userId?: string) {
     mutationFn: (input: VacancyMutationInput) =>
       vacancyService.createVacancy(input),
     onSuccess: (createdVacancy) => {
+      if (createdVacancy.status === 'active') {
+        analyticsService.track('vacancy_publish', { vacancyId: createdVacancy.id }, userId);
+      }
+
       if (userId) {
         queryClient.setQueryData<Vacancy[]>(
           vacancyQueryKeys.employer(userId),

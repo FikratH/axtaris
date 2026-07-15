@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Application, CandidateProfile, ScreeningAnswer } from '@/types/models';
+import { analyticsService } from '@/services/analyticsService';
 import {
   candidateVacancyService,
   CandidateProfileMutationInput,
@@ -94,6 +95,8 @@ export function useApplyToVacancy(userId?: string) {
       candidateVacancyService.applyToVacancy(userId || '', vacancyId, answers),
     onSuccess: (application) => {
       if (!userId) return;
+
+      analyticsService.track('application_submit', { vacancyId: application.vacancyId }, userId);
 
       queryClient.setQueryData<Application[]>(
         candidateVacancyActionKeys.applications(userId),

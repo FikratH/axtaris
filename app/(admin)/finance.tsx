@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Wallet, TrendingUp, Users, Repeat } from 'lucide-react-native';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { useAdminFinance } from '@/hooks/useAdminQueries';
+import { useAdminEngagement, useAdminFinance } from '@/hooks/useAdminQueries';
 import { getSubscriptionPlanLabel } from '@/utils/subscriptionPresentation';
 
 export default function AdminFinanceScreen() {
@@ -14,6 +14,7 @@ export default function AdminFinanceScreen() {
   const { t: tr } = useTranslation();
   const insets = useSafeAreaInsets();
   const { data, isLoading, isError, refetch, isRefetching } = useAdminFinance();
+  const { data: engagement = [] } = useAdminEngagement();
 
   const money = (value: number, currency: string) => `${value.toLocaleString()} ${currency}`;
 
@@ -94,6 +95,34 @@ export default function AdminFinanceScreen() {
       <Text style={[{ color: colors.textTertiary, marginTop: s.lg }, t.caption]}>
         {tr('admin.financeNote', { active: data.activeSubscriptions })}
       </Text>
+
+      <Text style={[{ color: colors.textPrimary, marginTop: s['2xl'], marginBottom: s.md }, t.headingSmall]}>
+        {tr('admin.engagement')}
+      </Text>
+      <Card padding="none">
+        {engagement.map((e, i) => (
+          <View
+            key={e.event}
+            style={[
+              styles.planRow,
+              { paddingHorizontal: s.lg, paddingVertical: s.md, borderBottomWidth: i < engagement.length - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: colors.divider },
+            ]}
+          >
+            <Text style={[{ color: colors.textPrimary, flex: 1 }, t.bodyMedium]}>{tr(`admin.evt.${e.event}`)}</Text>
+            <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{e.count.toLocaleString()}</Text>
+          </View>
+        ))}
+      </Card>
+      {(() => {
+        const views = engagement.find((e) => e.event === 'vacancy_view')?.count || 0;
+        const applies = engagement.find((e) => e.event === 'application_submit')?.count || 0;
+        const rate = views > 0 ? Math.round((applies / views) * 100) : 0;
+        return (
+          <Text style={[{ color: colors.textTertiary, marginTop: s.lg }, t.caption]}>
+            {tr('admin.viewToApply')}: {rate}%
+          </Text>
+        );
+      })()}
     </ScrollView>
   );
 }

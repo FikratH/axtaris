@@ -1,4 +1,15 @@
 export default {
+  chat: {
+    title: 'Чат',
+    messages: 'Сообщения',
+    message: 'Написать',
+    support: 'Поддержка',
+    messagePlaceholder: 'Введите сообщение…',
+    empty: 'Пока нет сообщений. Поздоровайтесь!',
+    noMessages: 'Пока нет сообщений',
+    emptyListTitle: 'Пока нет переписок',
+    emptyListSubtitle: 'Здесь появятся сообщения с работодателями и кандидатами.',
+  },
   cv: {
     title: 'Резюме',
     preview: 'Просмотр резюме',
@@ -364,6 +375,7 @@ export default {
   },
   settings: {
     title: 'Настройки',
+    contactSupport: 'Связаться с поддержкой',
     language: 'Язык',
     theme: 'Оформление',
     themeLight: 'Светлая',
@@ -643,6 +655,14 @@ export default {
     noRevenue: 'Пока нет платных подписок.',
     subscribersCount: '{{count}} подписчиков',
     financeNote: 'На основе {{active}} активных подписок. Оценка по ценам подписок.',
+    engagement: 'Активность (30 дней)',
+    viewToApply: 'Просмотр → отклик',
+    evt: {
+      vacancy_view: 'Просмотры вакансий',
+      application_submit: 'Отклики',
+      message_sent: 'Отправлено сообщений',
+      vacancy_publish: 'Опубликовано вакансий',
+    },
     panel: 'Админ-панель',
     dashboard: 'Панель',
     moderation: 'Модерация',

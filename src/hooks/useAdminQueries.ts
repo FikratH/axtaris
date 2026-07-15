@@ -6,6 +6,7 @@ export const adminQueryKeys = {
   root: ['admin'] as const,
   stats: ['admin', 'stats'] as const,
   finance: ['admin', 'finance'] as const,
+  engagement: ['admin', 'engagement'] as const,
   users: (search: string) => ['admin', 'users', search] as const,
   moderationVacancies: ['admin', 'moderation', 'vacancies'] as const,
   companies: ['admin', 'companies'] as const,
@@ -18,6 +19,10 @@ export function usePlatformStats() {
 
 export function useAdminFinance() {
   return useQuery({ queryKey: adminQueryKeys.finance, queryFn: () => adminService.fetchFinanceStats() });
+}
+
+export function useAdminEngagement() {
+  return useQuery({ queryKey: adminQueryKeys.engagement, queryFn: () => adminService.fetchEngagement() });
 }
 
 export function useAdminUsers(search = '') {

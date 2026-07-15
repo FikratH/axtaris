@@ -1,4 +1,15 @@
 export default {
+  chat: {
+    title: 'Söhbət',
+    messages: 'Mesajlar',
+    message: 'Mesaj',
+    support: 'Dəstək',
+    messagePlaceholder: 'Mesaj yazın…',
+    empty: 'Hələ mesaj yoxdur. Salam deyin!',
+    noMessages: 'Hələ mesaj yoxdur',
+    emptyListTitle: 'Hələ söhbət yoxdur',
+    emptyListSubtitle: 'İşəgötürən və namizədlərlə mesajlar burada görünür.',
+  },
   cv: {
     title: 'CV',
     preview: 'CV-yə bax',
@@ -364,6 +375,7 @@ export default {
   },
   settings: {
     title: 'Parametrlər',
+    contactSupport: 'Dəstəklə əlaqə',
     language: 'Dil',
     theme: 'Görünüş',
     themeLight: 'Açıq',
@@ -643,6 +655,14 @@ export default {
     noRevenue: 'Hələ ödənişli abunə yoxdur.',
     subscribersCount: '{{count}} abunəçi',
     financeNote: '{{active}} aktiv abunə əsasında. Abunə qiymətlərindən hesablanıb.',
+    engagement: 'Fəallıq (30 gün)',
+    viewToApply: 'Baxış → müraciət',
+    evt: {
+      vacancy_view: 'Vakansiya baxışları',
+      application_submit: 'Müraciətlər',
+      message_sent: 'Göndərilən mesajlar',
+      vacancy_publish: 'Dərc olunan vakansiyalar',
+    },
     panel: 'Admin panel',
     dashboard: 'İdarəetmə',
     moderation: 'Moderasiya',

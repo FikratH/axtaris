@@ -13,7 +13,8 @@ import i18n from '@/i18n';
 import { accountService } from '@/services/accountService';
 import { StoredAccount } from '@/store/authStore';
 import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresentation';
-import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2, UserPlus, X, LogOut } from 'lucide-react-native';
+import { ChevronLeft, Check, ChevronRight, Sparkles, FileText, ShieldCheck, Trash2, UserPlus, X, LogOut, LifeBuoy } from 'lucide-react-native';
+import { useStartSupportChat } from '@/hooks/useChat';
 
 export default function PreferencesScreen() {
   const { colors, spacing: s, typography: t, radius: r, mode, setMode } = useTheme();
@@ -47,6 +48,21 @@ export default function PreferencesScreen() {
   const handleSignOut = async () => {
     await signOut();
     router.replace('/auth/role-select');
+  };
+
+  const startSupport = useStartSupportChat(user?.id);
+
+  const handleContactSupport = async () => {
+    if (!user?.id) {
+      router.push('/auth/sign-in');
+      return;
+    }
+    try {
+      const conv = await startSupport.mutateAsync(tr('chat.support'));
+      router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: tr('chat.support') } } as never);
+    } catch (error) {
+      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -262,6 +278,20 @@ export default function PreferencesScreen() {
           >
             <ShieldCheck size={18} color={colors.textSecondary} strokeWidth={1.8} style={{ marginRight: 10 }} />
             <Text style={[{ color: colors.textPrimary, ...t.bodyMedium, flex: 1 }]}>{tr('settings.privacyPolicy')}</Text>
+            <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
+          </TouchableOpacity>
+        </Card>
+      </View>
+
+      <View style={[styles.section, { paddingHorizontal: s.xl, marginTop: s['2xl'] }]}>
+        <Card padding="none">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={handleContactSupport}
+            style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
+          >
+            <LifeBuoy size={18} color={colors.primary} strokeWidth={1.8} style={{ marginRight: 10 }} />
+            <Text style={[{ color: colors.textPrimary, ...t.bodyMedium, flex: 1 }]}>{tr('settings.contactSupport')}</Text>
             <ChevronRight size={16} color={colors.textTertiary} strokeWidth={1.8} />
           </TouchableOpacity>
         </Card>

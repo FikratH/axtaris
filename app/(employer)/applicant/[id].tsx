@@ -23,7 +23,8 @@ import { ApplicationStatus } from '@/types/models';
 import { fileStorageService } from '@/services/fileStorageService';
 import { getLanguageLevelLabel } from '@/utils/labels';
 import { safeBack } from '@/utils/navigation';
-import { Briefcase, ChevronLeft, Download, Mail, MapPin } from 'lucide-react-native';
+import { Briefcase, ChevronLeft, Download, Mail, MapPin, MessageCircle } from 'lucide-react-native';
+import { useStartApplicationChat } from '@/hooks/useChat';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -98,6 +99,25 @@ export default function EmployerApplicantDetailScreen() {
       pathname: '/cv-preview',
       params: { ref: cvUrl, name: candidate?.user?.fullName || tr('cv.title') },
     } as never);
+  };
+
+  const startChat = useStartApplicationChat();
+
+  const handleMessage = async () => {
+    if (!application || !candidateUser?.id || !user?.id) return;
+    try {
+      const conv = await startChat.mutateAsync({
+        applicationId: application.id,
+        vacancyId: application.vacancy?.id,
+        companyId: application.vacancy?.companyId,
+        candidateId: candidateUser.id,
+        employerId: user.id,
+        subject: candidateUser.fullName || application.vacancy?.title || tr('chat.title'),
+      });
+      router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: conv.subject || tr('chat.title') } } as never);
+    } catch (error) {
+      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+    }
   };
 
   const handleStatusChange = async (status: ApplicationStatus) => {
@@ -236,6 +256,15 @@ export default function EmployerApplicantDetailScreen() {
           />
         </View>
       ) : null}
+
+      <View style={{ marginTop: s.md }}>
+        <Button
+          title={tr('chat.message')}
+          onPress={handleMessage}
+          loading={startChat.isPending}
+          icon={<MessageCircle size={16} color="#FFFFFF" strokeWidth={1.8} />}
+        />
+      </View>
 
       <Card padding="md" style={{ marginTop: s.md }}>
         <Text style={[{ color: colors.textPrimary, marginBottom: s.sm }, t.labelMedium]}>

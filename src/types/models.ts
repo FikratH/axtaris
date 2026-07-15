@@ -170,6 +170,30 @@ export interface EmployerProfile {
   updatedAt: string;
 }
 
+export type ConversationKind = 'application' | 'support';
+
+export interface Conversation {
+  id: string;
+  kind: ConversationKind;
+  applicationId?: string;
+  vacancyId?: string;
+  companyId?: string;
+  participantA: string;
+  participantB?: string;
+  subject?: string;
+  lastMessage?: string;
+  lastMessageAt: string;
+  createdAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  createdAt: string;
+}
+
 export interface ScreeningQuestion {
   id: string;
   question: string;

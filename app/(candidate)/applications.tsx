@@ -21,7 +21,8 @@ import {
   getSubscriptionPlanLabel,
   getSubscriptionSummaryLine,
 } from '@/utils/subscriptionPresentation';
-import { FileText, Sparkles } from 'lucide-react-native';
+import { FileText, Sparkles, MessageCircle } from 'lucide-react-native';
+import { useStartApplicationChat } from '@/hooks/useChat';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -54,6 +55,26 @@ export default function ApplicationsScreen() {
       accepted: tr('candidate.accepted'),
     };
     return labels[status];
+  };
+
+  const startChat = useStartApplicationChat();
+
+  const handleMessage = async (item: Application) => {
+    const employerId = item.vacancy?.company?.ownerId;
+    if (!employerId || !user?.id) return;
+    try {
+      const conv = await startChat.mutateAsync({
+        applicationId: item.id,
+        vacancyId: item.vacancyId,
+        companyId: item.vacancy?.companyId,
+        candidateId: user.id,
+        employerId,
+        subject: item.vacancy?.title || tr('chat.title'),
+      });
+      router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: conv.subject || tr('chat.title') } } as never);
+    } catch {
+      // errors surface via the mutation state
+    }
   };
 
   const renderApplication = ({ item }: { item: Application }) => {
@@ -104,19 +125,37 @@ export default function ApplicationsScreen() {
                 : tr('candidate.daysAgo', { count: days })}
           </Text>
         </View>
+
+        <View style={{ marginTop: s.md }}>
+          <Button
+            title={tr('chat.message')}
+            onPress={() => handleMessage(item)}
+            variant="outline"
+            size="sm"
+            icon={<MessageCircle size={14} color={colors.textPrimary} strokeWidth={1.8} />}
+          />
+        </View>
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
-      <View style={[styles.header, { paddingHorizontal: s.xl }]}> 
-        <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}> 
-          {tr('candidate.applications')}
-        </Text>
-        <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.xs }]}> 
-          {applications.length} {tr('candidate.applications').toLowerCase()}
-        </Text>
+      <View style={[styles.header, { paddingHorizontal: s.xl, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[{ color: colors.textPrimary, ...t.headingLarge }]}>
+            {tr('candidate.applications')}
+          </Text>
+          <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.xs }]}>
+            {applications.length} {tr('candidate.applications').toLowerCase()}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/messages' as never)}
+          style={{ width: 40, height: 40, borderRadius: r.md, backgroundColor: colors.surfaceSecondary, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <MessageCircle size={20} color={colors.textPrimary} strokeWidth={1.8} />
+        </TouchableOpacity>
       </View>
 
       {subscriptionSummary ? (
