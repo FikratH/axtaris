@@ -55,8 +55,11 @@ capped output tokens, and only signed-in users can call it.
 
 ### 2. Push notifications
 ```bash
+supabase secrets set PUSH_SECRET=$(openssl rand -hex 24)   # required: send-push refuses calls without it
 supabase functions deploy send-push
 ```
+The DB trigger (or backend) that calls `send-push` must pass this value in the
+`x-push-secret` header. Without `PUSH_SECRET` set, the endpoint safely rejects everything.
 The app registers each device's Expo push token on sign-in (native builds; web is a
 safe no-op). To fire a push automatically whenever an in-app notification is created,
 add a trigger on `public.notifications` that calls `send-push` via `net.http_post`
