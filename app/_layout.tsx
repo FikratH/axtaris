@@ -43,6 +43,7 @@ function AppContent() {
   const pendingVerification = useAuthStore((s) => s.pendingVerification);
   const sessionExpired = useAuthStore((s) => s.sessionExpired);
   const guestRole = useAuthStore((s) => s.guestRole);
+  const isAddingAccount = useAuthStore((s) => s.isAddingAccount);
   const hasOnboarded = useAppStore((s) => s.hasCompletedOnboarding);
 
   usePushNotifications(user?.id, user?.role);
@@ -232,12 +233,13 @@ function AppContent() {
       return;
     }
 
-    if ((isAuthRoute && !isResetPasswordRoute) || isOnboardingRoute) {
+    if (((isAuthRoute && !isResetPasswordRoute) || isOnboardingRoute) && !isAddingAccount) {
       router.replace(homeForRole as never);
     }
   }, [
     authStatus,
     guestRole,
+    isAddingAccount,
     hasOnboarded,
     isAuthenticated,
     isLoading,

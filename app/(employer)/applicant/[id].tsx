@@ -82,7 +82,9 @@ export default function EmployerApplicantDetailScreen() {
   );
   const candidate = application?.candidate;
   const candidateUser = candidate?.user;
-  const cvUrl = application?.cvUrl || candidate?.cvUrl;
+  // Prefer the candidate's CURRENT profile CV (live, resolvable) over the
+  // apply-time snapshot, which can be stale/empty or a non-storage URL.
+  const cvUrl = candidate?.cvUrl || application?.cvUrl;
 
   useEffect(() => {
     setEmployerNotes(application?.employerNotes || '');
@@ -112,7 +114,11 @@ export default function EmployerApplicantDetailScreen() {
         companyId: application.vacancy?.companyId,
         candidateId: candidateUser.id,
         employerId: user.id,
-        subject: candidateUser.fullName || application.vacancy?.title || tr('chat.title'),
+        currentUserId: user.id,
+        subject: application.vacancy?.title || candidateUser.fullName || tr('chat.title'),
+        candidateName: candidateUser.fullName,
+        companyName: application.vacancy?.company?.name,
+        vacancyTitle: application.vacancy?.title,
       });
       router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: conv.subject || tr('chat.title') } } as never);
     } catch (error) {

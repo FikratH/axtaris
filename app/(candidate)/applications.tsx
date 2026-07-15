@@ -69,7 +69,11 @@ export default function ApplicationsScreen() {
         companyId: item.vacancy?.companyId,
         candidateId: user.id,
         employerId,
+        currentUserId: user.id,
         subject: item.vacancy?.title || tr('chat.title'),
+        candidateName: user.fullName,
+        companyName: item.vacancy?.company?.name,
+        vacancyTitle: item.vacancy?.title,
       });
       router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: conv.subject || tr('chat.title') } } as never);
     } catch {
@@ -130,6 +134,7 @@ export default function ApplicationsScreen() {
           <Button
             title={tr('chat.message')}
             onPress={() => handleMessage(item)}
+            loading={startChat.isPending}
             variant="outline"
             size="sm"
             icon={<MessageCircle size={14} color={colors.textPrimary} strokeWidth={1.8} />}

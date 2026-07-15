@@ -13,6 +13,9 @@ interface ConversationRow {
   last_message: string | null;
   last_message_at: string;
   created_at: string;
+  vacancy_title: string | null;
+  candidate_name: string | null;
+  company_name: string | null;
 }
 
 interface MessageRow {
@@ -20,6 +23,8 @@ interface MessageRow {
   conversation_id: string;
   sender_id: string;
   body: string;
+  kind: 'text' | 'image' | null;
+  image_url: string | null;
   created_at: string;
 }
 
@@ -36,6 +41,9 @@ function mapConversation(row: ConversationRow): Conversation {
     lastMessage: row.last_message || undefined,
     lastMessageAt: row.last_message_at,
     createdAt: row.created_at,
+    vacancyTitle: row.vacancy_title || undefined,
+    candidateName: row.candidate_name || undefined,
+    companyName: row.company_name || undefined,
   };
 }
 
@@ -45,6 +53,8 @@ function mapMessage(row: MessageRow): ChatMessage {
     conversationId: row.conversation_id,
     senderId: row.sender_id,
     body: row.body,
+    kind: row.kind === 'image' ? 'image' : 'text',
+    imageUrl: row.image_url || undefined,
     createdAt: row.created_at,
   };
 }
@@ -59,9 +69,13 @@ export interface EnsureApplicationConversationParams {
   applicationId: string;
   vacancyId?: string;
   companyId?: string;
-  candidateId: string; // candidate's auth user id (participant_a)
-  employerId: string; // employer owner's auth user id (participant_b)
+  candidateId: string; // candidate's auth user id
+  employerId: string; // employer owner's auth user id
+  currentUserId: string; // the authenticated initiator — becomes participant_a (RLS insert requires auth.uid() = participant_a)
   subject?: string;
+  candidateName?: string;
+  companyName?: string;
+  vacancyTitle?: string;
 }
 
 class ChatService {
@@ -117,6 +131,7 @@ class ChatService {
         conversationId,
         senderId,
         body: text,
+        kind: 'text',
         createdAt: new Date().toISOString(),
       };
       mockMessages.push(message);
@@ -145,21 +160,84 @@ class ChatService {
     return mapMessage(data as MessageRow);
   }
 
+  async getConversation(conversationId: string): Promise<Conversation | null> {
+    if (!conversationId) return null;
+    if (shouldUseMockBackend()) {
+      return mockConversations.find((c) => c.id === conversationId) || null;
+    }
+    const { data, error } = await getSupabase()
+      .from('conversations')
+      .select('*')
+      .eq('id', conversationId)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? mapConversation(data as ConversationRow) : null;
+  }
+
+  async sendImageMessage(
+    conversationId: string,
+    senderId: string,
+    imageUrl: string,
+    caption?: string
+  ): Promise<ChatMessage> {
+    if (!conversationId || !senderId || !imageUrl) throw new Error('Missing image');
+    const body = caption?.trim() || '';
+
+    if (shouldUseMockBackend()) {
+      const message: ChatMessage = {
+        id: nextId(),
+        conversationId,
+        senderId,
+        body,
+        kind: 'image',
+        imageUrl,
+        createdAt: new Date().toISOString(),
+      };
+      mockMessages.push(message);
+      const conv = mockConversations.find((c) => c.id === conversationId);
+      if (conv) {
+        conv.lastMessage = body || '📷';
+        conv.lastMessageAt = message.createdAt;
+      }
+      return message;
+    }
+
+    const { data, error } = await getSupabase()
+      .from('messages')
+      .insert({ conversation_id: conversationId, sender_id: senderId, body, kind: 'image', image_url: imageUrl })
+      .select('*')
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    await getSupabase()
+      .from('conversations')
+      .update({ last_message: body || '📷', last_message_at: (data as MessageRow).created_at })
+      .eq('id', conversationId);
+
+    return mapMessage(data as MessageRow);
+  }
+
   async getOrCreateApplicationConversation(
     params: EnsureApplicationConversationParams
   ): Promise<Conversation> {
     if (shouldUseMockBackend()) {
       const existing = mockConversations.find((c) => c.applicationId === params.applicationId);
       if (existing) return existing;
+      const participantA = params.currentUserId;
+      const participantB = participantA === params.candidateId ? params.employerId : params.candidateId;
       const conv: Conversation = {
         id: nextId(),
         kind: 'application',
         applicationId: params.applicationId,
         vacancyId: params.vacancyId,
         companyId: params.companyId,
-        participantA: params.candidateId,
-        participantB: params.employerId,
+        participantA,
+        participantB,
         subject: params.subject,
+        vacancyTitle: params.vacancyTitle,
+        candidateName: params.candidateName,
+        companyName: params.companyName,
         lastMessageAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
       };
@@ -179,10 +257,10 @@ class ChatService {
       return mapConversation(existingRows[0] as ConversationRow);
     }
 
-    // The creator must be participant_a (RLS insert check). Whoever opens the
-    // thread first inserts it; the other party still matches on participant_b.
-    const currentUser = (await supa.auth.getUser()).data.user?.id;
-    const participantA = currentUser || params.candidateId;
+    // The creator must be participant_a (RLS insert check). currentUserId is the
+    // authenticated initiator, so this is deterministic for both roles — no
+    // getUser() round-trip that could null out and pick the wrong participant.
+    const participantA = params.currentUserId;
     const participantB = participantA === params.candidateId ? params.employerId : params.candidateId;
 
     const { data, error } = await supa
@@ -195,6 +273,9 @@ class ChatService {
         participant_a: participantA,
         participant_b: participantB,
         subject: params.subject ?? null,
+        vacancy_title: params.vacancyTitle ?? null,
+        candidate_name: params.candidateName ?? null,
+        company_name: params.companyName ?? null,
       })
       .select('*')
       .single();

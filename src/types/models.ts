@@ -184,6 +184,9 @@ export interface Conversation {
   lastMessage?: string;
   lastMessageAt: string;
   createdAt: string;
+  vacancyTitle?: string;
+  candidateName?: string;
+  companyName?: string;
 }
 
 export interface ChatMessage {
@@ -191,6 +194,8 @@ export interface ChatMessage {
   conversationId: string;
   senderId: string;
   body: string;
+  kind: 'text' | 'image';
+  imageUrl?: string;
   createdAt: string;
 }
 

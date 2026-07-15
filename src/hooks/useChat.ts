@@ -6,8 +6,17 @@ import { ChatMessage } from '@/types/models';
 
 export const chatKeys = {
   conversations: (userId?: string) => ['chat', 'conversations', userId] as const,
+  conversation: (conversationId?: string) => ['chat', 'conversation', conversationId] as const,
   messages: (conversationId?: string) => ['chat', 'messages', conversationId] as const,
 };
+
+export function useConversation(conversationId?: string) {
+  return useQuery({
+    queryKey: chatKeys.conversation(conversationId),
+    queryFn: () => chatService.getConversation(conversationId || ''),
+    enabled: !!conversationId,
+  });
+}
 
 export function useConversations(userId?: string) {
   return useQuery({
@@ -54,6 +63,23 @@ export function useSendMessage(conversationId?: string, userId?: string) {
       });
       queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
       analyticsService.track('message_sent', { conversationId }, userId);
+    },
+  });
+}
+
+export function useSendImageMessage(conversationId?: string, userId?: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { imageUrl: string; caption?: string }) =>
+      chatService.sendImageMessage(conversationId || '', userId || '', p.imageUrl, p.caption),
+    onSuccess: (message) => {
+      queryClient.setQueryData<ChatMessage[]>(chatKeys.messages(conversationId), (cur) => {
+        const existing = cur || [];
+        if (existing.some((m) => m.id === message.id)) return existing;
+        return [...existing, message];
+      });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'conversations'] });
+      analyticsService.track('message_sent', { conversationId, kind: 'image' }, userId);
     },
   });
 }

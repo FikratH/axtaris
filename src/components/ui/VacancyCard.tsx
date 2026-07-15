@@ -17,6 +17,7 @@ interface VacancyCardProps {
   saved?: boolean;
   compact?: boolean;
   matchScore?: number;
+  applied?: boolean;
 }
 
 const workTypeTranslationKeys: Record<WorkType, string> = {
@@ -70,7 +71,7 @@ function AnimatedSaveButton({
   );
 }
 
-export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchScore }: VacancyCardProps) {
+export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchScore, applied }: VacancyCardProps) {
   const { colors, radius: r, spacing: s, typography: t, elevation: e, isDark } = useTheme();
   const { t: tr } = useTranslation();
 
@@ -110,6 +111,11 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchSco
           </Text>
           {matchScore !== undefined && <MatchBadge score={matchScore} style={{ marginTop: 6 }} />}
         </View>
+        {applied && (
+          <View style={[styles.appliedPill, { backgroundColor: colors.successLight, marginRight: onSave ? 8 : 0 }]}>
+            <Text style={[{ color: colors.success }, t.caption]}>{tr('candidate.applied')}</Text>
+          </View>
+        )}
         {onSave && (
           <AnimatedSaveButton saved={saved} onPress={onSave} colors={colors} />
         )}
@@ -161,6 +167,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
+  },
+  appliedPill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   footer: {
     flexDirection: 'row',

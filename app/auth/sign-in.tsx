@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
@@ -25,6 +25,10 @@ export default function SignInScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const selectedRole = useAuthStore((st) => st.selectedRole);
+
+  // Clear the add-account guard suppression when leaving sign-in (whether the
+  // user completed the add flow or backed out) so it can't stay suppressed.
+  useEffect(() => () => useAuthStore.getState().setAddingAccount(false), []);
   const completeAuthentication = useAuthStore((st) => st.completeAuthentication);
 
   const [showPassword, setShowPassword] = useState(false);

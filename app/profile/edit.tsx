@@ -153,10 +153,10 @@ export default function EditProfileScreen() {
           <SuggestionChips
             suggestions={getSuggestions('skills', i18n.language as 'az' | 'ru' | 'en')}
             query={skillInput}
-            exclude={skills}
+            selected={skills}
             title={tr('common.suggestions')}
             onSelect={(v) => {
-              if (!skills.includes(v)) setSkills([...skills, v]);
+              setSkills((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
               setSkillInput('');
             }}
           />

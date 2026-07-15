@@ -19,6 +19,32 @@ export interface AIResumeResult {
   improvedBio?: string;
 }
 
+/** Structured resume extracted from an uploaded CV by the parse-resume function. */
+export interface ParsedResume {
+  title?: string;
+  bio?: string;
+  skills: string[];
+  experience: {
+    jobTitle: string;
+    company: string;
+    location?: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent?: boolean;
+    description?: string;
+  }[];
+  education: {
+    degree: string;
+    fieldOfStudy: string;
+    institution: string;
+    startDate: string;
+    endDate?: string;
+    isCurrent?: boolean;
+    description?: string;
+  }[];
+  languages: { language: string; level: string }[];
+}
+
 class AIService {
   async analyzeProfile(profile: CandidateProfile): Promise<AISuggestion[]> {
     await this.simulateDelay();
@@ -77,6 +103,23 @@ class AIService {
   }
 
   async suggestSkills(currentSkills: string[], jobTitle?: string): Promise<string[]> {
+    // AI-first: ask the model for role-specific skills, fall back to templates.
+    const ai = await this.callAssistant(
+      'You suggest relevant professional skills. Return ONLY a comma-separated list of 8 skills — no numbering, no preamble, no extra words.',
+      `Suggest 8 professional skills relevant to the job title "${jobTitle || 'professional'}". Already listed (do not repeat): ${currentSkills.join(', ') || 'none'}.`,
+      120
+    );
+    if (ai) {
+      const parsed = ai
+        .split(/[,\n]/)
+        .map((s) => s.replace(/^[-•\d.)\s]+/, '').trim())
+        .filter(Boolean);
+      const filtered = parsed.filter(
+        (s) => !currentSkills.some((c) => c.toLowerCase() === s.toLowerCase())
+      );
+      if (filtered.length >= 3) return filtered.slice(0, 8);
+    }
+
     await this.simulateDelay();
 
     const skillSuggestions: Record<string, string[]> = {
@@ -166,6 +209,32 @@ class AIService {
       trimmed,
       Math.min(1200, Math.ceil(trimmed.length / 2) + 220)
     );
+  }
+
+  /**
+   * Parse an uploaded CV (already in Storage) into a structured resume via the
+   * parse-resume Edge Function. Returns null when AI is unavailable (mock mode,
+   * function not deployed, no key, quota hit, unreadable/scanned file) so the
+   * caller can silently skip autofill.
+   */
+  async parseResumeFromStorage(loc: {
+    bucket: string;
+    path: string;
+    fileName?: string;
+  }): Promise<ParsedResume | null> {
+    if (shouldUseMockBackend()) return null;
+
+    try {
+      const { data, error } = await getSupabase().functions.invoke<{
+        data?: ParsedResume;
+        error?: string;
+        code?: string;
+      }>('parse-resume', { body: loc });
+      if (error) return null;
+      return (data?.data as ParsedResume) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /**

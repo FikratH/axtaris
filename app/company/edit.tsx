@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useEmployerCompany, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
+import { useGuestGate } from '@/hooks/useGuestGate';
 import { safeBack } from '@/utils/navigation';
 import { ChevronLeft } from 'lucide-react-native';
 
@@ -26,6 +27,7 @@ export default function EditCompanyScreen() {
     refetch,
   } = useEmployerCompany(user?.id);
   const updateCompany = useUpdateEmployerCompany(user?.id);
+  const { requireAuth } = useGuestGate();
 
   const [name, setName] = useState('');
   const [industry, setIndustry] = useState('');
@@ -46,6 +48,7 @@ export default function EditCompanyScreen() {
   }, [company]);
 
   const handleSave = async () => {
+    if (!requireAuth()) return;
     if (!name.trim()) { Alert.alert(tr('common.error'), tr('validation.required')); return; }
 
     if (!company) {

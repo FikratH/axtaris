@@ -1,7 +1,7 @@
 import i18n from '@/i18n';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 
-export type StorageBucket = 'cv-uploads' | 'avatars' | 'company-media';
+export type StorageBucket = 'cv-uploads' | 'avatars' | 'company-media' | 'chat-media';
 const STORAGE_URI_PREFIX = 'storage://';
 
 export interface LocalUploadFile {
@@ -108,7 +108,7 @@ function parseStorageReference(fileUrl: string): { bucket: StorageBucket; path: 
 
   if (!bucket || pathParts.length === 0) return null;
 
-  if (bucket !== 'cv-uploads' && bucket !== 'avatars' && bucket !== 'company-media') {
+  if (bucket !== 'cv-uploads' && bucket !== 'avatars' && bucket !== 'company-media' && bucket !== 'chat-media') {
     return null;
   }
 
@@ -129,7 +129,7 @@ function parsePublicStorageUrl(fileUrl: string): { bucket: StorageBucket; path: 
 
   if (!bucket || pathParts.length === 0) return null;
 
-  if (bucket !== 'cv-uploads' && bucket !== 'avatars' && bucket !== 'company-media') {
+  if (bucket !== 'cv-uploads' && bucket !== 'avatars' && bucket !== 'company-media' && bucket !== 'chat-media') {
     return null;
   }
 
@@ -189,6 +189,28 @@ class FileStorageService {
       maxSizeBytes: 5 * 1024 * 1024,
       allowedMimeTypes: IMAGE_MIME_TYPES,
     });
+  }
+
+  async uploadChatImage(
+    userId: string,
+    conversationId: string,
+    file: LocalUploadFile
+  ): Promise<UploadedFileAsset> {
+    return this.upload({
+      bucket: 'chat-media',
+      userId,
+      file,
+      pathPrefix: `conversations/${sanitizePathSegment(conversationId)}/${sanitizePathSegment(userId)}`,
+      isPublic: false,
+      maxSizeBytes: 5 * 1024 * 1024,
+      allowedMimeTypes: IMAGE_MIME_TYPES,
+    });
+  }
+
+  /** Resolve a stored file URL back to its {bucket, path} (e.g. to re-parse a CV). */
+  getStorageLocation(fileUrl?: string): { bucket: StorageBucket; path: string } | null {
+    if (!fileUrl) return null;
+    return parseStorageReference(fileUrl) || parsePublicStorageUrl(fileUrl);
   }
 
   async resolveFileUrl(

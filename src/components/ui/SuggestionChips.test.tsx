@@ -63,24 +63,23 @@ describe('SuggestionChips', () => {
     expect(labels).toEqual(['Java', 'JavaScript', 'Advanced Java']);
   });
 
-  it('hides excluded values', async () => {
+  it('keeps selected values visible (highlighted, not hidden)', async () => {
     const { queryByText } = await renderChips({
       suggestions: ['Baku', 'Ganja'],
-      exclude: ['Ganja'],
+      selected: ['Ganja'],
       onSelect: jest.fn(),
     });
     expect(queryByText('Baku')).toBeTruthy();
-    expect(queryByText('Ganja')).toBeNull();
+    expect(queryByText('Ganja')).toBeTruthy();
   });
 
-  it('hides an exact query match and renders nothing when empty', async () => {
+  it('shows an exact query match (no longer suppressed)', async () => {
     const { queryByText } = await renderChips({
       suggestions: ['React'],
       query: 'react',
       onSelect: jest.fn(),
     });
-    // The only candidate equals the query exactly, so it is suppressed.
-    expect(queryByText('React')).toBeNull();
+    expect(queryByText('React')).toBeTruthy();
   });
 
   it('respects the max chip count', async () => {

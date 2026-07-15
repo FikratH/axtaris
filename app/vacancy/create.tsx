@@ -16,6 +16,7 @@ import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
+import { useGuestGate } from '@/hooks/useGuestGate';
 import { SuggestionChips } from '@/components/ui/SuggestionChips';
 import { getSuggestions } from '@/data/suggestions';
 import { createLocalItemId } from '@/utils/profileSections';
@@ -35,6 +36,7 @@ export default function CreateVacancyScreen() {
   const user = useAuthStore((s) => s.user);
   const { data: company, isLoading: companyLoading, isError: companyError, refetch } = useEmployerCompany(user?.id);
   const createVacancy = useCreateVacancy(user?.id);
+  const { requireAuth } = useGuestGate();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -62,8 +64,13 @@ export default function CreateVacancyScreen() {
   const toggleRequired = (id: string) =>
     setScreeningQuestions((cur) => cur.map((x) => (x.id === id ? { ...x, required: !x.required } : x)));
 
-  const appendLine = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) =>
-    setter((cur) => (cur.trim() ? `${cur.trim()}\n${value}` : value));
+  const linesOf = (text: string) => text.split('\n').map((x) => x.trim()).filter(Boolean);
+  const toggleLine = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) =>
+    setter((cur) => {
+      const lines = linesOf(cur);
+      if (lines.includes(value)) return lines.filter((l) => l !== value).join('\n');
+      return cur.trim() ? `${cur.trim()}\n${value}` : value;
+    });
 
   const addSkill = () => {
     const trimmed = skillInput.trim();
@@ -78,6 +85,7 @@ export default function CreateVacancyScreen() {
   };
 
   const submitVacancy = async (status: VacancyStatus) => {
+    if (!requireAuth()) return;
     if (!title.trim()) {
       Alert.alert(tr('common.error'), tr('validation.required'));
       return;
@@ -176,7 +184,7 @@ export default function CreateVacancyScreen() {
           <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder={tr('employer.vacancyTitlePlaceholder')} />
           <Input label={tr('employer.vacancyDescription')} value={description} onChangeText={setDescription} placeholder={tr('employer.vacancyDescription')} multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
           <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
-          <SuggestionChips suggestions={getSuggestions('cities', lang)} query={city} onSelect={setCity} />
+          <SuggestionChips suggestions={getSuggestions('cities', lang)} query={city} selected={city ? [city] : []} onSelect={(v) => setCity((cur) => (cur === v ? '' : v))} />
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
@@ -221,21 +229,21 @@ export default function CreateVacancyScreen() {
             <SuggestionChips
               suggestions={getSuggestions('skills', lang)}
               query={skillInput}
-              exclude={skills}
+              selected={skills}
               title={tr('common.suggestions')}
               onSelect={(v) => {
-                if (!skills.includes(v)) setSkills([...skills, v]);
+                setSkills((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
                 setSkillInput('');
               }}
             />
           </View>
 
           <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <SuggestionChips suggestions={getSuggestions('requirements', lang)} onSelect={appendLine(setRequirements)} title={tr('common.suggestions')} />
+          <SuggestionChips suggestions={getSuggestions('requirements', lang)} selected={linesOf(requirements)} onSelect={toggleLine(setRequirements)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <SuggestionChips suggestions={getSuggestions('responsibilities', lang)} onSelect={appendLine(setResponsibilities)} title={tr('common.suggestions')} />
+          <SuggestionChips suggestions={getSuggestions('responsibilities', lang)} selected={linesOf(responsibilities)} onSelect={toggleLine(setResponsibilities)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <SuggestionChips suggestions={getSuggestions('benefits', lang)} onSelect={appendLine(setBenefits)} title={tr('common.suggestions')} />
+          <SuggestionChips suggestions={getSuggestions('benefits', lang)} selected={linesOf(benefits)} onSelect={toggleLine(setBenefits)} title={tr('common.suggestions')} />
 
           <Text style={[{ color: colors.textPrimary, marginTop: 20, marginBottom: 4 }, t.labelSmall]}>{tr('employer.screeningQuestions')}</Text>
           <Text style={[{ color: colors.textTertiary, marginBottom: 8 }, t.caption]}>{tr('employer.screeningQuestionsHint')}</Text>

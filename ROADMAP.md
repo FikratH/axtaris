@@ -1,50 +1,57 @@
-# AxtarIS — Product Roadmap (CPO audit)
+# AxtarIS — Product Roadmap (living doc)
 
-Generated from a deep product audit of the two‑sided Azerbaijani jobs marketplace.
+Two-sided Azerbaijani jobs marketplace. This file tracks what has shipped and
+what's next. Last updated after the messaging / analytics / chat-attachments pass.
 
 ## 🎯 North star
 
-**Close the hiring loop with in‑app messaging + employer response mechanics.**
-Today the flow dead‑ends the moment an employer shortlists or a candidate applies —
-there's no channel to talk, schedule, or follow up, so both sides go quiet and churn.
-Messaging (gated by application/shortlist, wired to the existing push + deep‑link
-infra) is the connective tissue that turns one‑way applications into two‑way
-conversations and measurable hires. It's also the substrate the real revenue model
-needs — paid direct contact, talent‑search outreach, and boosted visibility all only
-pay off once a live conversation channel exists.
+**Close the hiring loop with in-app messaging + employer response mechanics.**
+Status: **shipped** — realtime candidate↔employer chat + admin support threads.
 
-## Biggest gaps today
+## ✅ Shipped
+
+| Area | What shipped |
+|---|---|
+| **Cross-platform dialogs** | `react-native-web`'s `Alert` is a no-op; built `@/utils/dialog` + `<DialogHost>` so all confirmations/deletes/errors work on web |
+| **In-app messaging** | `conversations`/`messages` + RLS + **Supabase Realtime**; thread + list UI; image attachments; tappable header; application-gated |
+| **Admin support** | `support` conversation kind; premium-gated "Contact support"; admin support inbox |
+| **Screening questions** | Optional per-vacancy questions; candidates answer on apply; employers see answers |
+| **CV** | Fixed employer 400 (storage RLS); in-app CV preview (web iframe / native viewer) |
+| **AI (gpt-4o-mini proxy)** | Vacancy translator; AI bio; AI skill suggestions; experience rewrite; **resume parsing → profile auto-fill** |
+| **Input suggestions** | Curated az/ru/en dataset (skills, titles, degrees, cities, benefits…) with highlight-selected chips across profile + vacancy forms |
+| **Matching depth** | Skill/city taxonomy normalization (Baku/Bakı/Баку fold to one token) |
+| **Admin finance** | MRR / ARR / ARPU + revenue-by-plan |
+| **Product analytics** | `analytics_events` + funnel instrumentation (view → apply → message → publish) + admin engagement + view→apply conversion |
+| **Guest experience** | Pre-login browsing of chosen role; account-required actions prompt sign-in |
+| **Multi-account** | Persisted accounts + switcher + add-account |
+| **Tests** | Jest + jest-expo; 97+ tests (utils, data, services, components) |
+| **Admin** | Dashboard KPIs, moderation, user & company management, finance, seeded admin account |
+
+## Remaining gaps (prioritized)
 
 | # | Area | Gap | Severity |
 |---|---|---|---|
-| 1 | Messaging | No channel after apply/shortlist — the flow dead‑ends at a status change | 🔴 critical |
-| 2 | Monetization | Subscription upgrade is a stub (`comingSoon`); no payment gateway (Stripe unavailable in AZ) | 🔴 critical |
-| 3 | Analytics | Zero event instrumentation — blind on the view→apply→shortlist→hire funnel | 🔴 critical |
-| 4 | Candidate retention | No job alerts / saved searches / "new matches" digest | 🟠 high |
-| 5 | Employer liquidity | Inbound‑only; no talent/CV search to invite candidates | 🟠 high |
-| 6 | Trust & safety | No reviews, no scam/fake‑job reporting, no candidate verification | 🟠 high |
-| 7 | Application quality | One‑tap apply ignores the existing `coverLetter` field; no screening questions | 🟠 high |
-| 8 | Matching depth | Keyword overlap only; "Bakı/Baku/Baki" silently breaks scoring | 🟡 medium |
-| 9 | Onboarding | CV upload exists but no resume parsing to auto‑fill the profile | 🟡 medium |
-| 10 | Status transparency | No interview scheduling / rejection feedback | 🟡 medium |
-| 11 | i18n edges | Salary‑currency + number/date formatting per locale; non‑normalized place/skill spellings | 🟢 low |
+| 1 | Monetization | Subscription upgrade is a stub; no AZ payment gateway (Stripe unavailable) — Azericard/Kapital, m10/Birbank, ASAN Pay | 🔴 critical |
+| 2 | Candidate retention | No job alerts / saved searches / "new matches" digest | 🟠 high |
+| 3 | Employer liquidity | Inbound-only; no talent/CV search to invite candidates | 🟠 high |
+| 4 | Trust & safety | No reviews/ratings, scam reporting, verified badges in feed | 🟠 high |
+| 5 | Matching | Keyword + normalization only; no semantic (pgvector) matching | 🟡 medium |
+| 6 | Interviews | No scheduling / structured rejection feedback | 🟡 medium |
+| 7 | Web push | Realtime chat works; browser push (VAPID) not wired | 🟡 medium |
+| 8 | i18n edges | Per-locale salary/number/date formatting | 🟢 low |
 
 ## Sequenced recommendations
 
 **NOW**
-1. **In‑app messaging** (application‑gated, push‑enabled) — L. Highest single lever on liquidity + retention; reuse `send-push` + deep‑links.
-2. **Real payments + monetization** (local AZ gateways: Azericard/Kapital, m10/Birbank, ASAN Pay) + featured/boosted vacancies + application boost — XL. Unblocks revenue.
-3. **Employer talent search / CV database** (premium employer SKU, invite‑to‑apply) — L. Fixes cold‑start on the paying side.
-4. **Job alerts + saved searches + weekly "new matches" digest** — M. Core candidate retention loop on existing match + push infra.
-5. **Product analytics + liquidity dashboard** (funnel events, employer response SLA, time‑to‑first‑application) — M. Makes every other bet measurable.
+1. **Real payments + monetization** (local AZ gateways) + boosted/featured vacancies — XL. Unblocks revenue.
+2. **Job alerts + saved searches + weekly "new matches" digest** — M. Core retention loop on the existing match + push infra.
+3. **Employer talent search / CV database** (premium SKU, invite-to-apply) — L. Fixes cold-start on the paying side.
 
 **NEXT**
-6. **Structured apply** (optional cover letter + per‑vacancy knockout questions) — M. Raises application signal.
-7. **AI employer suite** (JD generation, auto screening questions, applicant summarization/ranking) — L. Extends the gpt‑4o‑mini proxy to the paying side.
-8. **Trust layer** (company reviews/ratings, scam reporting, verified badges in feed) — M. Reuses the moderation queue.
-9. **Semantic matching + skill/city taxonomy normalization** (pgvector embeddings) — L. Fixes "Baku/Bakı" breakage; upgrades the core value prop.
-10. **Resume parsing** to auto‑fill the profile from an uploaded CV — M. Removes the biggest onboarding drop‑off.
+4. **Trust layer** (company reviews/ratings, scam reporting, verified badges) — M. Reuses the moderation queue.
+5. **Semantic matching** (pgvector embeddings) — L. Upgrades the core value prop beyond keywords.
+6. **AI employer suite** (JD generation, auto screening questions, applicant ranking) — L. Extends the AI proxy to the paying side.
 
 **LATER**
-11. **Candidate growth loops** (shareable public profile link, "employers viewed you", referral invites) — M.
-12. **Interview scheduling + automated status feedback** — M. Completes the post‑shortlist workflow.
+7. **Interview scheduling + automated status feedback** — M.
+8. **Web push (VAPID)** + candidate growth loops (public profile link, "employers viewed you", referrals) — M.

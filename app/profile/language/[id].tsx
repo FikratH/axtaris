@@ -159,7 +159,8 @@ export default function LanguageFormScreen() {
           <SuggestionChips
             suggestions={getSuggestions('languages', i18n.language as 'az' | 'ru' | 'en')}
             query={language}
-            onSelect={setLanguage}
+            selected={language ? [language] : []}
+            onSelect={(v) => setLanguage((cur) => (cur === v ? '' : v))}
           />
           <SelectField
             label={tr('profileCrud.language.proficiencyLabel')}

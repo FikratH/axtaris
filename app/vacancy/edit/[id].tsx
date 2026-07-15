@@ -83,8 +83,13 @@ export default function EditVacancyScreen() {
   const removeQuestion = (qid: string) => setScreeningQuestions((cur) => cur.filter((x) => x.id !== qid));
   const toggleRequired = (qid: string) =>
     setScreeningQuestions((cur) => cur.map((x) => (x.id === qid ? { ...x, required: !x.required } : x)));
-  const appendLine = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) =>
-    setter((cur) => (cur.trim() ? `${cur.trim()}\n${value}` : value));
+  const linesOf = (text: string) => text.split('\n').map((x) => x.trim()).filter(Boolean);
+  const toggleLine = (setter: React.Dispatch<React.SetStateAction<string>>) => (value: string) =>
+    setter((cur) => {
+      const lines = linesOf(cur);
+      if (lines.includes(value)) return lines.filter((l) => l !== value).join('\n');
+      return cur.trim() ? `${cur.trim()}\n${value}` : value;
+    });
 
   useEffect(() => {
     if (!vacancy) return;
@@ -262,11 +267,11 @@ export default function EditVacancyScreen() {
           </View>
 
           <Input label={tr('candidate.requirements')} value={requirements} onChangeText={setRequirements} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <SuggestionChips suggestions={getSuggestions('requirements', lang)} onSelect={appendLine(setRequirements)} title={tr('common.suggestions')} />
+          <SuggestionChips suggestions={getSuggestions('requirements', lang)} selected={linesOf(requirements)} onSelect={toggleLine(setRequirements)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.responsibilities')} value={responsibilities} onChangeText={setResponsibilities} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <SuggestionChips suggestions={getSuggestions('responsibilities', lang)} onSelect={appendLine(setResponsibilities)} title={tr('common.suggestions')} />
+          <SuggestionChips suggestions={getSuggestions('responsibilities', lang)} selected={linesOf(responsibilities)} onSelect={toggleLine(setResponsibilities)} title={tr('common.suggestions')} />
           <Input label={tr('candidate.benefits')} value={benefits} onChangeText={setBenefits} placeholder={tr('employer.onePerLine')} multiline numberOfLines={3} style={{ minHeight: 80, textAlignVertical: 'top' }} />
-          <SuggestionChips suggestions={getSuggestions('benefits', lang)} onSelect={appendLine(setBenefits)} title={tr('common.suggestions')} />
+          <SuggestionChips suggestions={getSuggestions('benefits', lang)} selected={linesOf(benefits)} onSelect={toggleLine(setBenefits)} title={tr('common.suggestions')} />
 
           <Text style={[{ color: colors.textPrimary, marginTop: 20, marginBottom: 4 }, t.labelSmall]}>{tr('employer.screeningQuestions')}</Text>
           <Text style={[{ color: colors.textTertiary, marginBottom: 8 }, t.caption]}>{tr('employer.screeningQuestionsHint')}</Text>

@@ -10,6 +10,7 @@ import { useConversations } from '@/hooks/useChat';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Conversation } from '@/types/models';
 import { safeBack } from '@/utils/navigation';
+import { getConversationTitle } from '@/utils/chatPresentation';
 
 export default function MessagesScreen() {
   const { colors, spacing: s, typography: t, radius: r } = useTheme();
@@ -20,11 +21,12 @@ export default function MessagesScreen() {
   const { data: conversations = [], isLoading } = useConversations(user?.id);
 
   const openThread = (c: Conversation) => {
-    router.push({ pathname: '/chat/[id]', params: { id: c.id, subject: c.subject || tr('chat.title') } } as never);
+    router.push({ pathname: '/chat/[id]', params: { id: c.id, subject: getConversationTitle(c, user?.role, tr) } } as never);
   };
 
   const renderItem = ({ item }: { item: Conversation }) => {
     const support = item.kind === 'support';
+    const title = getConversationTitle(item, user?.role, tr);
     return (
       <TouchableOpacity
         activeOpacity={0.7}
@@ -40,7 +42,7 @@ export default function MessagesScreen() {
         </View>
         <View style={{ flex: 1, marginLeft: s.md }}>
           <Text numberOfLines={1} style={[{ color: colors.textPrimary }, t.labelMedium]}>
-            {item.subject || (support ? tr('chat.support') : tr('chat.title'))}
+            {title}
           </Text>
           <Text numberOfLines={1} style={[{ color: colors.textTertiary, marginTop: 2 }, t.bodySmall]}>
             {item.lastMessage || tr('chat.noMessages')}

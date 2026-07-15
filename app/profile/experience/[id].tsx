@@ -212,7 +212,8 @@ export default function ExperienceFormScreen() {
           <SuggestionChips
             suggestions={getSuggestions('jobTitles', i18n.language as 'az' | 'ru' | 'en')}
             query={jobTitle}
-            onSelect={setJobTitle}
+            selected={jobTitle ? [jobTitle] : []}
+            onSelect={(v) => setJobTitle((cur) => (cur === v ? '' : v))}
           />
           <Input
             label={tr('candidate.company')}
@@ -223,7 +224,8 @@ export default function ExperienceFormScreen() {
           <SuggestionChips
             suggestions={getSuggestions('companies', i18n.language as 'az' | 'ru' | 'en')}
             query={company}
-            onSelect={setCompany}
+            selected={company ? [company] : []}
+            onSelect={(v) => setCompany((cur) => (cur === v ? '' : v))}
           />
           <Input
             label={tr('candidate.location')}
@@ -292,10 +294,10 @@ export default function ExperienceFormScreen() {
           <SuggestionChips
             suggestions={getSuggestions('achievements', i18n.language as 'az' | 'ru' | 'en')}
             query={highlightInput}
-            exclude={highlights}
+            selected={highlights}
             title={tr('common.suggestions')}
             onSelect={(v) => {
-              setHighlights((current) => (current.includes(v) ? current : [...current, v]));
+              setHighlights((current) => (current.includes(v) ? current.filter((x) => x !== v) : [...current, v]));
               setHighlightInput('');
             }}
           />

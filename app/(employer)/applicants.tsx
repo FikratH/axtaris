@@ -70,7 +70,7 @@ export default function ApplicantsScreen() {
     : allApplications.filter((a) => a.status === filter);
 
   const handleOpenCv = (application: Application) => {
-    const cvUrl = application.cvUrl || application.candidate?.cvUrl;
+    const cvUrl = application.candidate?.cvUrl || application.cvUrl;
 
     if (!cvUrl) {
       Alert.alert(tr('common.error'), tr('common.notAvailable'));

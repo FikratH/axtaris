@@ -21,6 +21,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
 import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
+import { useGuestGate } from '@/hooks/useGuestGate';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Avatar } from '@/components/ui/Avatar';
@@ -48,6 +49,10 @@ export default function CandidateHomeScreen() {
   const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
   const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
   const toggleSave = useToggleSavedJob(user?.id);
+  const { requireAuth } = useGuestGate();
+  const saveJob = (id: string) => {
+    if (requireAuth()) toggleSave.mutate(id);
+  };
   const {
     data: vacancies = [],
     isLoading: vacanciesLoading,
@@ -218,7 +223,7 @@ export default function CandidateHomeScreen() {
                 <VacancyCard
                   vacancy={item}
                   onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-                  onSave={() => toggleSave.mutate(item.id)}
+                  onSave={() => saveJob(item.id)}
                   saved={savedJobIds.includes(item.id)}
                   matchScore={item.match.score}
                   compact
@@ -281,7 +286,7 @@ export default function CandidateHomeScreen() {
                 <VacancyCard
                   vacancy={vacancy}
                   onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
-                  onSave={() => toggleSave.mutate(vacancy.id)}
+                  onSave={() => saveJob(vacancy.id)}
                   saved={savedJobIds.includes(vacancy.id)}
                 />
               </StaggeredItem>

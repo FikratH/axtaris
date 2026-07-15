@@ -13,9 +13,22 @@ import {
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
 import { fileStorageService } from '@/services/fileStorageService';
+import { aiService } from '@/services/aiService';
+import { shouldUseMockBackend } from '@/services/supabase';
+import { useResumeDraftStore } from '@/store/resumeDraftStore';
 import { safeBack } from '@/utils/navigation';
-import { ChevronLeft, FileUp, FileCheck, Trash2 } from 'lucide-react-native';
+import { ChevronLeft, FileUp, FileCheck, Trash2, Sparkles } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
+
+/** PDFs and DOCX carry embedded text we can parse; legacy .doc does not. */
+function isParsableCv(fileName?: string, mimeType?: string): boolean {
+  const lower = (fileName || '').toLowerCase();
+  if (lower.endsWith('.doc')) return false;
+  if (lower.endsWith('.pdf') || lower.endsWith('.docx')) return true;
+  if (mimeType === 'application/pdf') return true;
+  if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') return true;
+  return false;
+}
 
 export default function UploadCVScreen() {
   const { colors, typography: t } = useTheme();
@@ -31,6 +44,45 @@ export default function UploadCVScreen() {
   } = useCandidateProfile(user?.id);
   const updateProfile = useUpdateCandidateProfile(user?.id);
   const [uploading, setUploading] = useState(false);
+  const [parsing, setParsing] = useState(false);
+
+  /**
+   * Parse a stored CV into a resume draft, then offer to open the review
+   * screen. Returns true when a draft was produced (so callers can skip a
+   * plain success alert). Never throws — parsing is best-effort autofill.
+   */
+  const runAutofill = async (
+    loc: { bucket: string; path: string; fileName?: string },
+    notifyOnEmpty: boolean
+  ): Promise<boolean> => {
+    setParsing(true);
+    try {
+      const result = await aiService.parseResumeFromStorage(loc);
+      if (result) {
+        useResumeDraftStore.getState().setDraft(result);
+        Alert.alert(tr('candidate.autofillFromCv'), tr('reviewCv.autofillReady'), [
+          { text: tr('reviewCv.reviewCta'), onPress: () => router.push('/profile/review-cv' as never) },
+          { text: tr('common.later'), style: 'cancel' },
+        ]);
+        return true;
+      }
+      if (notifyOnEmpty) {
+        Alert.alert(tr('candidate.autofillFromCv'), tr('reviewCv.noData'));
+      }
+      return false;
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleAutofillExisting = async () => {
+    const loc = fileStorageService.getStorageLocation(profile?.cvUrl);
+    if (!loc) return;
+    await runAutofill(
+      { bucket: loc.bucket, path: loc.path, fileName: profile?.cvFileName || undefined },
+      true
+    );
+  };
 
   const handlePick = async () => {
     if (!user?.id || !profile) {
@@ -63,7 +115,17 @@ export default function UploadCVScreen() {
           void fileStorageService.removeUploadedFile(previousCvUrl).catch(() => undefined);
         }
 
-        Alert.alert(tr('common.done'), file.name);
+        const parsable = !shouldUseMockBackend() && isParsableCv(file.name, file.mimeType);
+        const autofilled = parsable
+          ? await runAutofill(
+              { bucket: uploaded.bucket, path: uploaded.path, fileName: file.name },
+              false
+            )
+          : false;
+
+        if (!autofilled) {
+          Alert.alert(tr('common.done'), file.name);
+        }
       }
     } catch (error) {
       setUploading(false);
@@ -158,6 +220,16 @@ export default function UploadCVScreen() {
             <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>{tr('candidate.cvUploadSuccess')}</Text>
             <View style={{ marginTop: 20, gap: 10, alignSelf: 'stretch' }}>
               <Button title={tr('cv.preview')} onPress={handlePreview} variant="primary" size="sm" />
+              {!shouldUseMockBackend() ? (
+                <Button
+                  title={tr('candidate.autofillFromCv')}
+                  onPress={handleAutofillExisting}
+                  variant="secondary"
+                  size="sm"
+                  loading={parsing}
+                  icon={<Sparkles size={14} color={colors.primary} strokeWidth={2} />}
+                />
+              ) : null}
               <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'center' }}>
                 <Button title={tr('common.replace')} onPress={handlePick} variant="outline" size="sm" fullWidth={false} loading={uploading || updateProfile.isPending} />
                 <Button title={tr('common.remove')} onPress={handleRemove} variant="destructive" size="sm" fullWidth={false} loading={updateProfile.isPending} icon={<Trash2 size={14} color="#FFF" strokeWidth={2} />} />
@@ -177,9 +249,12 @@ export default function UploadCVScreen() {
         )}
       </View>
 
-      {uploading && (
+      {(uploading || parsing) && (
         <View style={[styles.loadingOverlay, { backgroundColor: colors.surfaceOverlay }]}>
-          <Text style={[{ color: '#FFF' }, t.labelMedium]}>{tr('common.loading')}</Text>
+          <ActivityIndicator size="large" color="#FFF" />
+          <Text style={[{ color: '#FFF', marginTop: 12 }, t.labelMedium]}>
+            {parsing ? tr('candidate.parsingCv') : tr('common.loading')}
+          </Text>
         </View>
       )}
     </View>

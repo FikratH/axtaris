@@ -38,9 +38,11 @@ interface AuthState {
   sessionExpired: boolean;
   isSigningOut: boolean;
   guestRole: UserRole | null;
+  isAddingAccount: boolean;
   accounts: StoredAccount[];
   setSelectedRole: (role: UserRole | null) => void;
   setGuestRole: (role: UserRole | null) => void;
+  setAddingAccount: (value: boolean) => void;
   updateUser: (updates: Partial<User>) => Promise<void>;
   completeAuthentication: (user: User, token: string | null, refreshToken?: string | null) => Promise<void>;
   refreshAuthentication: (user: User, token: string | null) => Promise<void>;
@@ -145,11 +147,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   sessionExpired: false,
   isSigningOut: false,
   guestRole: null,
+  isAddingAccount: false,
   accounts: [],
 
   setSelectedRole: (role) => set({ selectedRole: role }),
 
   setGuestRole: (role) => set({ guestRole: role }),
+
+  setAddingAccount: (value) => set({ isAddingAccount: value }),
 
   updateUser: async (updates) => {
     const currentUser = get().user;
@@ -206,6 +211,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       sessionExpired: false,
       isSigningOut: false,
       guestRole: null,
+      isAddingAccount: false,
       accounts: nextAccounts,
     });
   },

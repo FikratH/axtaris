@@ -14,10 +14,12 @@ import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import {
+  useCandidateApplications,
   useCandidateProfile,
   useSavedJobIds,
   useToggleSavedJob,
 } from '@/hooks/useCandidateVacancyActions';
+import { useGuestGate } from '@/hooks/useGuestGate';
 import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
 import { rankVacanciesByMatch } from '@/utils/jobMatch';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -41,7 +43,10 @@ export default function SearchScreen() {
   const user = useAuthStore((s) => s.user);
   const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
   const { data: profile } = useCandidateProfile(user?.id);
+  const { data: applications = [] } = useCandidateApplications(user?.id);
+  const appliedVacancyIds = useMemo(() => new Set(applications.map((a) => a.vacancyId)), [applications]);
   const toggleSave = useToggleSavedJob(user?.id);
+  const { requireAuth } = useGuestGate();
   const {
     data: allVacancies = [],
     isLoading,
@@ -141,9 +146,10 @@ export default function SearchScreen() {
           <VacancyCard
             vacancy={item}
             onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-            onSave={() => toggleSave.mutate(item.id)}
+            onSave={() => { if (requireAuth()) toggleSave.mutate(item.id); }}
             saved={savedJobIds.includes(item.id)}
             matchScore={item.match.score}
+            applied={appliedVacancyIds.has(item.id)}
           />
         )}
         keyExtractor={(item) => item.id}

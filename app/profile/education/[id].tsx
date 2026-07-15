@@ -178,13 +178,15 @@ export default function EducationFormScreen() {
           <SuggestionChips
             suggestions={getSuggestions('degrees', i18n.language as 'az' | 'ru' | 'en')}
             query={degree}
-            onSelect={setDegree}
+            selected={degree ? [degree] : []}
+            onSelect={(v) => setDegree((cur) => (cur === v ? '' : v))}
           />
           <Input label={tr('candidate.fieldOfStudy')} value={fieldOfStudy} onChangeText={setFieldOfStudy} placeholder={tr('profileCrud.education.fieldOfStudyPlaceholder')} />
           <SuggestionChips
             suggestions={getSuggestions('fieldsOfStudy', i18n.language as 'az' | 'ru' | 'en')}
             query={fieldOfStudy}
-            onSelect={setFieldOfStudy}
+            selected={fieldOfStudy ? [fieldOfStudy] : []}
+            onSelect={(v) => setFieldOfStudy((cur) => (cur === v ? '' : v))}
           />
           <Input label={tr('candidate.school')} value={institution} onChangeText={setInstitution} placeholder={tr('profileCrud.education.institutionPlaceholder')} />
           <DateField label={tr('candidate.startDate')} value={startDate} onChange={setStartDate} placeholder={tr('profileCrud.shared.selectDate')} maximumYear={new Date().getFullYear()} />

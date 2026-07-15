@@ -6,6 +6,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { aiService, AISuggestion } from '@/services/aiService';
+import { Alert } from '@/utils/dialog';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
@@ -35,6 +36,7 @@ export default function AIAssistantScreen() {
   const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([]);
   const [appliedIds, setAppliedIds] = useState<string[]>([]);
+  const [applyingId, setApplyingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!profile) return;
@@ -52,17 +54,33 @@ export default function AIAssistantScreen() {
 
   const applySuggestion = async (s: AISuggestion) => {
     if (!profile) return;
-
-    if (s.type === 'bio') {
-      const bio = await aiService.generateBio(profile);
-      await updateProfile.mutateAsync({ bio });
+    setApplyingId(s.id);
+    try {
+      if (s.type === 'bio') {
+        const bio = await aiService.generateBio(profile);
+        await updateProfile.mutateAsync({ bio });
+      } else if (s.type === 'skill') {
+        const skills = await aiService.suggestSkills(profile.skills, profile.title);
+        await updateProfile.mutateAsync({
+          skills: Array.from(new Set([...profile.skills, ...skills.slice(0, 5)])),
+        });
+      } else if (s.type === 'experience_rewrite' && profile.workExperience.length > 0) {
+        const exp = profile.workExperience[0];
+        const rewritten = await aiService.rewriteExperience(exp.description || exp.jobTitle);
+        const workExperience = profile.workExperience.map((e, i) =>
+          i === 0 ? { ...e, description: rewritten } : e
+        );
+        await updateProfile.mutateAsync({ workExperience });
+      } else if (s.type === 'profile_improvement') {
+        router.push('/profile/edit');
+        return;
+      }
+      setAppliedIds((prev) => [...prev, s.id]);
+    } catch (error) {
+      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+    } finally {
+      setApplyingId(null);
     }
-    if (s.type === 'skill') {
-      await updateProfile.mutateAsync({
-        skills: Array.from(new Set([...profile.skills, ...suggestedSkills.slice(0, 3)])),
-      });
-    }
-    setAppliedIds((prev) => [...prev, s.id]);
   };
 
   const addSkill = async (skill: string) => {
@@ -168,11 +186,18 @@ export default function AIAssistantScreen() {
                     {!isApplied && (
                       <TouchableOpacity
                         onPress={() => applySuggestion(s)}
+                        disabled={applyingId === s.id}
                         activeOpacity={0.7}
-                        style={[styles.applyBtn, { backgroundColor: colors.primary }]}
+                        style={[styles.applyBtn, { backgroundColor: colors.primary, opacity: applyingId === s.id ? 0.7 : 1 }]}
                       >
-                        <Zap size={14} color="#FFF" strokeWidth={2} />
-                        <Text style={[{ color: '#FFF', marginLeft: 6 }, t.labelSmall]}>{tr('ai.apply_suggestion')}</Text>
+                        {applyingId === s.id ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <Zap size={14} color="#FFF" strokeWidth={2} />
+                        )}
+                        <Text style={[{ color: '#FFF', marginLeft: 6 }, t.labelSmall]}>
+                          {applyingId === s.id ? tr('ai.analyzingProfile') : tr('ai.apply_suggestion')}
+                        </Text>
                       </TouchableOpacity>
                     )}
                     {isApplied && (
