@@ -17,12 +17,16 @@ export function GuestRoleSwitch() {
   const user = useAuthStore((s) => s.user);
   const guestRole = useAuthStore((s) => s.guestRole);
   const setGuestRole = useAuthStore((s) => s.setGuestRole);
+  const setSelectedRole = useAuthStore((s) => s.setSelectedRole);
 
   if (user || !guestRole) return null;
 
   const other = guestRole === 'employer' ? 'candidate' : 'employer';
   const onSwitch = () => {
     setGuestRole(other);
+    // Keep the registration role in sync so a guest who converts to sign-up gets
+    // the correct form (employer view → employer sign-up with a company field).
+    setSelectedRole(other);
     router.replace((other === 'employer' ? '/(employer)/dashboard' : '/(candidate)/home') as never);
   };
 

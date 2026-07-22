@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
-import { Bell, Settings, MapPin, Upload, Wand2, Briefcase, GraduationCap, Languages, Award, Plus, Trash2 } from 'lucide-react-native';
+import { Bell, Settings, MapPin, Upload, Wand2, Briefcase, GraduationCap, Languages, Award, Plus, Trash2, ChevronRight } from 'lucide-react-native';
 import { useImagePicker } from '@/hooks/useImagePicker';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
 import { fileStorageService } from '@/services/fileStorageService';
@@ -275,10 +275,19 @@ export default function CandidateProfileScreen() {
 
           {/* Stats Row */}
           <View style={[styles.statsRow, { borderTopColor: colors.divider }]}>
-            <View style={styles.stat}>
+            <TouchableOpacity
+              style={styles.stat}
+              activeOpacity={0.7}
+              onPress={() => router.push('/profile/completion' as never)}
+              accessibilityRole="button"
+              accessibilityLabel={tr('candidate.completion.title')}
+            >
               <Text style={[{ color: colors.primary }, t.headingSmall]}>{profile.profileCompleteness}%</Text>
-              <Text style={[{ color: colors.textTertiary }, t.caption]}>{tr('candidate.profileCompletion')}</Text>
-            </View>
+              <View style={styles.statLabelRow}>
+                <Text style={[{ color: colors.textTertiary }, t.caption]}>{tr('candidate.profileCompletion')}</Text>
+                <ChevronRight size={12} color={colors.textTertiary} strokeWidth={2} />
+              </View>
+            </TouchableOpacity>
             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.stat}>
               <Text style={[{ color: colors.accent }, t.headingSmall]}>{profile.skills.length}</Text>
@@ -502,6 +511,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   stat: { alignItems: 'center', flex: 1 },
+  statLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   statDivider: { width: 1, alignSelf: 'stretch' },
   actionRow: {
     paddingHorizontal: 20,

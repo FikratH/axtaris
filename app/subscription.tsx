@@ -30,6 +30,7 @@ import {
   getSubscriptionVisibilityLabel,
 } from '@/utils/subscriptionPresentation';
 import { safeBack } from '@/utils/navigation';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const iconMap: Record<SubscriptionPlanCode, typeof Star> = {
   free: Star,
@@ -52,11 +53,18 @@ export default function SubscriptionScreen() {
   const { data: features = [] } = useSubscriptionFeatureComparison(audience);
   const changePlan = useChangeCandidateSubscriptionPlan(user?.id);
   const currentPlan = isCandidateAudience ? summary?.subscription.plan : 'free';
-  const comparisonPlanCodes: SubscriptionPlanCode[] = ['free', 'pro'];
+  const comparisonPlanCodes: SubscriptionPlanCode[] = ['free', 'pro', 'premium'];
 
   const handleSelectPlan = async (planCode: SubscriptionPlanCode) => {
     if (!isCandidateAudience) {
-      Alert.alert(tr('common.comingSoon'));
+      // Employer billing is sales-assisted (no self-serve AZ gateway yet), so a
+      // plan tap opens a clear "request plan" prompt instead of a dead alert.
+      const planName = getSubscriptionPlanName(tr, planCode, 'employer');
+      Alert.alert(
+        tr('subscription.requestPlanTitle', { plan: planName }),
+        tr('subscription.requestPlanMessage'),
+        [{ text: tr('common.ok') }]
+      );
       return;
     }
 
@@ -64,7 +72,7 @@ export default function SubscriptionScreen() {
       await changePlan.mutateAsync(planCode);
       Alert.alert(tr('subscription.planUpdated'));
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 

@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/Input';
 import { useEmployerCompany, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
 import { useGuestGate } from '@/hooks/useGuestGate';
 import { safeBack } from '@/utils/navigation';
+import { toUserMessage } from '@/utils/errorMessage';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function EditCompanyScreen() {
@@ -70,7 +71,7 @@ export default function EditCompanyScreen() {
 
       Alert.alert(tr('common.save'), '', [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/company') }]);
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 

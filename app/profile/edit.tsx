@@ -10,14 +10,22 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
+import { SelectField } from '@/components/ui/SelectField';
 import { SuggestionChips } from '@/components/ui/SuggestionChips';
 import { getSuggestions } from '@/data/suggestions';
+import { getWorkTypeLabel } from '@/utils/labels';
+import type { CandidateProfile, WorkType } from '@/types/models';
 import {
   useCandidateProfile,
   useUpdateCandidateProfile,
 } from '@/hooks/useCandidateVacancyActions';
 import { safeBack } from '@/utils/navigation';
+import { toUserMessage } from '@/utils/errorMessage';
 import { ChevronLeft, Plus } from 'lucide-react-native';
+
+type Availability = NonNullable<CandidateProfile['availability']>;
+const availabilityValues: Availability[] = ['immediate', 'two_weeks', 'one_month', 'negotiable'];
+const workTypeValues: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
 
 export default function EditProfileScreen() {
   const { colors, typography: t } = useTheme();
@@ -40,6 +48,8 @@ export default function EditProfileScreen() {
   const [skillInput, setSkillInput] = useState('');
   const [skills, setSkills] = useState<string[]>([]);
   const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [availability, setAvailability] = useState<Availability | undefined>(undefined);
+  const [workPreference, setWorkPreference] = useState<WorkType | undefined>(undefined);
 
   useEffect(() => {
     if (!profile) return;
@@ -50,6 +60,8 @@ export default function EditProfileScreen() {
     setExpectedSalary(profile.expectedSalary?.toString() || '');
     setSkills(profile.skills);
     setPortfolioUrl(profile.portfolioUrl || '');
+    setAvailability(profile.availability);
+    setWorkPreference(profile.workPreference);
   }, [profile]);
 
   const addSkill = () => {
@@ -69,11 +81,13 @@ export default function EditProfileScreen() {
         expectedSalary: expectedSalary ? Number(expectedSalary) : undefined,
         skills,
         portfolioUrl,
+        availability,
+        workPreference,
       });
 
       Alert.alert(tr('common.save'), '', [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(candidate)/profile') }]);
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
@@ -135,6 +149,21 @@ export default function EditProfileScreen() {
           <Input label={tr('candidate.location')} value={location} onChangeText={setLocation} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
           <Input label={tr('candidate.expectedSalary')} value={expectedSalary} onChangeText={setExpectedSalary} placeholder="3000" keyboardType="numeric" />
           <Input label={tr('candidate.portfolio')} value={portfolioUrl} onChangeText={setPortfolioUrl} placeholder="https://yoursite.com" keyboardType="url" autoCapitalize="none" />
+
+          <SelectField
+            label={tr('candidate.availability')}
+            placeholder={tr('candidate.completion.hints.availability')}
+            value={availability}
+            options={availabilityValues.map((value) => ({ value, label: tr(`candidate.availabilityOptions.${value}`) }))}
+            onChange={(value) => setAvailability(value)}
+          />
+          <SelectField
+            label={tr('candidate.workPreference')}
+            placeholder={tr('candidate.completion.hints.workPreference')}
+            value={workPreference}
+            options={workTypeValues.map((value) => ({ value, label: getWorkTypeLabel(tr, value) }))}
+            onChange={(value) => setWorkPreference(value)}
+          />
 
           <Text style={[{ color: colors.textPrimary, marginBottom: 8 }, t.labelSmall]}>{tr('candidate.skills')}</Text>
           <Input

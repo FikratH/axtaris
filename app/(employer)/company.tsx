@@ -16,6 +16,7 @@ import { useImagePicker } from '@/hooks/useImagePicker';
 import { useEmployerCompany, useEmployerVacancies, useUpdateEmployerCompany } from '@/hooks/useVacancyQueries';
 import { fileStorageService } from '@/services/fileStorageService';
 import { getVerificationPresentation } from '@/utils/labels';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function CompanyScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -59,10 +60,7 @@ export default function CompanyScreen() {
           void fileStorageService.removeUploadedFile(previousLogoUrl).catch(() => undefined);
         }
       } catch (error) {
-        Alert.alert(
-          tr('common.error'),
-          error instanceof Error ? error.message : tr('common.error')
-        );
+        Alert.alert(tr('common.error'), toUserMessage(error, tr));
       }
     }
   };

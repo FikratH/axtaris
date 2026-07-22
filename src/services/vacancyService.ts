@@ -264,19 +264,43 @@ class VacancyService {
       throw new Error('Company id is required');
     }
 
-    const normalized: CompanyMutationInput = {
-      name: updates.name !== undefined ? updates.name.trim() || undefined : undefined,
-      industry: updates.industry !== undefined ? updates.industry.trim() || undefined : undefined,
-      description:
-        updates.description !== undefined ? updates.description.trim() || undefined : undefined,
-      logoUrl: updates.logoUrl !== undefined ? updates.logoUrl.trim() || undefined : undefined,
-      coverUrl: updates.coverUrl !== undefined ? updates.coverUrl.trim() || undefined : undefined,
-      website: updates.website !== undefined ? updates.website.trim() || undefined : undefined,
-      employeeCount:
-        updates.employeeCount !== undefined ? updates.employeeCount.trim() || undefined : undefined,
-      location: updates.location !== undefined ? updates.location.trim() || undefined : undefined,
-      foundedYear: updates.foundedYear,
+    // Build a PARTIAL patch: only touch the fields the caller actually provided.
+    // A logo-only update must NOT resend name/industry/… — doing so nulls the NOT NULL
+    // `name`/`industry` columns (the "null value in column name" crash) and silently
+    // wipes every other field (e.g. saving text edits would erase the logo).
+    const supabasePatch: Record<string, string | number | null> = {};
+    const mockPatch: Record<string, string | number | undefined> = {};
+
+    // Required (NOT NULL) text columns — updated only when a non-empty value is given,
+    // never nulled.
+    const setRequired = (value: string | undefined, column: string, key: keyof Company) => {
+      if (value === undefined) return;
+      const trimmed = value.trim();
+      if (!trimmed) return;
+      supabasePatch[column] = trimmed;
+      mockPatch[key] = trimmed;
     };
+    setRequired(updates.name, 'name', 'name');
+    setRequired(updates.industry, 'industry', 'industry');
+
+    // Optional columns — an explicit empty string clears them.
+    const setOptional = (value: string | undefined, column: string, key: keyof Company) => {
+      if (value === undefined) return;
+      const trimmed = value.trim();
+      supabasePatch[column] = trimmed || null;
+      mockPatch[key] = trimmed || undefined;
+    };
+    setOptional(updates.description, 'description', 'description');
+    setOptional(updates.logoUrl, 'logo_url', 'logoUrl');
+    setOptional(updates.coverUrl, 'cover_url', 'coverUrl');
+    setOptional(updates.website, 'website', 'website');
+    setOptional(updates.employeeCount, 'employee_count', 'employeeCount');
+    setOptional(updates.location, 'location', 'location');
+
+    if (updates.foundedYear !== undefined) {
+      supabasePatch.founded_year = updates.foundedYear ?? null;
+      mockPatch.foundedYear = updates.foundedYear;
+    }
 
     if (shouldUseMockBackend()) {
       const company = mockCompanies.find((item) => item.id === companyId);
@@ -285,27 +309,14 @@ class VacancyService {
         throw new Error('Company not found');
       }
 
-      Object.assign(company, {
-        ...normalized,
-        updatedAt: new Date().toISOString(),
-      });
+      Object.assign(company, mockPatch, { updatedAt: new Date().toISOString() });
 
       return { ...company };
     }
 
     const { data, error } = await getSupabase()
       .from('companies')
-      .update({
-        name: normalized.name || null,
-        industry: normalized.industry || null,
-        description: normalized.description || null,
-        logo_url: normalized.logoUrl || null,
-        cover_url: normalized.coverUrl || null,
-        website: normalized.website || null,
-        employee_count: normalized.employeeCount || null,
-        location: normalized.location || null,
-        founded_year: normalized.foundedYear ?? null,
-      })
+      .update(supabasePatch)
       .eq('id', companyId)
       .select(companySelect)
       .single();

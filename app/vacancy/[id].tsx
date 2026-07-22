@@ -429,16 +429,16 @@ export default function VacancyDetailScreen() {
             </Text>
             <View style={[styles.companyCard, { backgroundColor: colors.surfaceSecondary, borderRadius: r.lg, padding: s.lg }]}> 
               <View style={styles.companyCardHeader}>
-                <Avatar uri={vacancy.company.logoUrl} name={vacancy.company.name} size={44} />
+                <Avatar uri={vacancy.company?.logoUrl} name={vacancy.company?.name} size={44} />
                 <View style={{ marginLeft: s.md, flex: 1 }}>
-                  <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{vacancy.company.name}</Text>
-                  <Text style={[{ color: colors.textSecondary, ...t.caption }]}>{vacancy.company.industry}</Text>
+                  <Text style={[{ color: colors.textPrimary, ...t.labelMedium }]}>{vacancy.company?.name}</Text>
+                  <Text style={[{ color: colors.textSecondary, ...t.caption }]}>{vacancy.company?.industry}</Text>
                 </View>
-                {vacancy.company.rating && (
+                {vacancy.company?.rating && (
                   <Badge label={`${vacancy.company.rating}`} variant="success" />
                 )}
               </View>
-              {vacancy.company.description && (
+              {vacancy.company?.description && (
                 <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.md, lineHeight: 20 }]}>
                   {vacancy.company.description}
                 </Text>

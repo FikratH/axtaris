@@ -49,10 +49,10 @@ const candidateSubscriptionPlans: SubscriptionPlan[] = [
   {
     code: 'premium',
     name: 'Premium',
-    monthlyPriceAzn: 25,
-    monthlyPriceLabel: '25 AZN / 30 günlük',
+    monthlyPriceAzn: 15,
+    monthlyPriceLabel: '15 AZN / 30 günlük',
     dailyApplicationLimit: null,
-    visibilityLabel: 'CV-lər ən üstdə göstərilir',
+    visibilityLabel: 'Müraciətiniz siyahının ən üstündə',
     sortPriority: 30,
   },
 ];
@@ -70,8 +70,8 @@ const employerSubscriptionPlans: SubscriptionPlan[] = [
   {
     code: 'pro',
     name: 'Pro',
-    monthlyPriceAzn: 10,
-    monthlyPriceLabel: '10 AZN / 30 günlük',
+    monthlyPriceAzn: 29,
+    monthlyPriceLabel: '29 AZN / 30 günlük',
     dailyApplicationLimit: null,
     visibilityLabel: 'Vakansiyalar daha yuxarıda göstərilir',
     sortPriority: 10,
@@ -80,8 +80,8 @@ const employerSubscriptionPlans: SubscriptionPlan[] = [
   {
     code: 'premium',
     name: 'Premium',
-    monthlyPriceAzn: 200,
-    monthlyPriceLabel: '200 AZN / 30 günlük',
+    monthlyPriceAzn: 99,
+    monthlyPriceLabel: '99 AZN / 30 günlük',
     dailyApplicationLimit: null,
     visibilityLabel: 'VIP işəgötürən dəstəyi',
     sortPriority: 30,
@@ -94,7 +94,7 @@ const candidateSubscriptionFeatureRows: SubscriptionFeatureComparisonRow[] = [
     label: 'Aylıq qiymət',
     free: 'Pulsuz',
     pro: '5 AZN',
-    premium: '25 AZN',
+    premium: '15 AZN',
   },
   {
     id: 'applications',
@@ -124,8 +124,8 @@ const employerSubscriptionFeatureRows: SubscriptionFeatureComparisonRow[] = [
     id: 'price',
     label: '30 günlük qiymət',
     free: '0 AZN',
-    pro: '10 AZN',
-    premium: '200 AZN',
+    pro: '29 AZN',
+    premium: '99 AZN',
   },
   {
     id: 'vacancy-visibility',

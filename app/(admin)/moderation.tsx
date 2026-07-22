@@ -15,18 +15,27 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { getVacancyStatusPresentation } from '@/utils/labels';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function AdminModerationScreen() {
   const { colors, spacing: s, typography: t } = useTheme();
   const { t: tr } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { data: vacancies = [], isLoading } = useModerationVacancies();
-  const { data: flags = [] } = useModerationFlags();
+  const { data: vacancies = [], isLoading, isError: vacanciesError, refetch: refetchVacancies } = useModerationVacancies();
+  const { data: flags = [], isError: flagsError, refetch: refetchFlags } = useModerationFlags();
   const setStatus = useSetVacancyModeration();
   const resolveFlag = useResolveFlag();
 
-  const onError = (e: unknown) =>
-    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error'));
+  const onError = (e: unknown) => Alert.alert(tr('common.error'), toUserMessage(e, tr));
+
+  const errorState = (onRetry: () => void) => (
+    <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+      <Text style={[{ color: colors.textTertiary, textAlign: 'center', marginBottom: 10 }, t.bodySmall]}>
+        {tr('common.error')}
+      </Text>
+      <Button title={tr('common.retry')} onPress={() => onRetry()} variant="outline" size="sm" />
+    </View>
+  );
 
   const emptyText = (message: string) => (
     <Text style={[{ color: colors.textTertiary, textAlign: 'center', paddingVertical: 24 }, t.bodySmall]}>
@@ -48,6 +57,8 @@ export default function AdminModerationScreen() {
         <Text style={[{ color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>{tr('admin.reviewQueue')}</Text>
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => <VacancyCardSkeleton key={i} />)
+        ) : vacanciesError ? (
+          errorState(refetchVacancies)
         ) : vacancies.length === 0 ? (
           emptyText(tr('admin.noPending'))
         ) : (
@@ -92,7 +103,9 @@ export default function AdminModerationScreen() {
 
       <View style={{ paddingHorizontal: s.xl, marginTop: s['2xl'] }}>
         <Text style={[{ color: colors.textSecondary, ...t.overline, marginBottom: s.md }]}>{tr('admin.flagsTitle')}</Text>
-        {flags.length === 0
+        {flagsError
+          ? errorState(refetchFlags)
+          : flags.length === 0
           ? emptyText(tr('admin.noFlags'))
           : flags.map((f) => (
               <Card key={f.id} padding="md" style={{ marginBottom: 10 }}>

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
-import { UserSearch, Building2, ArrowRight } from 'lucide-react-native';
+import { UserSearch, Building2, ArrowRight, Compass } from 'lucide-react-native';
 import { FadeInView, ScaleInView } from '@/components/ui/Animated';
 
 const { width } = Dimensions.get('window');
@@ -19,10 +19,20 @@ export default function RoleSelectScreen() {
   const setSelectedRole = useAuthStore((s) => s.setSelectedRole);
   const setGuestRole = useAuthStore((s) => s.setGuestRole);
 
-  const handleSelectRole = (role: 'candidate' | 'employer') => {
+  // Picking a role now leads to REGISTRATION for that role (sign-up reads
+  // `selectedRole`). Guest browsing is a deliberate, separate choice below.
+  const handleRegister = (role: 'candidate' | 'employer') => {
     setSelectedRole(role);
-    setGuestRole(role);
-    router.replace(role === 'employer' ? '/(employer)/dashboard' : '/(candidate)/home');
+    setGuestRole(null);
+    router.push('/auth/sign-up');
+  };
+
+  // "Register later" — browse without an account. Default to the job-seeker view
+  // (the most common browse-first persona); guests can switch sides in-app.
+  const handleBrowseAsGuest = () => {
+    setSelectedRole('candidate');
+    setGuestRole('candidate');
+    router.replace('/(candidate)/home');
   };
 
   return (
@@ -46,7 +56,7 @@ export default function RoleSelectScreen() {
         <ScaleInView delay={150}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => handleSelectRole('candidate')}
+          onPress={() => handleRegister('candidate')}
           style={[
             styles.roleCard,
             {
@@ -75,7 +85,7 @@ export default function RoleSelectScreen() {
         <ScaleInView delay={250}>
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => handleSelectRole('employer')}
+          onPress={() => handleRegister('employer')}
           style={[
             styles.roleCard,
             {
@@ -102,6 +112,22 @@ export default function RoleSelectScreen() {
         </TouchableOpacity>
         </ScaleInView>
       </View>
+
+      <ScaleInView delay={350} style={[styles.guestWrap, { paddingHorizontal: s.xl, marginTop: s.xl }]}>
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleBrowseAsGuest}
+          style={[styles.guestBtn, { borderColor: colors.border, borderRadius: r.lg }]}
+        >
+          <Compass size={18} color={colors.textSecondary} strokeWidth={1.8} />
+          <Text style={[{ color: colors.textSecondary, marginLeft: 8 }, t.labelMedium]}>
+            {tr('roleSelect.registerLater')}
+          </Text>
+        </TouchableOpacity>
+        <Text style={[{ color: colors.textTertiary, textAlign: 'center', marginTop: s.sm }, t.caption]}>
+          {tr('roleSelect.registerLaterHint')}
+        </Text>
+      </ScaleInView>
 
       <TouchableOpacity
         onPress={() => router.push('/auth/sign-in')}
@@ -141,6 +167,14 @@ const styles = StyleSheet.create({
   title: {},
   subtitle: {},
   cardsContainer: {},
+  guestWrap: {},
+  guestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderWidth: 1.5,
+  },
   signInLink: {
     marginTop: 'auto',
     alignItems: 'center',

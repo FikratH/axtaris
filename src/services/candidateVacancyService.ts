@@ -14,6 +14,7 @@ import {
 } from './mockData';
 import i18n from '@/i18n';
 import { dedupeBy } from '@/utils/profileSections';
+import { calculateProfileCompletenessFromItems } from '@/utils/profileCompletion';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 import { subscriptionService } from './subscriptionService';
 import {
@@ -212,24 +213,10 @@ function cloneCandidateProfile(profile: CandidateProfile): CandidateProfile {
   };
 }
 
+// Delegates to the shared checklist in '@/utils/profileCompletion' so the stat,
+// the "steps to 100%" screen, and the persisted value always agree.
 function calculateProfileCompleteness(profile: CandidateProfile): number {
-  const checks = [
-    !!profile.title?.trim(),
-    !!profile.bio?.trim(),
-    !!profile.location?.trim(),
-    typeof profile.expectedSalary === 'number' && profile.expectedSalary > 0,
-    profile.skills.length > 0,
-    !!profile.portfolioUrl?.trim(),
-    !!profile.cvUrl?.trim(),
-    !!profile.availability,
-    !!profile.workPreference,
-    profile.workExperience.length > 0,
-    profile.education.length > 0,
-    profile.languages.length > 0,
-    profile.certifications.length > 0,
-  ];
-
-  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  return calculateProfileCompletenessFromItems(profile);
 }
 
 function mapCandidateProfile(row: CandidateProfileRow): CandidateProfile {
@@ -769,15 +756,7 @@ class CandidateVacancyService {
       throw new Error('Candidate profile not found');
     }
 
-    const { data, error } = await getSupabase()
-      .from('applications')
-      .insert({
-        vacancy_id: vacancyId,
-        candidate_id: profile.id,
-        cv_url: profile.cvUrl || null,
-        screening_answers: screeningAnswers,
-      })
-      .select(`
+    const applicationSelect = `
         id,
         vacancy_id,
         candidate_id,
@@ -793,7 +772,34 @@ class CandidateVacancyService {
         vacancies (
           ${vacancySelect}
         )
-      `)
+      `;
+
+    // Idempotent apply: if this candidate already applied to this vacancy, return
+    // the existing application instead of inserting a duplicate (which would trip
+    // the dedupe unique index and surface a raw constraint error). Mirrors mock.
+    const { data: existing, error: existingError } = await getSupabase()
+      .from('applications')
+      .select(applicationSelect)
+      .eq('vacancy_id', vacancyId)
+      .eq('candidate_id', profile.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingError) throw new Error(existingError.message);
+
+    if (existing) {
+      return mapApplication(existing as SupabaseApplicationRow);
+    }
+
+    const { data, error } = await getSupabase()
+      .from('applications')
+      .insert({
+        vacancy_id: vacancyId,
+        candidate_id: profile.id,
+        cv_url: profile.cvUrl || null,
+        screening_answers: screeningAnswers,
+      })
+      .select(applicationSelect)
       .single();
 
     if (error) throw new Error(error.message);
