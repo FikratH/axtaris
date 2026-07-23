@@ -694,13 +694,15 @@ class CandidateVacancyService {
   async applyToVacancy(
     userId: string,
     vacancyId: string,
-    answers?: ScreeningAnswer[]
+    answers?: ScreeningAnswer[],
+    coverLetter?: string
   ): Promise<Application> {
     if (!userId || !vacancyId) {
       throw new Error('User and vacancy are required');
     }
 
     const screeningAnswers = answers && answers.length > 0 ? answers : [];
+    const trimmedCoverLetter = coverLetter?.trim() || undefined;
 
     const subscriptionSummary = await subscriptionService.fetchCandidateSubscriptionSummary(userId);
 
@@ -740,6 +742,7 @@ class CandidateVacancyService {
         visibilityScore: subscriptionSummary.visibilityScore,
         vacancy,
         cvUrl: mockCandidateProfile.cvUrl,
+        coverLetter: trimmedCoverLetter,
         screeningAnswers,
         appliedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -797,6 +800,7 @@ class CandidateVacancyService {
         vacancy_id: vacancyId,
         candidate_id: profile.id,
         cv_url: profile.cvUrl || null,
+        cover_letter: trimmedCoverLetter || null,
         screening_answers: screeningAnswers,
       })
       .select(applicationSelect)

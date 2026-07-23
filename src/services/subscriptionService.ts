@@ -70,8 +70,8 @@ const employerSubscriptionPlans: SubscriptionPlan[] = [
   {
     code: 'pro',
     name: 'Pro',
-    monthlyPriceAzn: 29,
-    monthlyPriceLabel: '29 AZN / 30 günlük',
+    monthlyPriceAzn: 19,
+    monthlyPriceLabel: '19 AZN / 30 günlük',
     dailyApplicationLimit: null,
     visibilityLabel: 'Vakansiyalar daha yuxarıda göstərilir',
     sortPriority: 10,
@@ -80,8 +80,8 @@ const employerSubscriptionPlans: SubscriptionPlan[] = [
   {
     code: 'premium',
     name: 'Premium',
-    monthlyPriceAzn: 99,
-    monthlyPriceLabel: '99 AZN / 30 günlük',
+    monthlyPriceAzn: 49,
+    monthlyPriceLabel: '49 AZN / 30 günlük',
     dailyApplicationLimit: null,
     visibilityLabel: 'VIP işəgötürən dəstəyi',
     sortPriority: 30,
@@ -225,6 +225,8 @@ let mockCandidateSubscription: CandidateSubscription = {
   createdAt: '2024-01-15T10:00:00Z',
   updatedAt: '2024-01-15T10:00:00Z',
 };
+
+let mockEmployerPlan: SubscriptionPlanCode = 'free';
 
 class SubscriptionService {
   async fetchPlans(audience: SubscriptionAudience = 'candidate'): Promise<SubscriptionPlan[]> {
@@ -408,6 +410,88 @@ class SubscriptionService {
     }
 
     return summary;
+  }
+
+  async fetchEmployerSubscriptionPlan(userId: string): Promise<SubscriptionPlanCode> {
+    if (!userId) return 'free';
+
+    if (shouldUseMockBackend()) {
+      return mockEmployerPlan;
+    }
+
+    try {
+      const { data, error } = await getSupabase()
+        .from('employer_subscriptions')
+        .select('plan')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return (data?.plan as SubscriptionPlanCode) || 'free';
+    } catch {
+      // employer_subscriptions migration may not be applied yet — treat as free.
+      return 'free';
+    }
+  }
+
+  async changeEmployerSubscriptionPlan(
+    userId: string,
+    planCode: SubscriptionPlanCode
+  ): Promise<SubscriptionPlanCode> {
+    if (!userId) throw new Error('User id is required');
+
+    const nextPlan =
+      employerSubscriptionPlans.find((plan) => plan.code === planCode) || employerSubscriptionPlans[0];
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setMonth(expiresAt.getMonth() + 1);
+
+    if (shouldUseMockBackend()) {
+      mockEmployerPlan = planCode;
+      return planCode;
+    }
+
+    const supa = getSupabase();
+    const { error: closeError } = await supa
+      .from('employer_subscriptions')
+      .update({ status: 'expired', canceled_at: now.toISOString() })
+      .eq('user_id', userId)
+      .eq('status', 'active');
+    if (closeError) throw new Error(closeError.message);
+
+    const { error: createError } = await supa.from('employer_subscriptions').insert({
+      user_id: userId,
+      plan: planCode,
+      status: 'active',
+      price_amount: nextPlan.monthlyPriceAzn || 0,
+      price_currency: 'AZN',
+      billing_interval: 'month',
+      started_at: now.toISOString(),
+      expires_at: planCode === 'free' ? null : expiresAt.toISOString(),
+    });
+    if (createError) throw new Error(createError.message);
+
+    return planCode;
+  }
+
+  /**
+   * Unified plan activation used by the checkout flow. Instant activation now
+   * (writes the subscription row); a real AZ payment gateway (Azericard/m10)
+   * drops into a pre-step before this call later.
+   */
+  async activatePlan(
+    userId: string,
+    planCode: SubscriptionPlanCode,
+    audience: SubscriptionAudience
+  ): Promise<SubscriptionPlanCode> {
+    if (audience === 'employer') {
+      return this.changeEmployerSubscriptionPlan(userId, planCode);
+    }
+    await this.changeCandidateSubscriptionPlan(userId, planCode);
+    return planCode;
   }
 }
 

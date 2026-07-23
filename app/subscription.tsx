@@ -1,16 +1,14 @@
 import React from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, ChevronLeft, Crown, Star, Zap } from 'lucide-react-native';
+import { Check, ChevronLeft, Crown, Star, Users, Zap } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { Button, Card, EmptyState } from '@/components/ui';
 import {
   useCandidateSubscriptionSummary,
-  useChangeCandidateSubscriptionPlan,
   useSubscriptionFeatureComparison,
   useSubscriptionPlans,
 } from '@/hooks/useSubscriptionQueries';
@@ -18,7 +16,6 @@ import { SubscriptionAudience, SubscriptionPlanCode } from '@/types/models';
 import {
   getSubscriptionCatalogDescription,
   getSubscriptionCatalogTitle,
-  getSubscriptionChooseLabel,
   getSubscriptionFeatureLabel,
   getSubscriptionFeatureValue,
   getSubscriptionPlanHighlights,
@@ -30,7 +27,6 @@ import {
   getSubscriptionVisibilityLabel,
 } from '@/utils/subscriptionPresentation';
 import { safeBack } from '@/utils/navigation';
-import { toUserMessage } from '@/utils/errorMessage';
 
 const iconMap: Record<SubscriptionPlanCode, typeof Star> = {
   free: Star,
@@ -51,29 +47,13 @@ export default function SubscriptionScreen() {
   );
   const { data: plans = [], isLoading: plansLoading } = useSubscriptionPlans(audience);
   const { data: features = [] } = useSubscriptionFeatureComparison(audience);
-  const changePlan = useChangeCandidateSubscriptionPlan(user?.id);
   const currentPlan = isCandidateAudience ? summary?.subscription.plan : 'free';
   const comparisonPlanCodes: SubscriptionPlanCode[] = ['free', 'pro', 'premium'];
 
-  const handleSelectPlan = async (planCode: SubscriptionPlanCode) => {
-    if (!isCandidateAudience) {
-      // Employer billing is sales-assisted (no self-serve AZ gateway yet), so a
-      // plan tap opens a clear "request plan" prompt instead of a dead alert.
-      const planName = getSubscriptionPlanName(tr, planCode, 'employer');
-      Alert.alert(
-        tr('subscription.requestPlanTitle', { plan: planName }),
-        tr('subscription.requestPlanMessage'),
-        [{ text: tr('common.ok') }]
-      );
-      return;
-    }
-
-    try {
-      await changePlan.mutateAsync(planCode);
-      Alert.alert(tr('subscription.planUpdated'));
-    } catch (error) {
-      Alert.alert(tr('common.error'), toUserMessage(error, tr));
-    }
+  // Both candidate and employer now flow through self-serve checkout (employer is
+  // no longer sales-only). Instant activation happens on the checkout screen.
+  const handleSelectPlan = (planCode: SubscriptionPlanCode) => {
+    router.push(`/checkout?plan=${planCode}&audience=${audience}` as never);
   };
 
   if ((isCandidateAudience && summaryLoading) || plansLoading) {
@@ -107,7 +87,17 @@ export default function SubscriptionScreen() {
           <Text style={[{ color: colors.textPrimary, ...t.headingMedium, marginLeft: s.md }]}>{getSubscriptionCatalogTitle(tr, audience)}</Text>
         </View>
 
-        <Card padding="lg" style={{ marginTop: s.xl }}>
+        <View style={[styles.socialProof, { backgroundColor: colors.primaryLight, borderRadius: r.lg, padding: s.lg, marginTop: s.xl }]}>
+          <View style={[styles.socialProofIcon, { backgroundColor: colors.surface, borderRadius: r.full }]}>
+            <Users size={18} color={colors.primary} strokeWidth={2} />
+          </View>
+          <View style={{ flex: 1, marginLeft: s.md }}>
+            <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{tr('paywall.socialProof')}</Text>
+            <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.caption]}>{tr('paywall.socialProofSub')}</Text>
+          </View>
+        </View>
+
+        <Card padding="lg" style={{ marginTop: s.lg }}>
           <Text style={[{ color: colors.textSecondary }, t.bodySmall]}>{tr('subscription.currentPlan')}</Text>
           <View style={[styles.summaryRow, { marginTop: s.sm }]}> 
             <View style={{ flex: 1 }}>
@@ -138,17 +128,27 @@ export default function SubscriptionScreen() {
           const highlights = getSubscriptionPlanHighlights(tr, plan.code, audience);
 
           return (
-            <Card key={plan.code} padding="lg" style={{ marginBottom: 12, borderWidth: isActive ? 1.5 : 1, borderColor: isActive ? colors.primary : colors.cardBorder }}>
+            <Card
+              key={plan.code}
+              padding="lg"
+              variant={plan.isPopular ? 'elevated' : 'default'}
+              style={{
+                marginBottom: 12,
+                borderWidth: isActive || plan.isPopular ? 1.5 : 1,
+                borderColor: isActive || plan.isPopular ? colors.primary : colors.cardBorder,
+              }}
+            >
               <View style={styles.planHeader}>
-                <View style={[styles.planIcon, { backgroundColor: plan.code === 'premium' ? colors.warning + '20' : plan.code === 'pro' ? colors.primaryLight : colors.surfaceSecondary, borderRadius: r.lg }]}> 
+                <View style={[styles.planIcon, { backgroundColor: plan.code === 'premium' ? colors.warning + '20' : plan.code === 'pro' ? colors.primaryLight : colors.surfaceSecondary, borderRadius: r.lg }]}>
                   <Icon size={22} color={plan.code === 'premium' ? colors.warning : colors.primary} strokeWidth={2} />
                 </View>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <View style={styles.planTitleRow}>
                     <Text style={[{ color: colors.textPrimary }, t.headingSmall]}>{getSubscriptionPlanName(tr, plan.code, audience)}</Text>
                     {plan.isPopular ? (
-                      <View style={[styles.popularBadge, { backgroundColor: colors.primary, borderRadius: r.full }]}> 
-                        <Text style={[{ color: '#FFFFFF' }, t.caption]}>{tr('subscription.popular')}</Text>
+                      <View style={[styles.popularBadge, { backgroundColor: colors.primary, borderRadius: r.full }]}>
+                        <Star size={11} color="#FFFFFF" strokeWidth={2.4} fill="#FFFFFF" />
+                        <Text style={[{ color: '#FFFFFF', marginLeft: 4 }, t.caption]}>{tr('paywall.mostPopular')}</Text>
                       </View>
                     ) : null}
                   </View>
@@ -167,11 +167,10 @@ export default function SubscriptionScreen() {
 
               <View style={{ marginTop: 16 }}>
                 <Button
-                  title={isActive ? tr('subscription.currentPlanCta') : getSubscriptionChooseLabel(tr, plan, audience)}
+                  title={isActive ? tr('subscription.currentPlanCta') : tr('subscription.choosePlan', { plan: getSubscriptionPlanName(tr, plan.code, audience) })}
                   onPress={() => handleSelectPlan(plan.code)}
                   disabled={isActive}
-                  loading={isCandidateAudience && changePlan.isPending && changePlan.variables === plan.code}
-                  variant={isActive ? 'secondary' : plan.code === 'premium' ? 'primary' : 'outline'}
+                  variant={isActive ? 'secondary' : plan.isPopular || plan.code === 'premium' ? 'primary' : 'outline'}
                   size="md"
                 />
               </View>
@@ -221,10 +220,12 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   usageBadge: { paddingHorizontal: 12, paddingVertical: 10 },
+  socialProof: { flexDirection: 'row', alignItems: 'center' },
+  socialProofIcon: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   planHeader: { flexDirection: 'row', alignItems: 'center' },
   planIcon: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   planTitleRow: { flexDirection: 'row', alignItems: 'center' },
-  popularBadge: { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 4 },
+  popularBadge: { flexDirection: 'row', alignItems: 'center', marginLeft: 8, paddingHorizontal: 8, paddingVertical: 4 },
   featureRow: { flexDirection: 'row', alignItems: 'center' },
   tableHeader: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 14, borderBottomWidth: 1 },
   tableRow: { flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 14 },

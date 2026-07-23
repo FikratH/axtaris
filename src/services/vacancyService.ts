@@ -42,6 +42,9 @@ export interface SupabaseVacancyRow {
   response_rate: number | null;
   expires_at: string | null;
   screening_questions: ScreeningQuestion[] | null;
+  // Optional: the column may not be migrated in every environment yet, so it is
+  // only ever selected through `vacancySelectWithFeatured` and defaulted on read.
+  is_featured?: boolean | null;
   created_at: string;
   updated_at: string;
   companies: SupabaseCompanyRow | SupabaseCompanyRow[] | null;
@@ -64,6 +67,8 @@ export interface VacancyMutationInput {
   companyId: string;
   status: VacancyStatus;
   screeningQuestions: ScreeningQuestion[];
+  /** Boosted placement in the candidate feed. Only written when explicitly set. */
+  isFeatured?: boolean;
 }
 
 export interface CompanyMutationInput {
@@ -124,6 +129,24 @@ export const vacancySelect = `
     ${companySelect}
   )
 `;
+
+// Same as `vacancySelect` but additionally requests the `is_featured` column.
+// Used only in code paths that first try the featured behavior and fall back to
+// the plain select if the column doesn't exist in this environment yet, so the
+// shared `vacancySelect` stays safe for callers that never touch featuring.
+const vacancySelectWithFeatured = vacancySelect.replace(
+  'companies (',
+  'is_featured,\n  companies ('
+);
+
+// Featured vacancies bubble to the top of the candidate feed. Order within each
+// group is preserved because Array.prototype.sort is stable, so the created_at
+// desc coming from the query is kept intact.
+function sortFeaturedFirst(vacancies: Vacancy[]): Vacancy[] {
+  return [...vacancies].sort(
+    (a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0)
+  );
+}
 
 function unwrapCompany(
   value: SupabaseCompanyRow | SupabaseCompanyRow[] | null
@@ -192,6 +215,8 @@ export function mapVacancy(row: SupabaseVacancyRow): Vacancy {
     updatedAt: row.updated_at,
     expiresAt: row.expires_at || undefined,
     screeningQuestions: row.screening_questions || [],
+    // Undefined when the column wasn't selected/migrated — treated as not featured.
+    isFeatured: row.is_featured ?? false,
   };
 }
 
@@ -202,18 +227,38 @@ function getMockCandidateVacancies(): Vacancy[] {
 class VacancyService {
   async fetchCandidateVacancies(): Promise<Vacancy[]> {
     if (shouldUseMockBackend()) {
-      return getMockCandidateVacancies();
+      return sortFeaturedFirst(getMockCandidateVacancies());
     }
 
-    const { data, error } = await getSupabase()
+    const supa = getSupabase();
+
+    // Prefer a featured-aware query so boosted vacancies come first. If the
+    // is_featured column isn't migrated in this environment, that query errors —
+    // fall back to the plain select so the feed never breaks.
+    const featured = await supa
       .from('vacancies')
-      .select(vacancySelect)
+      .select(vacancySelectWithFeatured)
       .eq('status', 'active')
+      .order('is_featured', { ascending: false })
       .order('created_at', { ascending: false });
 
-    if (error) throw new Error(error.message);
+    let rows: SupabaseVacancyRow[];
+    if (featured.error) {
+      const base = await supa
+        .from('vacancies')
+        .select(vacancySelect)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
 
-    return ((data || []) as SupabaseVacancyRow[]).map(mapVacancy);
+      if (base.error) throw new Error(base.error.message);
+      rows = (base.data || []) as SupabaseVacancyRow[];
+    } else {
+      rows = (featured.data || []) as unknown as SupabaseVacancyRow[];
+    }
+
+    // Client-side sort as a safety net (a no-op once already ordered, and the
+    // fallback path leaves everything not-featured so ordering stays by date).
+    return sortFeaturedFirst(rows.map(mapVacancy));
   }
 
   async fetchEmployerVacancies(userId: string): Promise<Vacancy[]> {
@@ -439,6 +484,7 @@ class VacancyService {
         company: company || undefined,
         status: input.status,
         screeningQuestions: input.screeningQuestions,
+        isFeatured: input.isFeatured ?? false,
         applicantCount: 0,
         viewCount: 0,
         createdAt: new Date().toISOString(),
@@ -446,26 +492,43 @@ class VacancyService {
       };
     }
 
+    const basePayload = {
+      title: input.title,
+      description: input.description,
+      requirements: input.requirements,
+      responsibilities: input.responsibilities,
+      benefits: input.benefits,
+      salary_min: input.salaryMin ?? null,
+      salary_max: input.salaryMax ?? null,
+      salary_currency: input.salaryCurrency || 'AZN',
+      show_salary: input.showSalary,
+      city: input.city,
+      work_type: input.workType,
+      experience_level: input.experienceLevel,
+      skills: input.skills,
+      company_id: input.companyId,
+      status: input.status,
+      screening_questions: input.screeningQuestions,
+    };
+
+    // Only touch is_featured when the caller opted in. If the column isn't
+    // migrated yet the insert...returning statement fails atomically (no row is
+    // created), so we can safely fall back to a plain insert without it.
+    if (input.isFeatured !== undefined) {
+      const withFeatured = await getSupabase()
+        .from('vacancies')
+        .insert({ ...basePayload, is_featured: input.isFeatured })
+        .select(vacancySelectWithFeatured)
+        .single();
+
+      if (!withFeatured.error) {
+        return mapVacancy(withFeatured.data as unknown as SupabaseVacancyRow);
+      }
+    }
+
     const { data, error } = await getSupabase()
       .from('vacancies')
-      .insert({
-        title: input.title,
-        description: input.description,
-        requirements: input.requirements,
-        responsibilities: input.responsibilities,
-        benefits: input.benefits,
-        salary_min: input.salaryMin ?? null,
-        salary_max: input.salaryMax ?? null,
-        salary_currency: input.salaryCurrency || 'AZN',
-        show_salary: input.showSalary,
-        city: input.city,
-        work_type: input.workType,
-        experience_level: input.experienceLevel,
-        skills: input.skills,
-        company_id: input.companyId,
-        status: input.status,
-        screening_questions: input.screeningQuestions,
-      })
+      .insert(basePayload)
       .select(vacancySelect)
       .single();
 
@@ -508,32 +571,50 @@ class VacancyService {
         company: company || vacancy.company,
         status: input.status,
         screeningQuestions: input.screeningQuestions,
+        isFeatured: input.isFeatured ?? vacancy.isFeatured,
         updatedAt: new Date().toISOString(),
       });
 
       return { ...vacancy };
     }
 
+    const basePatch = {
+      title: input.title,
+      description: input.description,
+      requirements: input.requirements,
+      responsibilities: input.responsibilities,
+      benefits: input.benefits,
+      salary_min: input.salaryMin ?? null,
+      salary_max: input.salaryMax ?? null,
+      salary_currency: input.salaryCurrency || 'AZN',
+      show_salary: input.showSalary,
+      city: input.city,
+      work_type: input.workType,
+      experience_level: input.experienceLevel,
+      skills: input.skills,
+      company_id: input.companyId,
+      status: input.status,
+      screening_questions: input.screeningQuestions,
+    };
+
+    // Update is idempotent (same id), so retrying without is_featured is safe if
+    // the column isn't migrated in this environment yet.
+    if (input.isFeatured !== undefined) {
+      const withFeatured = await getSupabase()
+        .from('vacancies')
+        .update({ ...basePatch, is_featured: input.isFeatured })
+        .eq('id', id)
+        .select(vacancySelectWithFeatured)
+        .single();
+
+      if (!withFeatured.error) {
+        return mapVacancy(withFeatured.data as unknown as SupabaseVacancyRow);
+      }
+    }
+
     const { data, error } = await getSupabase()
       .from('vacancies')
-      .update({
-        title: input.title,
-        description: input.description,
-        requirements: input.requirements,
-        responsibilities: input.responsibilities,
-        benefits: input.benefits,
-        salary_min: input.salaryMin ?? null,
-        salary_max: input.salaryMax ?? null,
-        salary_currency: input.salaryCurrency || 'AZN',
-        show_salary: input.showSalary,
-        city: input.city,
-        work_type: input.workType,
-        experience_level: input.experienceLevel,
-        skills: input.skills,
-        company_id: input.companyId,
-        status: input.status,
-        screening_questions: input.screeningQuestions,
-      })
+      .update(basePatch)
       .eq('id', id)
       .select(vacancySelect)
       .single();

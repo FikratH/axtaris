@@ -86,7 +86,9 @@ export default function NotificationsScreen() {
             markRead.mutate(notif.id);
           }
           const data = notif.data || {};
-          if (data.applicationId && user?.role === 'employer') {
+          if (data.type === 'invite') {
+            router.push('/invites' as never);
+          } else if (data.applicationId && user?.role === 'employer') {
             router.push({
               pathname: '/(employer)/applicant/[id]',
               params: { id: data.applicationId },

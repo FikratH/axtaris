@@ -170,9 +170,12 @@ function AppContent() {
     const isAdminOnlyRoute = (firstSegment as string) === '(admin)';
     const isCandidateOnlyRoute =
       firstSegment === '(candidate)' ||
-      firstSegment === 'profile';
+      firstSegment === 'profile' ||
+      (firstSegment as string) === 'invites' ||
+      (firstSegment as string) === 'saved-searches';
     const isEmployerOnlyRoute =
       firstSegment === '(employer)' ||
+      (firstSegment as string) === 'talent' ||
       (firstSegment === 'vacancy' && secondSegment === 'create') ||
       (firstSegment === 'vacancy' && secondSegment === 'edit') ||
       (firstSegment === 'company' && secondSegment === 'edit');

@@ -4,7 +4,7 @@ import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Briefcase, Users, Building2, Settings } from 'lucide-react-native';
+import { LayoutDashboard, Briefcase, Users, Building2, Settings, UserSearch } from 'lucide-react-native';
 
 export default function EmployerLayout() {
   const { colors, typography: t } = useTheme();
@@ -57,6 +57,13 @@ export default function EmployerLayout() {
         options={{
           title: tr('employer.vacancies'),
           tabBarIcon: ({ color }) => <Briefcase size={22} color={color} strokeWidth={1.8} />,
+        }}
+      />
+      <Tabs.Screen
+        name="talent"
+        options={{
+          title: tr('talent.tab'),
+          tabBarIcon: ({ color }) => <UserSearch size={22} color={color} strokeWidth={1.8} />,
         }}
       />
       <Tabs.Screen

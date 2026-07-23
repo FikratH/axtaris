@@ -261,6 +261,102 @@ class AIService {
     }
   }
 
+  /** Generate a job-posting draft for a vacancy. Falls back to a template. */
+  async generateJobDescription(input: {
+    title: string;
+    city?: string;
+    workType?: string;
+    skills?: string[];
+    seniority?: string;
+  }): Promise<{ description: string; requirements: string[]; responsibilities: string[] }> {
+    const ai = await this.callAssistant(
+      'You write clear job postings. Output THREE labeled sections separated by lines "DESCRIPTION:", "REQUIREMENTS:", "RESPONSIBILITIES:". Under REQUIREMENTS and RESPONSIBILITIES put one item per line starting with "- ". No markdown headers, no preamble.',
+      `Role: ${input.title}. City: ${input.city || 'Baku'}. Work type: ${input.workType || 'full_time'}. Key skills: ${(input.skills || []).join(', ') || 'general'}. Seniority: ${input.seniority || 'mid'}.`,
+      500
+    );
+    if (ai) {
+      const parsed = this.parseJobSections(ai);
+      if (parsed && parsed.description) return parsed;
+    }
+
+    await this.simulateDelay();
+    const skills = input.skills && input.skills.length ? input.skills : ['relevant tools'];
+    return {
+      description: `We are looking for a ${input.title} to join our team${input.city ? ` in ${input.city}` : ''}. You will work with ${skills.slice(0, 3).join(', ')} and contribute to impactful projects.`,
+      requirements: [
+        `Experience as a ${input.title} or in a similar role`,
+        `Proficiency in ${skills.slice(0, 4).join(', ')}`,
+        'Strong communication and teamwork skills',
+      ],
+      responsibilities: [
+        `Deliver high-quality work as a ${input.title}`,
+        'Collaborate with cross-functional teammates',
+        'Continuously improve processes and outcomes',
+      ],
+    };
+  }
+
+  private parseJobSections(
+    text: string
+  ): { description: string; requirements: string[]; responsibilities: string[] } | null {
+    const dMatch = text.match(/DESCRIPTION:\s*([\s\S]*?)(?:REQUIREMENTS:|RESPONSIBILITIES:|$)/i);
+    const rMatch = text.match(/REQUIREMENTS:\s*([\s\S]*?)(?:RESPONSIBILITIES:|$)/i);
+    const oMatch = text.match(/RESPONSIBILITIES:\s*([\s\S]*)$/i);
+    if (!dMatch) return null;
+    const toList = (s?: string) =>
+      (s || '')
+        .split('\n')
+        .map((l) => l.replace(/^[-•*\d.)\s]+/, '').trim())
+        .filter(Boolean);
+    return {
+      description: dMatch[1].trim(),
+      requirements: toList(rMatch?.[1]),
+      responsibilities: toList(oMatch?.[1]),
+    };
+  }
+
+  /** Draft a cover letter for a candidate applying to a vacancy. Fallback template. */
+  async generateCoverLetter(input: {
+    candidateName?: string;
+    candidateTitle?: string;
+    skills?: string[];
+    vacancyTitle: string;
+    companyName?: string;
+  }): Promise<string> {
+    const ai = await this.callAssistant(
+      'You write concise, professional cover letters (120-160 words), first person, no markdown, no bracketed placeholders. Reply in the language of the job title.',
+      `Write a cover letter. Applicant current title ${input.candidateTitle || 'professional'}, skills ${(input.skills || []).slice(0, 6).join(', ') || 'relevant skills'}. Applying for "${input.vacancyTitle}"${input.companyName ? ` at ${input.companyName}` : ''}.`,
+      320
+    );
+    if (ai) return ai;
+
+    await this.simulateDelay();
+    return `Dear ${input.companyName || 'Hiring Team'},\n\nI am excited to apply for the ${input.vacancyTitle} role. As a ${input.candidateTitle || 'professional'} with experience in ${(input.skills || ['my field']).slice(0, 3).join(', ')}, I am confident I can contribute meaningfully to your team. I would welcome the opportunity to discuss how my background fits your needs.\n\nBest regards,\n${input.candidateName || ''}`.trim();
+  }
+
+  /**
+   * Rank applicants by fit to a vacancy. Deterministic skill-overlap scoring
+   * (always available; also the fallback if the model is off).
+   */
+  async rankApplicants(
+    vacancy: { title: string; skills: string[] },
+    applicants: { id: string; title?: string; skills: string[] }[]
+  ): Promise<{ id: string; score: number; reason: string }[]> {
+    const target = new Set(vacancy.skills.map((s) => s.toLowerCase()));
+    const ranked = applicants.map((a) => {
+      const overlap = a.skills.filter((s) => target.has(s.toLowerCase()));
+      const score = target.size ? Math.round((overlap.length / target.size) * 100) : 0;
+      return {
+        id: a.id,
+        score,
+        reason: overlap.length
+          ? `${overlap.length} matching skill${overlap.length > 1 ? 's' : ''}: ${overlap.slice(0, 3).join(', ')}`
+          : 'No direct skill overlap',
+      };
+    });
+    return ranked.sort((x, y) => y.score - x.score);
+  }
+
   async buildResumeSummary(profile: CandidateProfile): Promise<AIResumeResult> {
     await this.simulateDelay();
 

@@ -20,7 +20,9 @@ import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Application, ApplicationStatus } from '@/types/models';
 import { fileStorageService } from '@/services/fileStorageService';
-import { Users as UsersIcon, MessageCircle } from 'lucide-react-native';
+import { useEmployerEntitlements } from '@/hooks/useEntitlements';
+import { aiService } from '@/services/aiService';
+import { Users as UsersIcon, MessageCircle, Sparkles } from 'lucide-react-native';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -55,8 +57,56 @@ export default function ApplicantsScreen() {
     refetch,
   } = useEmployerApplications(user?.id);
   const updateStatus = useUpdateApplicationStatus(user?.id);
+  const { entitlements } = useEmployerEntitlements();
   const [filter, setFilter] = useState<'all' | ApplicationStatus>('all');
   const [openingCvId, setOpeningCvId] = useState<string | null>(null);
+  const [rankMap, setRankMap] = useState<Record<string, { score: number; reason: string }> | null>(null);
+  const [ranking, setRanking] = useState(false);
+
+  const rankByFit = async () => {
+    if (!entitlements.aiApplicantRanking) {
+      Alert.alert(
+        tr('ai.upgradeTitle'),
+        tr('ai.applicantRankingUpgrade'),
+        [
+          { text: tr('common.cancel'), style: 'cancel' },
+          { text: tr('featured.viewPlans'), onPress: () => router.push('/subscription' as never) },
+        ]
+      );
+      return;
+    }
+
+    setRanking(true);
+    try {
+      // Applications span multiple vacancies, so rank each applicant against the
+      // vacancy they actually applied to, then merge every group's scores into a
+      // single id -> {score, reason} lookup.
+      const byVacancy = new Map<string, Application[]>();
+      allApplications.forEach((app) => {
+        const list = byVacancy.get(app.vacancyId) || [];
+        list.push(app);
+        byVacancy.set(app.vacancyId, list);
+      });
+
+      const map: Record<string, { score: number; reason: string }> = {};
+      for (const apps of byVacancy.values()) {
+        const ranked = await aiService.rankApplicants(
+          { title: apps[0].vacancy?.title || '', skills: apps[0].vacancy?.skills || [] },
+          apps.map((a) => ({ id: a.id, title: a.candidate?.title, skills: a.candidate?.skills || [] }))
+        );
+        ranked.forEach((entry) => {
+          map[entry.id] = { score: entry.score, reason: entry.reason };
+        });
+      }
+      setRankMap(map);
+    } catch (error: any) {
+      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+    } finally {
+      setRanking(false);
+    }
+  };
+
+  const clearRanking = () => setRankMap(null);
 
   const filters: { key: 'all' | ApplicationStatus; label: string }[] = [
     { key: 'all', label: tr('common.all') },
@@ -68,6 +118,12 @@ export default function ApplicantsScreen() {
   const filtered = filter === 'all'
     ? allApplications
     : allApplications.filter((a) => a.status === filter);
+
+  // When ranked, reorder highest-fit first (scores are keyed by application id so
+  // ranking composes with the status filter).
+  const displayed = rankMap
+    ? [...filtered].sort((a, b) => (rankMap[b.id]?.score ?? 0) - (rankMap[a.id]?.score ?? 0))
+    : filtered;
 
   const handleOpenCv = (application: Application) => {
     const cvUrl = application.candidate?.cvUrl || application.cvUrl;
@@ -87,6 +143,7 @@ export default function ApplicantsScreen() {
     const candidate = item.candidate;
     const candidateSkills = candidate?.skills ?? [];
     const hasCv = !!(item.cvUrl || candidate?.cvUrl);
+    const fit = rankMap?.[item.id];
 
     return (
       <Card padding="md" style={{ marginBottom: 10 }}>
@@ -115,7 +172,19 @@ export default function ApplicantsScreen() {
           </View>
         </View>
 
-        <View style={[styles.skillsRow, { marginTop: s.md }]}> 
+        {fit ? (
+          <View style={[styles.fitRow, { backgroundColor: colors.primaryLight, borderRadius: r.md, marginTop: s.md }]}>
+            <Sparkles size={13} color={colors.primary} strokeWidth={2} />
+            <Text style={[{ color: colors.primary, marginLeft: 6 }, t.labelSmall]}>
+              {tr('ai.fitScore', { score: fit.score })}
+            </Text>
+            <Text style={[{ color: colors.textSecondary, marginLeft: 8, flex: 1 }, t.caption]} numberOfLines={1}>
+              {fit.reason}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={[styles.skillsRow, { marginTop: s.md }]}>
           {candidateSkills.slice(0, 3).map((sk) => (
             <Chip key={sk} label={sk} style={{ marginRight: 6 }} />
           ))}
@@ -229,6 +298,20 @@ export default function ApplicantsScreen() {
             />
           ))}
         </View>
+        {allApplications.length > 0 ? (
+          <View style={{ marginTop: s.md }}>
+            <Button
+              title={rankMap ? tr('ai.clearRanking') : tr('ai.rankByFit')}
+              onPress={rankMap ? clearRanking : rankByFit}
+              loading={ranking}
+              variant={rankMap ? 'secondary' : 'outline'}
+              size="sm"
+              fullWidth={false}
+              style={{ alignSelf: 'flex-start' }}
+              icon={<Sparkles size={16} color={rankMap ? colors.textPrimary : colors.primary} strokeWidth={2} />}
+            />
+          </View>
+        ) : null}
       </View>
 
       {isError ? (
@@ -247,7 +330,7 @@ export default function ApplicantsScreen() {
         </View>
       ) : (
         <FlatList
-          data={filtered}
+          data={displayed}
           contentContainerStyle={{ paddingHorizontal: s.xl, paddingTop: s.lg, paddingBottom: 24 }}
           renderItem={renderApplicant}
           keyExtractor={(item) => item.id}
@@ -271,6 +354,7 @@ const styles = StyleSheet.create({
   filterRow: { flexDirection: 'row', flexWrap: 'wrap' },
   applicantRow: { flexDirection: 'row', alignItems: 'center' },
   applicantInfo: { flex: 1 },
+  fitRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8 },
   skillsRow: { flexDirection: 'row', flexWrap: 'wrap' },
   actionRow: { flexDirection: 'row' },
   actionCell: { flex: 1, minWidth: 0 },

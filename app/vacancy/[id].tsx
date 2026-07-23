@@ -34,7 +34,10 @@ import { computeJobMatch } from '@/utils/jobMatch';
 import { aiService } from '@/services/aiService';
 import { analyticsService } from '@/services/analyticsService';
 import { MatchBadge } from '@/components/ui/MatchBadge';
-import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Languages as LanguagesIcon } from 'lucide-react-native';
+import { UpgradeSheet } from '@/components/UpgradeSheet';
+import { useCandidateEntitlements } from '@/hooks/useEntitlements';
+import { toUserMessage } from '@/utils/errorMessage';
+import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Sparkles, Lock, Languages as LanguagesIcon } from 'lucide-react-native';
 
 export default function VacancyDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -51,6 +54,7 @@ export default function VacancyDetailScreen() {
   const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
   const { data: profile } = useCandidateProfile(isEmployer ? undefined : user?.id);
   const applyToVacancy = useApplyToVacancy(user?.id);
+  const { entitlements: candidateEntitlements } = useCandidateEntitlements();
   const { requireAuth } = useGuestGate();
   const {
     data: vacancy,
@@ -61,6 +65,10 @@ export default function VacancyDetailScreen() {
 
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [coverLetter, setCoverLetter] = useState('');
+  const [generatingCover, setGeneratingCover] = useState(false);
+  const [upgradeVisible, setUpgradeVisible] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<'limit' | 'ai'>('limit');
   const [showTranslation, setShowTranslation] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translation, setTranslation] = useState<{
@@ -147,28 +155,88 @@ export default function VacancyDetailScreen() {
 
   const jobMatch = !isEmployer && profile ? computeJobMatch(profile, vacancy) : null;
 
+  const isOutOfApplications =
+    !!subscriptionSummary &&
+    subscriptionSummary.dailyApplicationLimit !== null &&
+    (subscriptionSummary.applicationsRemainingToday ?? 0) <= 0;
+
+  const openLimitUpsell = () => {
+    setShowApplyModal(false);
+    setUpgradeReason('limit');
+    setUpgradeVisible(true);
+  };
+
   const submitApplication = async (screeningAnswers: ScreeningAnswer[]) => {
     if (!id) return;
     try {
-      await applyToVacancy.mutateAsync({ vacancyId: id, answers: screeningAnswers });
+      await applyToVacancy.mutateAsync({ vacancyId: id, answers: screeningAnswers, coverLetter });
       setShowApplyModal(false);
+      setCoverLetter('');
       Alert.alert(tr('candidate.applied'));
     } catch (error: any) {
-      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+      // Turn the daily-limit dead-end into an upsell moment instead of a raw error.
+      if ((error?.message || '').includes('Daily application limit')) {
+        openLimitUpsell();
+        return;
+      }
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
-  const handleApply = async () => {
+  const handleApply = () => {
     if (!id || !requireAuth()) return;
 
-    if (vacancy.screeningQuestions && vacancy.screeningQuestions.length > 0) {
-      setAnswers({});
-      setShowApplyModal(true);
+    // Proactively upsell when the candidate has already used today's quota.
+    if (isOutOfApplications) {
+      openLimitUpsell();
       return;
     }
 
-    await submitApplication([]);
+    setAnswers({});
+    setCoverLetter('');
+    setShowApplyModal(true);
   };
+
+  const handleWriteWithAI = async () => {
+    // AI cover letters are a Pro+ perk — send free candidates to the paywall.
+    if (!candidateEntitlements.aiCoverLetters) {
+      setUpgradeReason('ai');
+      setUpgradeVisible(true);
+      return;
+    }
+    setGeneratingCover(true);
+    try {
+      const text = await aiService.generateCoverLetter({
+        candidateTitle: profile?.title,
+        skills: profile?.skills,
+        vacancyTitle: vacancy.title,
+        companyName: vacancy.company?.name,
+      });
+      if (text) setCoverLetter(text);
+    } catch {
+      Alert.alert(tr('common.error'));
+    } finally {
+      setGeneratingCover(false);
+    }
+  };
+
+  const readList = (key: string): string[] => {
+    const value = tr(key, { returnObjects: true });
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+  };
+
+  const upgradeCopy =
+    upgradeReason === 'ai'
+      ? {
+          title: tr('paywall.ai.title'),
+          subtitle: tr('paywall.ai.subtitle'),
+          benefits: readList('paywall.ai.benefits'),
+        }
+      : {
+          title: tr('paywall.limit.title'),
+          subtitle: tr('paywall.limit.subtitle'),
+          benefits: readList('paywall.limit.benefits'),
+        };
 
   const handleSubmitAnswers = () => {
     const questions = vacancy.screeningQuestions || [];
@@ -496,9 +564,42 @@ export default function VacancyDetailScreen() {
       <Modal visible={showApplyModal} transparent animationType="slide" onRequestClose={() => setShowApplyModal(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modalBackdrop}>
           <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder, paddingBottom: insets.bottom + 16 }]}>
-            <Text style={[{ color: colors.textPrimary, marginBottom: 4 }, t.headingSmall]}>{tr('apply.answerQuestions')}</Text>
-            <Text style={[{ color: colors.textTertiary, marginBottom: 12 }, t.caption]}>{tr('apply.answerQuestionsHint')}</Text>
+            <Text style={[{ color: colors.textPrimary, marginBottom: 4 }, t.headingSmall]}>{tr('candidate.applyNow')}</Text>
+            <Text style={[{ color: colors.textTertiary, marginBottom: 12 }, t.caption]}>{tr('apply.sheetHint')}</Text>
             <ScrollView style={{ maxHeight: 360 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              <View style={{ marginBottom: 16 }}>
+                <View style={styles.coverHeader}>
+                  <Text style={[{ color: colors.textSecondary }, t.labelSmall]}>{tr('apply.coverLetterLabel')}</Text>
+                  <TouchableOpacity
+                    onPress={handleWriteWithAI}
+                    disabled={generatingCover}
+                    activeOpacity={0.7}
+                    style={[styles.aiBtn, { backgroundColor: colors.primaryLight, borderRadius: r.sm }]}
+                  >
+                    {generatingCover ? (
+                      <ActivityIndicator size="small" color={colors.primary} />
+                    ) : candidateEntitlements.aiCoverLetters ? (
+                      <Sparkles size={13} color={colors.primary} strokeWidth={2} />
+                    ) : (
+                      <Lock size={12} color={colors.primary} strokeWidth={2} />
+                    )}
+                    <Text style={[{ color: colors.primary, marginLeft: 6 }, t.caption]}>{tr('apply.writeWithAi')}</Text>
+                    {!candidateEntitlements.aiCoverLetters ? (
+                      <View style={[styles.proPill, { backgroundColor: colors.primary, borderRadius: r.full }]}>
+                        <Text style={[{ color: '#FFFFFF' }, t.caption]}>{tr('paywall.proTag')}</Text>
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
+                </View>
+                <Input
+                  value={coverLetter}
+                  onChangeText={setCoverLetter}
+                  placeholder={tr('apply.coverLetterPlaceholder')}
+                  multiline
+                  numberOfLines={4}
+                  style={{ minHeight: 96, textAlignVertical: 'top' }}
+                />
+              </View>
               {(vacancy.screeningQuestions || []).map((q, idx) => (
                 <View key={q.id} style={{ marginBottom: 12 }}>
                   <Input
@@ -520,6 +621,16 @@ export default function VacancyDetailScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      <UpgradeSheet
+        visible={upgradeVisible}
+        onClose={() => setUpgradeVisible(false)}
+        title={upgradeCopy.title}
+        subtitle={upgradeCopy.subtitle}
+        benefits={upgradeCopy.benefits}
+        plan="pro"
+        audience="candidate"
+      />
     </View>
   );
 }
@@ -589,6 +700,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
+  },
+  coverHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  aiBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  proPill: {
+    marginLeft: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   matchHeader: {
     flexDirection: 'row',

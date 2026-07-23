@@ -8,7 +8,7 @@ import { Avatar } from './Avatar';
 import { Badge } from './Badge';
 import { MatchBadge } from './MatchBadge';
 import { useTranslation } from 'react-i18next';
-import { Bookmark, BookmarkCheck, MapPin, Clock, Users } from 'lucide-react-native';
+import { Bookmark, BookmarkCheck, MapPin, Clock, Users, Star } from 'lucide-react-native';
 
 interface VacancyCardProps {
   vacancy: Vacancy;
@@ -121,6 +121,13 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchSco
         )}
       </View>
 
+      {vacancy.isFeatured && (
+        <View style={[styles.featuredBadge, { backgroundColor: colors.warningLight, borderRadius: r.full }]}>
+          <Star size={11} color={colors.warning} strokeWidth={2} fill={colors.warning} />
+          <Text style={[{ color: colors.warning, marginLeft: 4 }, t.caption]}>{tr('featured.badge')}</Text>
+        </View>
+      )}
+
       {!compact && (
         <View style={[styles.chipRow, { marginTop: 10 }]}>
           <Badge label={vacancy.city} variant="default" />
@@ -173,6 +180,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
+  },
+  featuredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
   },
   footer: {
     flexDirection: 'row',

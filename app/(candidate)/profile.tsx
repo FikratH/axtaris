@@ -19,9 +19,11 @@ import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SubscriptionPill } from '@/components/ui/SubscriptionPill';
-import { Bell, Settings, MapPin, Upload, Wand2, Briefcase, GraduationCap, Languages, Award, Plus, Trash2, ChevronRight } from 'lucide-react-native';
+import { Bell, Settings, MapPin, Upload, Wand2, Briefcase, GraduationCap, Languages, Award, Plus, Trash2, ChevronRight, Eye } from 'lucide-react-native';
 import { useImagePicker } from '@/hooks/useImagePicker';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
+import { useCandidateEntitlements } from '@/hooks/useEntitlements';
+import { useProfileViewSummary } from '@/hooks/useGrowthQueries';
 import { fileStorageService } from '@/services/fileStorageService';
 import { userProfileService } from '@/services/userProfileService';
 
@@ -39,6 +41,8 @@ export default function CandidateProfileScreen() {
     refetch,
   } = useCandidateProfile(user?.id);
   const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
+  const { entitlements } = useCandidateEntitlements();
+  const { data: viewSummary } = useProfileViewSummary(user?.id, entitlements.whoViewedYou);
   const updateProfile = useUpdateCandidateProfile(user?.id);
 
   const imagePicker = useImagePicker({ aspect: [1, 1], quality: 0.8 });
@@ -327,6 +331,29 @@ export default function CandidateProfileScreen() {
         </View>
       </View>
 
+      {/* ── Who viewed your profile ── */}
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => router.push('/profile/viewers' as never)}
+        style={[styles.viewersCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
+        accessibilityRole="button"
+        accessibilityLabel={tr('growth.whoViewedYou')}
+      >
+        <View style={[styles.viewersIcon, { backgroundColor: colors.primaryLight }]}>
+          <Eye size={18} color={colors.primary} strokeWidth={1.9} />
+        </View>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>{tr('growth.whoViewedYou')}</Text>
+          <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.caption]}>
+            {tr('growth.viewersSubtitle', { count: viewSummary?.weeklyViews ?? 0 })}
+          </Text>
+        </View>
+        <Text style={[{ color: colors.primary, marginRight: 4 }, t.headingSmall]}>
+          {viewSummary?.totalViews ?? 0}
+        </Text>
+        <ChevronRight size={16} color={colors.textTertiary} strokeWidth={2} />
+      </TouchableOpacity>
+
       {/* ── Bio ── */}
       {profile.bio && (
         <View style={[styles.sectionCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
@@ -519,6 +546,22 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   actionRowInner: { flexDirection: 'row' },
+  viewersCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 20,
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  viewersIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionCard: {
     marginHorizontal: 20,
     marginTop: 12,

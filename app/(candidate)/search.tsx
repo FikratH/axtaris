@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Alert } from '@/utils/dialog';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +22,8 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { useGuestGate } from '@/hooks/useGuestGate';
 import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
+import { useCandidateEntitlements } from '@/hooks/useEntitlements';
+import { useSavedSearches, useCreateSavedSearch } from '@/hooks/useGrowthQueries';
 import { rankVacanciesByMatch } from '@/utils/jobMatch';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { VacancyCard } from '@/components/ui/VacancyCard';
@@ -30,7 +33,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { WorkType } from '@/types/models';
 import { getWorkTypeLabel } from '@/utils/labels';
-import { Search as SearchIcon, SlidersHorizontal, SearchX } from 'lucide-react-native';
+import { Search as SearchIcon, SlidersHorizontal, SearchX, BookmarkPlus, Bookmark } from 'lucide-react-native';
 
 const cities = ['Bakı', 'Gəncə', 'Sumqayıt', 'Mingəçevir', 'Lənkəran'];
 
@@ -40,6 +43,13 @@ export default function SearchScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const params = useLocalSearchParams<{
+    savedQuery?: string;
+    savedCity?: string;
+    savedWorkType?: string;
+    savedSkills?: string;
+  }>();
+
   const user = useAuthStore((s) => s.user);
   const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
   const { data: profile } = useCandidateProfile(user?.id);
@@ -47,6 +57,9 @@ export default function SearchScreen() {
   const appliedVacancyIds = useMemo(() => new Set(applications.map((a) => a.vacancyId)), [applications]);
   const toggleSave = useToggleSavedJob(user?.id);
   const { requireAuth } = useGuestGate();
+  const { entitlements } = useCandidateEntitlements();
+  const { data: savedSearches = [] } = useSavedSearches(user?.id);
+  const createSavedSearch = useCreateSavedSearch(user?.id);
   const {
     data: allVacancies = [],
     isLoading,
@@ -57,6 +70,26 @@ export default function SearchScreen() {
   const [selectedWorkTypes, setSelectedWorkTypes] = useState<WorkType[]>([]);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Hydrate filters when arriving from a saved search (params change per search).
+  useEffect(() => {
+    const hasSavedParams =
+      params.savedQuery !== undefined ||
+      params.savedCity !== undefined ||
+      params.savedWorkType !== undefined ||
+      params.savedSkills !== undefined;
+    if (!hasSavedParams) return;
+
+    setQuery(typeof params.savedQuery === 'string' ? params.savedQuery : '');
+    setSelectedCity(
+      typeof params.savedCity === 'string' && params.savedCity ? params.savedCity : null
+    );
+    setSelectedWorkTypes(
+      typeof params.savedWorkType === 'string' && params.savedWorkType
+        ? [params.savedWorkType as WorkType]
+        : []
+    );
+  }, [params.savedQuery, params.savedCity, params.savedWorkType, params.savedSkills]);
 
   const workTypes: { key: WorkType; label: string }[] = [
     { key: 'full_time', label: tr('candidate.fullTime') },
@@ -96,6 +129,56 @@ export default function SearchScreen() {
   const activeFilterCount =
     selectedWorkTypes.length + (selectedCity ? 1 : 0);
 
+  const hasCriteria = query.trim().length > 0 || activeFilterCount > 0;
+
+  const handleSaveSearch = () => {
+    if (!requireAuth()) return;
+
+    const limit = entitlements.savedSearches; // number | null (null = unlimited)
+    const atLimit = limit !== null && savedSearches.length >= limit;
+    if (atLimit) {
+      Alert.alert(
+        tr('savedSearch.limitTitle'),
+        limit === 0 ? tr('savedSearch.upgradeSubtitleFree') : tr('savedSearch.upgradeSubtitleLimit'),
+        [
+          { text: tr('common.cancel'), style: 'cancel' },
+          {
+            text: tr('savedSearch.upgradeCta'),
+            onPress: () => router.push('/checkout?plan=pro&audience=candidate' as never),
+          },
+        ]
+      );
+      return;
+    }
+
+    const nameParts = [
+      query.trim(),
+      selectedCity,
+      ...selectedWorkTypes.map((wt) => workTypes.find((x) => x.key === wt)?.label ?? getWorkTypeLabel(tr, wt)),
+    ].filter(Boolean);
+    const name = nameParts.length > 0 ? nameParts.join(' · ') : tr('savedSearch.defaultName');
+
+    createSavedSearch.mutate(
+      {
+        name,
+        filters: {
+          query: query.trim() || undefined,
+          city: selectedCity || undefined,
+          workType: selectedWorkTypes[0],
+        },
+      },
+      {
+        onSuccess: () =>
+          Alert.alert(tr('savedSearch.savedTitle'), tr('savedSearch.savedMessage'), [
+            { text: tr('common.done'), style: 'cancel' },
+            { text: tr('savedSearch.viewSaved'), onPress: () => router.push('/saved-searches' as never) },
+          ]),
+        onError: (error) =>
+          Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error')),
+      }
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
       <View style={[styles.searchSection, { paddingHorizontal: s.xl }]}>
@@ -116,6 +199,34 @@ export default function SearchScreen() {
           }
           onFilterPress={() => setShowFilters(true)}
         />
+
+        <View style={[styles.savedRow, { marginTop: s.sm }]}>
+          <TouchableOpacity
+            style={styles.savedLink}
+            activeOpacity={0.7}
+            onPress={() => {
+              if (requireAuth()) router.push('/saved-searches' as never);
+            }}
+          >
+            <Bookmark size={14} color={colors.textSecondary} strokeWidth={1.9} />
+            <Text style={[{ color: colors.textSecondary, marginLeft: 6, ...t.labelSmall }]}>
+              {tr('savedSearch.title')}
+            </Text>
+          </TouchableOpacity>
+          {hasCriteria && (
+            <TouchableOpacity
+              style={[styles.saveBtn, { backgroundColor: colors.primaryLight }]}
+              activeOpacity={0.7}
+              onPress={handleSaveSearch}
+              disabled={createSavedSearch.isPending}
+            >
+              <BookmarkPlus size={14} color={colors.primary} strokeWidth={1.9} />
+              <Text style={[{ color: colors.primary, marginLeft: 6, ...t.labelSmall }]}>
+                {tr('savedSearch.saveThis')}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         {(selectedWorkTypes.length > 0 || selectedCity) && (
           <ScrollView
@@ -252,6 +363,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchSection: {},
+  savedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  savedLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
   chipGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

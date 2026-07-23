@@ -60,6 +60,8 @@ export interface CandidateProfile {
   workPreference?: WorkType;
   profileCompleteness: number;
   bio?: string;
+  /** Opt-in to appear in employer talent search. Defaults to true. */
+  isDiscoverable?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -239,6 +241,8 @@ export interface Vacancy {
   updatedAt: string;
   expiresAt?: string;
   screeningQuestions?: ScreeningQuestion[];
+  /** Boosted placement in the candidate feed (employer plan-limited slots). */
+  isFeatured?: boolean;
 }
 
 export interface Application {
@@ -334,4 +338,101 @@ export interface AnalyticsSummary {
   hired: number;
   rejected: number;
   responseRate: number;
+}
+
+// ── Talent search / invites / growth (v2 monetization) ──────────────────────
+
+export type InviteStatus = 'pending' | 'accepted' | 'declined';
+
+export interface CandidateInvite {
+  id: string;
+  companyId: string;
+  companyName?: string;
+  candidateId: string; // candidate_profiles.id
+  candidateUserId?: string;
+  vacancyId?: string;
+  vacancyTitle?: string;
+  message?: string;
+  status: InviteStatus;
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface TalentSearchFilters {
+  query?: string;
+  skills?: string[];
+  city?: string;
+  workPreference?: WorkType;
+  availability?: CandidateProfile['availability'];
+  minSalary?: number;
+  maxSalary?: number;
+}
+
+/**
+ * A privacy-safe candidate card for employer talent search. NEVER includes
+ * email/phone — contact happens via in-app conversation after an invite is
+ * accepted.
+ */
+export interface TalentCandidate {
+  id: string; // candidate_profiles.id
+  userId: string;
+  fullName: string;
+  avatarUrl?: string;
+  title?: string;
+  location?: string;
+  skills: string[];
+  availability?: CandidateProfile['availability'];
+  workPreference?: WorkType;
+  expectedSalary?: number;
+  salaryCurrency?: string;
+  bioSnippet?: string;
+  experienceCount: number;
+  profileCompleteness: number;
+  plan: SubscriptionPlanCode; // for spotlight ranking/badge
+  isSpotlight: boolean;
+  matchScore?: number;
+}
+
+export interface ProfileViewer {
+  companyId: string;
+  companyName: string;
+  companyLogoUrl?: string;
+  viewedAt: string;
+}
+
+export interface ProfileViewSummary {
+  totalViews: number;
+  weeklyViews: number;
+  viewers: ProfileViewer[]; // gated by plan (empty for the count-only tier)
+}
+
+export interface SavedSearchCriteria {
+  query?: string;
+  city?: string;
+  workType?: WorkType;
+  skills?: string[];
+}
+
+export interface SavedSearch {
+  id: string;
+  userId: string;
+  name: string;
+  filters: SavedSearchCriteria;
+  createdAt: string;
+  newMatchCount?: number;
+}
+
+export interface EmployerSubscription {
+  id: string;
+  userId: string;
+  plan: SubscriptionPlanCode;
+  status: SubscriptionStatus;
+  priceAmount: number;
+  priceCurrency: string;
+  billingInterval: 'month';
+  startedAt: string;
+  expiresAt?: string;
+  canceledAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }

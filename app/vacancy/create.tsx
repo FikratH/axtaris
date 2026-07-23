@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, KeyboardAvoidingView, Platform, Switch } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,7 +9,10 @@ import { useAuthStore } from '@/store/authStore';
 import {
   useCreateVacancy,
   useEmployerCompany,
+  useEmployerVacancies,
 } from '@/hooks/useVacancyQueries';
+import { useEmployerEntitlements } from '@/hooks/useEntitlements';
+import { aiService } from '@/services/aiService';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
@@ -20,7 +23,7 @@ import { useGuestGate } from '@/hooks/useGuestGate';
 import { SuggestionChips } from '@/components/ui/SuggestionChips';
 import { getSuggestions } from '@/data/suggestions';
 import { createLocalItemId } from '@/utils/profileSections';
-import { ChevronLeft, X } from 'lucide-react-native';
+import { ChevronLeft, X, Sparkles, Star } from 'lucide-react-native';
 import { WorkType, ExperienceLevel, VacancyStatus, ScreeningQuestion } from '@/types/models';
 
 const workTypes: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
@@ -37,6 +40,8 @@ export default function CreateVacancyScreen() {
   const { data: company, isLoading: companyLoading, isError: companyError, refetch } = useEmployerCompany(user?.id);
   const createVacancy = useCreateVacancy(user?.id);
   const { requireAuth } = useGuestGate();
+  const { entitlements } = useEmployerEntitlements();
+  const { data: employerVacancies = [] } = useEmployerVacancies(user?.id);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -52,6 +57,59 @@ export default function CreateVacancyScreen() {
   const [benefits, setBenefits] = useState('');
   const [screeningQuestions, setScreeningQuestions] = useState<ScreeningQuestion[]>([]);
   const [questionInput, setQuestionInput] = useState('');
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // Active featured vacancies already consuming this employer's plan slots.
+  const featuredCount = employerVacancies.filter((v) => v.isFeatured && v.status === 'active').length;
+  const atFeaturedLimit = featuredCount >= entitlements.featuredSlots;
+  const featureDisabled = atFeaturedLimit && !isFeatured;
+
+  const promptFeaturedLimit = () => {
+    Alert.alert(
+      tr('featured.limitReachedTitle'),
+      tr('featured.limitReached', { count: entitlements.featuredSlots }),
+      [
+        { text: tr('common.cancel'), style: 'cancel' },
+        { text: tr('featured.viewPlans'), onPress: () => router.push('/subscription' as never) },
+      ]
+    );
+  };
+
+  const generateWithAI = async () => {
+    if (!entitlements.aiJobDescriptions) {
+      Alert.alert(
+        tr('ai.upgradeTitle'),
+        tr('ai.jobDescriptionUpgrade'),
+        [
+          { text: tr('common.cancel'), style: 'cancel' },
+          { text: tr('featured.viewPlans'), onPress: () => router.push('/subscription' as never) },
+        ]
+      );
+      return;
+    }
+    if (!title.trim()) {
+      Alert.alert(tr('common.error'), tr('ai.titleRequiredForGeneration'));
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const result = await aiService.generateJobDescription({
+        title: title.trim(),
+        city: city.trim() || undefined,
+        workType,
+        skills,
+      });
+      setDescription(result.description);
+      if (result.requirements.length) setRequirements(result.requirements.join('\n'));
+      if (result.responsibilities.length) setResponsibilities(result.responsibilities.join('\n'));
+    } catch (error: any) {
+      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const addQuestion = () => {
     const q = questionInput.trim();
@@ -140,6 +198,7 @@ export default function CreateVacancyScreen() {
         companyId: company.id,
         status,
         screeningQuestions,
+        isFeatured,
       });
 
       Alert.alert(
@@ -183,6 +242,17 @@ export default function CreateVacancyScreen() {
         <View style={[styles.formCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
           <Input label={tr('employer.vacancyTitle')} value={title} onChangeText={setTitle} placeholder={tr('employer.vacancyTitlePlaceholder')} />
           <Input label={tr('employer.vacancyDescription')} value={description} onChangeText={setDescription} placeholder={tr('employer.vacancyDescription')} multiline numberOfLines={4} style={{ minHeight: 100, textAlignVertical: 'top' }} />
+          <View style={{ marginTop: -6, marginBottom: 10 }}>
+            <Button
+              title={tr('ai.generateWithAI')}
+              onPress={generateWithAI}
+              loading={aiLoading}
+              variant="outline"
+              size="sm"
+              icon={<Sparkles size={16} color={colors.primary} strokeWidth={2} />}
+            />
+            <Text style={[{ color: colors.textTertiary, marginTop: 6 }, t.caption]}>{tr('ai.generateHint')}</Text>
+          </View>
           <Input label={tr('candidate.city')} value={city} onChangeText={setCity} placeholder={tr('profileCrud.shared.locationPlaceholder')} />
           <SuggestionChips suggestions={getSuggestions('cities', lang)} query={city} selected={city ? [city] : []} onSelect={(v) => setCity((cur) => (cur === v ? '' : v))} />
 
@@ -270,6 +340,29 @@ export default function CreateVacancyScreen() {
             rightIcon={<Text style={{ color: colors.primary, fontWeight: '600', fontSize: 13 }}>{tr('common.add')}</Text>}
             onRightIconPress={addQuestion}
           />
+
+          <View style={[styles.featureRow, { borderColor: colors.cardBorder, borderRadius: r.md }]}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Star size={15} color={colors.warning} strokeWidth={2} fill={isFeatured ? colors.warning : 'transparent'} />
+                <Text style={[{ color: colors.textPrimary, marginLeft: 6 }, t.labelSmall]}>{tr('featured.toggleLabel')}</Text>
+              </View>
+              <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>
+                {featureDisabled ? tr('featured.limitHint', { count: entitlements.featuredSlots }) : tr('featured.toggleHint')}
+              </Text>
+            </View>
+            <TouchableOpacity activeOpacity={0.7} disabled={!featureDisabled} onPress={promptFeaturedLimit}>
+              <View pointerEvents={featureDisabled ? 'none' : 'auto'}>
+                <Switch
+                  value={isFeatured}
+                  onValueChange={setIsFeatured}
+                  disabled={featureDisabled}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={{ marginTop: 16, gap: 10 }}>
@@ -299,6 +392,13 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   formCard: { borderRadius: 14, borderWidth: 1, padding: 16 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    padding: 14,
+    marginTop: 20,
+  },
   questionRow: {
     flexDirection: 'row',
     alignItems: 'center',

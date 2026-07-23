@@ -91,8 +91,8 @@ export function useApplyToVacancy(userId?: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ vacancyId, answers }: { vacancyId: string; answers?: ScreeningAnswer[] }) =>
-      candidateVacancyService.applyToVacancy(userId || '', vacancyId, answers),
+    mutationFn: ({ vacancyId, answers, coverLetter }: { vacancyId: string; answers?: ScreeningAnswer[]; coverLetter?: string }) =>
+      candidateVacancyService.applyToVacancy(userId || '', vacancyId, answers, coverLetter),
     onSuccess: (application) => {
       if (!userId) return;
 
