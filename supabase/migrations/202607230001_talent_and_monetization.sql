@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_vacancies_featured
 
 -- 2. Employer subscriptions (mirror candidate_subscriptions) -------------------
 CREATE TABLE IF NOT EXISTS public.employer_subscriptions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   plan subscription_plan NOT NULL DEFAULT 'free',
   status subscription_status NOT NULL DEFAULT 'active',
@@ -48,11 +48,11 @@ CREATE POLICY "employer_subscriptions_update" ON public.employer_subscriptions
   FOR UPDATE USING (auth.uid() = user_id);
 DROP TRIGGER IF EXISTS employer_subscriptions_updated_at ON public.employer_subscriptions;
 CREATE TRIGGER employer_subscriptions_updated_at BEFORE UPDATE ON public.employer_subscriptions
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 
 -- 3. Candidate invites (employer -> candidate) --------------------------------
 CREATE TABLE IF NOT EXISTS public.candidate_invites (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   candidate_id UUID NOT NULL REFERENCES public.candidate_profiles(id) ON DELETE CASCADE,
   vacancy_id UUID REFERENCES public.vacancies(id) ON DELETE SET NULL,
@@ -81,7 +81,7 @@ CREATE POLICY "invites_update" ON public.candidate_invites FOR UPDATE USING (
 
 -- 4. Profile views (employer viewed a candidate card) -------------------------
 CREATE TABLE IF NOT EXISTS public.profile_views (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   candidate_id UUID NOT NULL REFERENCES public.candidate_profiles(id) ON DELETE CASCADE,
   company_id UUID NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   viewed_at TIMESTAMPTZ DEFAULT NOW()
@@ -99,7 +99,7 @@ CREATE POLICY "profile_views_insert" ON public.profile_views FOR INSERT WITH CHE
 
 -- 5. Saved searches (candidate job-search filters) ----------------------------
 CREATE TABLE IF NOT EXISTS public.saved_searches (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   filters JSONB NOT NULL DEFAULT '{}',
