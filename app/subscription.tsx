@@ -12,6 +12,7 @@ import {
   useSubscriptionFeatureComparison,
   useSubscriptionPlans,
 } from '@/hooks/useSubscriptionQueries';
+import { useEmployerPlan } from '@/hooks/useEntitlements';
 import { SubscriptionAudience, SubscriptionPlanCode } from '@/types/models';
 import {
   getSubscriptionCatalogDescription,
@@ -47,7 +48,8 @@ export default function SubscriptionScreen() {
   );
   const { data: plans = [], isLoading: plansLoading } = useSubscriptionPlans(audience);
   const { data: features = [] } = useSubscriptionFeatureComparison(audience);
-  const currentPlan = isCandidateAudience ? summary?.subscription.plan : 'free';
+  const { data: employerPlan } = useEmployerPlan(!isCandidateAudience ? user?.id : undefined);
+  const currentPlan = isCandidateAudience ? summary?.subscription.plan : employerPlan ?? 'free';
   const comparisonPlanCodes: SubscriptionPlanCode[] = ['free', 'pro', 'premium'];
 
   // Both candidate and employer now flow through self-serve checkout (employer is
