@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/theme/ThemeContext';
 
 interface ButtonProps {
@@ -74,7 +75,9 @@ export function Button({
 
   switch (variant) {
     case 'primary':
-      containerStyles.push({ backgroundColor: colors.buttonPrimary });
+      // A LinearGradient fills the button (see render); keep the base transparent
+      // and clip it to the radius.
+      containerStyles.push({ backgroundColor: 'transparent', overflow: 'hidden' });
       textStyles.push({ color: '#FFFFFF' });
       break;
     case 'secondary':
@@ -127,6 +130,14 @@ export function Button({
         activeOpacity={0.85}
         style={containerStyles}
       >
+        {variant === 'primary' && (
+          <LinearGradient
+            colors={[colors.buttonPrimary, colors.primaryDark]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+        )}
         {loading ? (
           <ActivityIndicator
             size="small"

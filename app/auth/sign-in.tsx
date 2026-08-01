@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -70,15 +71,22 @@ export default function SignInScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      <LinearGradient
+        colors={[colors.primaryLight, colors.background]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 0.5 }}
+        style={styles.bgWash}
+        pointerEvents="none"
+      />
       <ScrollView
         contentContainerStyle={[
           styles.container,
           { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
         ]}
-        style={{ backgroundColor: colors.background }}
+        style={{ backgroundColor: 'transparent' }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -182,6 +190,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
   },
+  bgWash: { position: 'absolute', top: 0, left: 0, right: 0, height: '42%' },
   backButton: {
     width: 40,
     height: 40,
