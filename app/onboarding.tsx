@@ -14,15 +14,16 @@ import Animated, {
   withTiming,
   withSpring,
   withDelay,
+  withRepeat,
   Easing,
 } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '@/store/appStore';
 import { changeLanguage, languages, LanguageCode } from '@/i18n';
-import { Button } from '@/components/ui/Button';
 import {
   Target,
   Cpu,
@@ -34,6 +35,9 @@ import {
   Check,
   ChevronRight,
   ChevronLeft,
+  Sparkles,
+  MapPin,
+  TrendingUp,
 } from 'lucide-react-native';
 
 const LOGO_ICON = require('@/assets/axtaris_logo_icon_png.png');
@@ -73,52 +77,182 @@ function AnimatedSlide({
   return <Animated.View style={[styles.slideAnimated, animatedStyle]}>{children}</Animated.View>;
 }
 
-// ── Animated dot indicator ───────────────────────────────────
-function AnimatedDot({ active, color }: { active: boolean; color: string }) {
-  const dotWidth = useSharedValue(active ? 24 : 8);
-  const dotOpacity = useSharedValue(active ? 1 : 0.3);
+// ── Animated progress segment (replaces plain dots) ──────────
+function ProgressSegment({ active, done, color }: { active: boolean; done: boolean; color: string }) {
+  const w = useSharedValue(active ? 28 : 8);
+  const o = useSharedValue(active || done ? 1 : 0.25);
 
   useEffect(() => {
-    dotWidth.value = withSpring(active ? 24 : 8, { damping: 15, stiffness: 200 });
-    dotOpacity.value = withTiming(active ? 1 : 0.3, { duration: 250 });
-  }, [active]);
+    w.value = withSpring(active ? 28 : 8, { damping: 16, stiffness: 220 });
+    o.value = withTiming(active || done ? 1 : 0.25, { duration: 250 });
+  }, [active, done]);
 
-  const style = useAnimatedStyle(() => ({
-    width: dotWidth.value,
-    opacity: dotOpacity.value,
-  }));
-
-  return <Animated.View style={[styles.dot, { backgroundColor: color }, style]} />;
+  const style = useAnimatedStyle(() => ({ width: w.value, opacity: o.value }));
+  return <Animated.View style={[styles.segment, { backgroundColor: color }, style]} />;
 }
 
-// ── Animated icon with spring entrance ───────────────────────
-function AnimatedIconBox({
-  children,
-  bgColor,
+// ── A small product-hint chip that drifts around the hero ────
+function FloatingChip({
+  icon,
+  label,
+  color,
+  bg,
+  position,
+  index,
   stepKey,
 }: {
-  children: React.ReactNode;
-  bgColor: string;
+  icon: React.ReactNode;
+  label: string;
+  color: string;
+  bg: string;
+  position: object;
+  index: number;
   stepKey: number;
 }) {
-  const iconScale = useSharedValue(0.5);
-  const iconOpacity = useSharedValue(0);
+  const enter = useSharedValue(0);
+  const drift = useSharedValue(0);
 
   useEffect(() => {
-    iconScale.value = 0.5;
-    iconOpacity.value = 0;
-    iconScale.value = withDelay(80, withSpring(1, { damping: 12, stiffness: 180 }));
-    iconOpacity.value = withDelay(80, withTiming(1, { duration: 280 }));
+    enter.value = 0;
+    enter.value = withDelay(180 + index * 90, withSpring(1, { damping: 13, stiffness: 160 }));
   }, [stepKey]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.value }],
-    opacity: iconOpacity.value,
+  useEffect(() => {
+    drift.value = withDelay(
+      index * 400,
+      withRepeat(withTiming(1, { duration: 2400 + index * 300, easing: Easing.inOut(Easing.sin) }), -1, true)
+    );
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: enter.value,
+    transform: [
+      { translateY: (drift.value - 0.5) * 10 + (1 - enter.value) * 8 },
+      { scale: 0.85 + enter.value * 0.15 },
+    ],
   }));
 
   return (
-    <Animated.View style={[styles.iconContainer, { backgroundColor: bgColor }, animatedStyle]}>
-      {children}
+    <Animated.View style={[styles.chip, position, { backgroundColor: bg }, style]}>
+      {icon}
+      <Text style={[styles.chipText, { color }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </Animated.View>
+  );
+}
+
+// ── The signature hero: layered aura glow + glass tile + chips ─
+function HeroAura({
+  Icon,
+  accent,
+  accentSoft,
+  surface,
+  border,
+  chips,
+  stepKey,
+}: {
+  Icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>;
+  accent: string;
+  accentSoft: string;
+  surface: string;
+  border: string;
+  chips: { icon: React.ReactNode; label: string; color: string; bg: string; position: object }[];
+  stepKey: number;
+}) {
+  const scale = useSharedValue(0.6);
+  const opacity = useSharedValue(0);
+  const float = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = 0.6;
+    opacity.value = 0;
+    scale.value = withDelay(60, withSpring(1, { damping: 12, stiffness: 150 }));
+    opacity.value = withDelay(60, withTiming(1, { duration: 340 }));
+  }, [stepKey]);
+
+  useEffect(() => {
+    float.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const tileStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ scale: scale.value }, { translateY: (float.value - 0.5) * 12 }],
+  }));
+  const auraStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value * 0.55,
+    transform: [{ scale: 0.85 + scale.value * 0.25 }],
+  }));
+
+  return (
+    <View style={styles.heroWrap}>
+      <Animated.View style={[styles.auraOuter, { backgroundColor: accentSoft }, auraStyle]} />
+      <Animated.View style={[styles.auraInner, { backgroundColor: accentSoft }, auraStyle]} />
+
+      {chips.map((c, i) => (
+        <FloatingChip key={i} {...c} index={i} stepKey={stepKey} />
+      ))}
+
+      <Animated.View
+        style={[
+          styles.heroTile,
+          {
+            backgroundColor: surface,
+            borderColor: border,
+            shadowColor: accent,
+          },
+          tileStyle,
+        ]}
+      >
+        <LinearGradient
+          colors={[accentSoft, 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <Icon size={46} color={accent} strokeWidth={1.7} />
+      </Animated.View>
+    </View>
+  );
+}
+
+// ── Full-width gradient CTA ──────────────────────────────────
+function GradientButton({
+  title,
+  onPress,
+  colors,
+  showArrow,
+}: {
+  title: string;
+  onPress: () => void;
+  colors: [string, string];
+  showArrow?: boolean;
+}) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  return (
+    <Animated.View style={style}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onPress}
+        onPressIn={() => (scale.value = withSpring(0.97, { damping: 15, stiffness: 300 }))}
+        onPressOut={() => (scale.value = withSpring(1, { damping: 15, stiffness: 300 }))}
+      >
+        <LinearGradient
+          colors={colors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cta}
+        >
+          <Text style={styles.ctaText}>{title}</Text>
+          {showArrow && <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} style={{ marginLeft: 6 }} />}
+        </LinearGradient>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -134,9 +268,7 @@ function ThemeFlash({ trigger }: { trigger: number }) {
     flashOpacity.value = withTiming(0, { duration: 500, easing: Easing.out(Easing.quad) });
   }, [trigger]);
 
-  const style = useAnimatedStyle(() => ({
-    opacity: flashOpacity.value,
-  }));
+  const style = useAnimatedStyle(() => ({ opacity: flashOpacity.value }));
 
   return (
     <Animated.View
@@ -223,17 +355,35 @@ export default function OnboardingScreen() {
   const isLastStep = step === TOTAL_STEPS - 1;
   const isFirstStep = step === 0;
 
+  // Per-step accent so each slide has its own character (brand navy ↔ teal).
+  const accentFor = (i: number) => {
+    const teal = i === 1 || i === 3;
+    return {
+      accent: teal ? colors.accent : colors.primary,
+      accentSoft: teal ? colors.accentLight : colors.primaryLight,
+    };
+  };
+  const { accent, accentSoft } = accentFor(step);
+  const tileBorder = isDark ? colors.border : colors.borderLight;
+
   // ── Feature slide ──────────────────────────────────────────
   const renderFeatureSlide = (
     Icon: React.ComponentType<{ size: number; color: string; strokeWidth: number }>,
     titleKey: string,
-    descKey: string
+    descKey: string,
+    chips: { icon: React.ReactNode; label: string; color: string; bg: string; position: object }[]
   ) => (
     <View style={styles.slideContent}>
-      <AnimatedIconBox bgColor={colors.primaryLight} stepKey={step}>
-        <Icon size={48} color={colors.primary} strokeWidth={1.5} />
-      </AnimatedIconBox>
-      <Text style={[styles.slideTitle, { color: colors.textPrimary, ...t.displayMedium }]}>
+      <HeroAura
+        Icon={Icon}
+        accent={accent}
+        accentSoft={accentSoft}
+        surface={colors.surface}
+        border={tileBorder}
+        chips={chips}
+        stepKey={step}
+      />
+      <Text style={[styles.slideTitle, { color: colors.textPrimary, ...t.displayLarge }]}>
         {tr(titleKey)}
       </Text>
       <Text style={[styles.slideDesc, { color: colors.textSecondary, ...t.bodyLarge }]}>
@@ -249,13 +399,19 @@ export default function OnboardingScreen() {
 
     return (
       <View style={styles.slideContent}>
-        <AnimatedIconBox bgColor={colors.primaryLight} stepKey={step}>
-          <Globe size={48} color={colors.primary} strokeWidth={1.5} />
-        </AnimatedIconBox>
+        <HeroAura
+          Icon={Globe}
+          accent={accent}
+          accentSoft={accentSoft}
+          surface={colors.surface}
+          border={tileBorder}
+          chips={[]}
+          stepKey={step}
+        />
         <Text style={[styles.slideTitle, { color: colors.textPrimary, ...t.displayMedium }]}>
           {tr('onboarding.chooseLanguage')}
         </Text>
-        <Text style={[styles.slideDesc, { color: colors.textSecondary, ...t.bodyMedium }]}>
+        <Text style={[styles.slideDesc, { color: colors.textSecondary, ...t.bodyMedium, marginBottom: 4 }]}>
           {tr('onboarding.chooseLanguageDesc')}
         </Text>
         <View style={styles.optionsContainer}>
@@ -264,13 +420,13 @@ export default function OnboardingScreen() {
             return (
               <TouchableOpacity
                 key={code}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
                 onPress={() => handleLanguageSelect(code)}
                 style={[
                   styles.optionCard,
                   {
-                    backgroundColor: isActive ? colors.primaryLight : colors.surface,
-                    borderColor: isActive ? colors.primary : colors.border,
+                    backgroundColor: isActive ? accentSoft : colors.surface,
+                    borderColor: isActive ? accent : colors.border,
                     borderRadius: r.lg,
                   },
                 ]}
@@ -278,7 +434,7 @@ export default function OnboardingScreen() {
                 <Text style={[styles.optionLabel, { color: colors.textPrimary, ...t.headingSmall }]}>
                   {lang.nativeLabel}
                 </Text>
-                {isActive && <Check size={20} color={colors.primary} strokeWidth={2.5} />}
+                <CheckDot active={isActive} color={accent} border={colors.border} />
               </TouchableOpacity>
             );
           })}
@@ -297,17 +453,19 @@ export default function OnboardingScreen() {
 
     return (
       <View style={styles.slideContent}>
-        <AnimatedIconBox bgColor={colors.primaryLight} stepKey={step}>
-          {isDark ? (
-            <Moon size={48} color={colors.primary} strokeWidth={1.5} />
-          ) : (
-            <Sun size={48} color={colors.primary} strokeWidth={1.5} />
-          )}
-        </AnimatedIconBox>
+        <HeroAura
+          Icon={isDark ? Moon : Sun}
+          accent={accent}
+          accentSoft={accentSoft}
+          surface={colors.surface}
+          border={tileBorder}
+          chips={[]}
+          stepKey={step}
+        />
         <Text style={[styles.slideTitle, { color: colors.textPrimary, ...t.displayMedium }]}>
           {tr('onboarding.chooseTheme')}
         </Text>
-        <Text style={[styles.slideDesc, { color: colors.textSecondary, ...t.bodyMedium }]}>
+        <Text style={[styles.slideDesc, { color: colors.textSecondary, ...t.bodyMedium, marginBottom: 4 }]}>
           {tr('onboarding.chooseThemeDesc')}
         </Text>
         <View style={styles.optionsContainer}>
@@ -316,19 +474,19 @@ export default function OnboardingScreen() {
             return (
               <TouchableOpacity
                 key={key}
-                activeOpacity={0.7}
+                activeOpacity={0.8}
                 onPress={() => handleThemeSelect(key)}
                 style={[
                   styles.optionCard,
                   {
-                    backgroundColor: isActive ? colors.primaryLight : colors.surface,
-                    borderColor: isActive ? colors.primary : colors.border,
+                    backgroundColor: isActive ? accentSoft : colors.surface,
+                    borderColor: isActive ? accent : colors.border,
                     borderRadius: r.lg,
                   },
                 ]}
               >
                 <View style={styles.optionRow}>
-                  <Icon size={20} color={isActive ? colors.primary : colors.textSecondary} strokeWidth={1.8} />
+                  <Icon size={20} color={isActive ? accent : colors.textSecondary} strokeWidth={1.8} />
                   <Text
                     style={[
                       styles.optionLabel,
@@ -338,7 +496,7 @@ export default function OnboardingScreen() {
                     {tr(labelKey)}
                   </Text>
                 </View>
-                {isActive && <Check size={20} color={colors.primary} strokeWidth={2.5} />}
+                <CheckDot active={isActive} color={accent} border={colors.border} />
               </TouchableOpacity>
             );
           })}
@@ -350,11 +508,42 @@ export default function OnboardingScreen() {
   const renderCurrentStep = () => {
     switch (step) {
       case 0:
-        return renderFeatureSlide(Target, 'onboarding.slide1Title', 'onboarding.slide1Desc');
+        return renderFeatureSlide(Target, 'onboarding.slide1Title', 'onboarding.slide1Desc', [
+          {
+            icon: <Sparkles size={13} color={colors.accent} strokeWidth={2.2} />,
+            label: 'AI',
+            color: colors.accent,
+            bg: colors.accentLight,
+            position: { top: 6, right: 18 },
+          },
+          {
+            icon: <TrendingUp size={13} color={colors.success} strokeWidth={2.2} />,
+            label: '75%',
+            color: colors.success,
+            bg: colors.successLight,
+            position: { bottom: 14, left: 8 },
+          },
+        ]);
       case 1:
-        return renderFeatureSlide(Cpu, 'onboarding.slide2Title', 'onboarding.slide2Desc');
+        return renderFeatureSlide(Cpu, 'onboarding.slide2Title', 'onboarding.slide2Desc', [
+          {
+            icon: <Sparkles size={13} color={colors.primary} strokeWidth={2.2} />,
+            label: 'AI',
+            color: colors.primary,
+            bg: colors.primaryLight,
+            position: { top: 10, left: 6 },
+          },
+        ]);
       case 2:
-        return renderFeatureSlide(Briefcase, 'onboarding.slide3Title', 'onboarding.slide3Desc');
+        return renderFeatureSlide(Briefcase, 'onboarding.slide3Title', 'onboarding.slide3Desc', [
+          {
+            icon: <MapPin size={13} color={colors.accent} strokeWidth={2.2} />,
+            label: 'Bakı',
+            color: colors.accent,
+            bg: colors.accentLight,
+            position: { top: 8, right: 14 },
+          },
+        ]);
       case 3:
         return renderLanguageSlide();
       case 4:
@@ -366,7 +555,15 @@ export default function OnboardingScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Theme flash overlay */}
+      {/* Branded ambient wash behind everything */}
+      <LinearGradient
+        colors={[accentSoft, colors.background]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 0.6 }}
+        style={styles.bgWash}
+        pointerEvents="none"
+      />
+
       <ThemeFlash trigger={themeFlashCount} />
 
       {/* ── Header ── */}
@@ -374,9 +571,7 @@ export default function OnboardingScreen() {
         <Image source={LOGO_ICON} style={styles.logoIcon} resizeMode="contain" />
         {!isLastStep ? (
           <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} style={styles.skipBtn}>
-            <Text style={[{ color: colors.textTertiary, ...t.labelMedium }]}>
-              {tr('common.skip')}
-            </Text>
+            <Text style={[{ color: colors.textTertiary, ...t.labelMedium }]}>{tr('common.skip')}</Text>
           </TouchableOpacity>
         ) : (
           <View />
@@ -400,12 +595,11 @@ export default function OnboardingScreen() {
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.dotsContainer}>
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
-            <AnimatedDot key={i} active={i === step} color={colors.primary} />
+            <ProgressSegment key={i} active={i === step} done={i < step} color={accent} />
           ))}
         </View>
 
         <View style={[styles.buttonRow, { paddingHorizontal: s.xl }]}>
-          {/* Back button */}
           <TouchableOpacity
             onPress={handleBack}
             activeOpacity={0.7}
@@ -422,19 +616,12 @@ export default function OnboardingScreen() {
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
 
-          {/* Next / Get Started */}
           <View style={styles.nextBtnWrap}>
-            <Button
+            <GradientButton
               title={isLastStep ? tr('onboarding.getStarted') : tr('common.next')}
               onPress={handleNext}
-              variant="primary"
-              size="lg"
-              icon={
-                isLastStep ? (
-                  <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.5} />
-                ) : undefined
-              }
-              iconPosition="right"
+              colors={[colors.primary, isDark ? colors.accent : colors.primaryDark]}
+              showArrow={isLastStep}
             />
           </View>
         </View>
@@ -443,10 +630,28 @@ export default function OnboardingScreen() {
   );
 }
 
+// A round check indicator used by the language/theme option cards.
+function CheckDot({ active, color, border }: { active: boolean; color: string; border: string }) {
+  return (
+    <View
+      style={[
+        styles.checkDot,
+        {
+          backgroundColor: active ? color : 'transparent',
+          borderColor: active ? color : border,
+        },
+      ]}
+    >
+      {active && <Check size={13} color="#FFFFFF" strokeWidth={3} />}
+    </View>
+  );
+}
+
+const HERO_SIZE = 220;
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  bgWash: { position: 'absolute', top: 0, left: 0, right: 0, height: '62%' },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -454,93 +659,111 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     zIndex: 1,
   },
-  logoIcon: {
-    width: 44,
-    height: 44,
-  },
-  skipBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  contentArea: {
-    flex: 1,
-  },
+  logoIcon: { width: 42, height: 42 },
+  skipBtn: { paddingVertical: 8, paddingHorizontal: 8 },
+  contentArea: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 20,
   },
-  slideAnimated: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  slideContent: {
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    width: '100%',
-    maxWidth: 440,
-  },
-  iconContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 32,
+  slideAnimated: { width: '100%', alignItems: 'center' },
+  slideContent: { alignItems: 'center', paddingHorizontal: 32, width: '100%', maxWidth: 460 },
+
+  // Hero
+  heroWrap: {
+    width: HERO_SIZE,
+    height: HERO_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 32,
+    marginBottom: 36,
   },
-  slideTitle: {
-    textAlign: 'center',
-    marginBottom: 12,
+  auraOuter: {
+    position: 'absolute',
+    width: HERO_SIZE,
+    height: HERO_SIZE,
+    borderRadius: HERO_SIZE / 2,
   },
-  slideDesc: {
-    textAlign: 'center',
-    maxWidth: 320,
-    lineHeight: 22,
+  auraInner: {
+    position: 'absolute',
+    width: HERO_SIZE * 0.66,
+    height: HERO_SIZE * 0.66,
+    borderRadius: HERO_SIZE,
   },
-  optionsContainer: {
-    width: '100%',
-    marginTop: 28,
-    gap: 12,
+  heroTile: {
+    width: 108,
+    height: 108,
+    borderRadius: 30,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 24,
+    elevation: 10,
   },
+  chip: {
+    position: 'absolute',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    zIndex: 2,
+    shadowColor: '#0A1628',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  chipText: { fontSize: 12, fontWeight: '700', letterSpacing: 0.2 },
+
+  slideTitle: { textAlign: 'center', marginBottom: 14 },
+  slideDesc: { textAlign: 'center', maxWidth: 330, lineHeight: 24 },
+
+  optionsContainer: { width: '100%', marginTop: 28, gap: 12 },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 16,
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     borderWidth: 1.5,
   },
-  optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  optionRow: { flexDirection: 'row', alignItems: 'center' },
   optionLabel: {},
-  bottomSection: {
-    paddingTop: 16,
+  checkDot: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
+  bottomSection: { paddingTop: 16 },
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginBottom: 22,
     gap: 6,
   },
-  dot: {
-    height: 8,
-    borderRadius: 4,
-  },
-  buttonRow: {
+  segment: { height: 8, borderRadius: 4 },
+  buttonRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  backBtn: { width: 54, height: 54, alignItems: 'center', justifyContent: 'center' },
+  nextBtnWrap: { flex: 1 },
+
+  // Gradient CTA
+  cta: {
+    height: 54,
+    borderRadius: 16,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  backBtn: {
-    width: 52,
-    height: 52,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nextBtnWrap: {
-    flex: 1,
-  },
+  ctaText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.2 },
 });
