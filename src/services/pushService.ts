@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 
 // expo-notifications is a native module; load it lazily and never on web.
@@ -29,7 +30,16 @@ export async function registerForPushNotifications(userId: string): Promise<stri
     }
     if (status !== 'granted') return null;
 
-    const tokenResponse = await Notifications.getExpoPushTokenAsync();
+    // Standalone / dev-client builds need the EAS projectId explicitly — unlike
+    // Expo Go it isn't always auto-resolved, and without it getExpoPushTokenAsync
+    // throws (then the catch below would silently yield no token → no push).
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      (Constants as { easConfig?: { projectId?: string } }).easConfig?.projectId;
+
+    const tokenResponse = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined
+    );
     const token = tokenResponse.data;
     if (!token) return null;
 
@@ -42,7 +52,10 @@ export async function registerForPushNotifications(userId: string): Promise<stri
     }
 
     return token;
-  } catch {
+  } catch (e) {
+    // Surface the reason during push setup/testing (missing projectId, no
+    // APNs entitlement on the build, simulator without push support, etc.).
+    console.warn('[push] registration failed:', e);
     return null;
   }
 }
