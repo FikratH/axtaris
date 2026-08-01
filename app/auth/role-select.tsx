@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -12,7 +13,7 @@ const { width } = Dimensions.get('window');
 const LOGO_ICON = require('@/assets/axtaris_logo_icon_png.png');
 
 export default function RoleSelectScreen() {
-  const { colors, spacing: s, typography: t, radius: r } = useTheme();
+  const { colors, spacing: s, typography: t, radius: r, isDark, elevation: e } = useTheme();
   const { t: tr } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -37,6 +38,13 @@ export default function RoleSelectScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 40 }]}>
+      <LinearGradient
+        colors={[colors.primaryLight, colors.background]}
+        start={{ x: 0.1, y: 0 }}
+        end={{ x: 0.9, y: 0.5 }}
+        style={styles.bgWash}
+        pointerEvents="none"
+      />
       <FadeInView delay={0} style={styles.header}>
         <View style={styles.logoRow}>
           <Image source={LOGO_ICON} style={styles.logoIcon} resizeMode="contain" />
@@ -64,6 +72,7 @@ export default function RoleSelectScreen() {
               borderColor: colors.border,
               borderRadius: r.xl,
               padding: s['2xl'],
+              ...(!isDark ? e.md : null),
             },
           ]}
         >
@@ -94,6 +103,7 @@ export default function RoleSelectScreen() {
               borderRadius: r.xl,
               padding: s['2xl'],
               marginTop: s.lg,
+              ...(!isDark ? e.md : null),
             },
           ]}
         >
@@ -147,6 +157,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  bgWash: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%' },
   header: {
     paddingHorizontal: 24,
   },
