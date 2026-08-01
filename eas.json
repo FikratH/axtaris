@@ -7,6 +7,13 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://cwmjyonylopsqrtujuvo.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_tElHfJFhgJNKSAVkOBkRrg_RRXQ9c9j",
+        "EXPO_PUBLIC_APP_ENV": "development",
+        "EXPO_PUBLIC_ENABLE_MOCK_AUTH": "false",
+        "EXPO_PUBLIC_REQUIRE_REAL_BACKEND": "true"
+      },
       "ios": {
         "simulator": true
       }
