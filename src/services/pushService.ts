@@ -21,6 +21,12 @@ export function getNotificationsModule() {
 export async function registerForPushNotifications(userId: string): Promise<string | null> {
   if (Platform.OS === 'web' || !Notifications || !userId) return null;
 
+  // Expo Go (SDK 53+) can't obtain a real push token, and calling
+  // getExpoPushTokenAsync there hits Expo's servers only to fail — which shows a
+  // scary "Network request failed" on flaky connections. Only real dev/standalone
+  // builds register; Expo Go is a clean no-op.
+  if ((Constants.executionEnvironment as string) === 'storeClient') return null;
+
   try {
     const current = await Notifications.getPermissionsAsync();
     let status = current.status;
