@@ -1,11 +1,10 @@
 /**
  * Talent-invite behavior under the in-memory mock backend.
  *
- * What IS observable in mock mode: invite creation, boundary validation, and the
- * per-company monthly count. Idempotency (a company inviting the same candidate
- * twice returns the first invite instead of a duplicate) is implemented ONLY on
- * the Supabase path — the mock path appends unconditionally — so it is verified
- * against a mocked Supabase client in talentService.invite.test.ts, not here.
+ * Observable in mock mode: invite creation, boundary validation, the per-company
+ * monthly count, and per-company+candidate idempotency (the mock path now mirrors
+ * the Supabase path). The Supabase-path idempotency has its own coverage in
+ * talentService.invite.test.ts.
  */
 
 describe('talentService invites (mock backend)', () => {
@@ -50,7 +49,11 @@ describe('talentService invites (mock backend)', () => {
     expect(await talent.countCompanyInvitesThisMonth('c2')).toBe(1);
   });
 
-  // Documented gap: per-company+candidate idempotency exists only on the Supabase
-  // path; see talentService.invite.test.ts for the real-path coverage.
-  it.skip('is idempotent per company+candidate (Supabase-only path)', () => {});
+  it('is idempotent per company+candidate (returns the first invite, no duplicate)', async () => {
+    const first = await talent.sendInvite({ companyId: 'c1', candidateId: 'talent-1' });
+    const second = await talent.sendInvite({ companyId: 'c1', candidateId: 'talent-1' });
+
+    expect(second.id).toBe(first.id);
+    expect(await talent.countCompanyInvitesThisMonth('c1')).toBe(1);
+  });
 });

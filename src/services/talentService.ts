@@ -270,6 +270,12 @@ class TalentService {
     const nowIso = new Date().toISOString();
 
     if (shouldUseMockBackend()) {
+      // Mirror the Supabase-path idempotency: one invite per company+candidate.
+      const existing = mockInvites.find(
+        (i) => i.companyId === input.companyId && i.candidateId === input.candidateId
+      );
+      if (existing) return existing;
+
       const invite: CandidateInvite = {
         id: `mock-invite-${mockInviteSeq++}`,
         companyId: input.companyId,
