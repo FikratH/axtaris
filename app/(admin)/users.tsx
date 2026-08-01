@@ -32,10 +32,10 @@ export default function AdminUsersScreen() {
   const updateRole = useUpdateUserRole();
   const setActive = useSetUserActive();
 
-  const onError = (e: unknown) =>
-    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error'));
+  const onError = React.useCallback((e: unknown) =>
+    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error')), [tr]);
 
-  const renderUser = ({ item }: { item: AdminUserSummary }) => (
+  const renderUser = React.useCallback(({ item }: { item: AdminUserSummary }) => (
     <Card padding="md" style={{ marginBottom: 10 }}>
       <View style={styles.row}>
         <Avatar uri={item.avatarUrl} name={item.fullName} size={44} />
@@ -74,7 +74,7 @@ export default function AdminUsersScreen() {
         />
       </View>
     </Card>
-  );
+  ), [colors, s, t, tr, updateRole, setActive, onError]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

@@ -33,6 +33,7 @@ export default {
     cardHolder: 'Kart sahibinin adı',
     cardHolderPlaceholder: 'Ad və soyad',
     expiry: 'Bitmə tarixi',
+    expires: 'Bitmə tarixi',
     cvv: 'CVV',
     pay: '{{price}} ödə',
     processing: 'Ödəniş emal olunur…',
@@ -672,6 +673,8 @@ export default {
     salaryNumber: 'Maaş rəqəm olmalıdır',
     salaryRange: 'Minimum maaş maksimumdan böyük ola bilməz',
     dateRange: 'Bitmə tarixi başlama tarixindən əvvəl ola bilməz',
+    invalidUrl: 'Düzgün URL daxil edin',
+    otpCode: '6 rəqəmli kodu daxil edin',
   },
   experienceLevel: {
     no_experience: 'Təcrübəsiz',
@@ -692,6 +695,7 @@ export default {
     unsupportedFileType: 'Dəstəklənməyən fayl növü',
     fileExceedsSizeLimit: 'Seçilmiş fayl icazə verilən ölçü limitini aşır',
     fileReadFailed: 'Seçilmiş faylı oxumaq mümkün olmadı',
+    userNotFound: 'İstifadəçi tapılmadı',
   },
   subscription: {
     title: 'Abunəlik',

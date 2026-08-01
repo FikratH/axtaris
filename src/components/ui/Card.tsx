@@ -42,6 +42,9 @@ export function Card({
         backgroundColor: colors.cardBackground,
         borderWidth: 1,
         borderColor: colors.cardBorder,
+        // A soft lift in light mode so cards read as surfaces above the
+        // page; in dark mode shadows don't register, so the border carries it.
+        ...(!isDark ? e.sm : {}),
       });
       break;
     case 'elevated':

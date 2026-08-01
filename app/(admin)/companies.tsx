@@ -21,10 +21,10 @@ export default function AdminCompaniesScreen() {
   const { data: companies = [], isLoading, isError, refetch } = useAdminCompanies();
   const setVerification = useSetCompanyVerification();
 
-  const onError = (e: unknown) =>
-    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error'));
+  const onError = React.useCallback((e: unknown) =>
+    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error')), [tr]);
 
-  const renderCompany = ({ item }: { item: Company }) => {
+  const renderCompany = React.useCallback(({ item }: { item: Company }) => {
     const v = getVerificationPresentation(tr, item.verificationStatus);
     const isVerified = item.verificationStatus === 'verified';
     return (
@@ -69,7 +69,7 @@ export default function AdminCompaniesScreen() {
         </View>
       </Card>
     );
-  };
+  }, [colors, s, t, tr, setVerification, onError]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

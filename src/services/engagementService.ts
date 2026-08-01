@@ -722,6 +722,36 @@ class EngagementService {
 
     if (error) throw new Error(error.message);
   }
+
+  /**
+   * Live subscription to notification changes for a user via Supabase Realtime.
+   * Fires onChange on any INSERT/UPDATE. Returns an unsubscribe function. No-op in mock mode.
+   */
+  subscribeToNotifications(userId: string, onChange: () => void): () => void {
+    if (shouldUseMockBackend() || !userId) {
+      return () => undefined;
+    }
+
+    const channel = getSupabase()
+      .channel(`notifications:${userId}`)
+      .on(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        'postgres_changes' as any,
+        { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        () => onChange()
+      )
+      .on(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        'postgres_changes' as any,
+        { event: 'UPDATE', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+        () => onChange()
+      )
+      .subscribe();
+
+    return () => {
+      void getSupabase().removeChannel(channel);
+    };
+  }
 }
 
 export const engagementService = new EngagementService();

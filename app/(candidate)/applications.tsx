@@ -46,7 +46,7 @@ export default function ApplicationsScreen() {
   } = useCandidateApplications(user?.id);
   const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
 
-  const getStatusLabel = (status: ApplicationStatus) => {
+  const getStatusLabel = React.useCallback((status: ApplicationStatus) => {
     const labels: Record<ApplicationStatus, string> = {
       pending: tr('candidate.pending'),
       reviewed: tr('candidate.reviewed'),
@@ -55,11 +55,11 @@ export default function ApplicationsScreen() {
       accepted: tr('candidate.accepted'),
     };
     return labels[status];
-  };
+  }, [tr]);
 
   const startChat = useStartApplicationChat();
 
-  const handleMessage = async (item: Application) => {
+  const handleMessage = React.useCallback(async (item: Application) => {
     const employerId = item.vacancy?.company?.ownerId;
     if (!employerId || !user?.id) return;
     try {
@@ -79,9 +79,9 @@ export default function ApplicationsScreen() {
     } catch {
       // errors surface via the mutation state
     }
-  };
+  }, [startChat, user, tr, router]);
 
-  const renderApplication = ({ item }: { item: Application }) => {
+  const renderApplication = React.useCallback(({ item }: { item: Application }) => {
     const appliedTime = new Date(item.appliedAt).getTime();
     const days = Number.isNaN(appliedTime)
       ? null
@@ -142,7 +142,7 @@ export default function ApplicationsScreen() {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [router, colors, s, t, r, tr, getStatusLabel, handleMessage, startChat]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

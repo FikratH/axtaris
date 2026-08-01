@@ -244,7 +244,7 @@ export default function CandidateHomeScreen() {
               style={[styles.companyCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
             >
               <Avatar name={item.name} uri={item.logoUrl} size={44} />
-              <Text style={[{ color: colors.textPrimary, marginTop: 8, textAlign: 'center' }, t.labelSmall]} numberOfLines={1}>
+              <Text style={[{ color: colors.textPrimary, marginTop: 8, textAlign: 'center' }, t.labelSmall]} numberOfLines={2} adjustsFontSizeToFit>
                 {item.name}
               </Text>
               <View style={[styles.companyBadge, { backgroundColor: item.verificationStatus === 'verified' ? colors.primaryLight : colors.successLight }]}>

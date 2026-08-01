@@ -13,6 +13,7 @@ import {
 } from '@/hooks/useVacancyQueries';
 import { useEmployerEntitlements } from '@/hooks/useEntitlements';
 import { aiService } from '@/services/aiService';
+import { vacancyFormSchema, firstIssueMessage } from '@/services/validation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
@@ -144,12 +145,10 @@ export default function CreateVacancyScreen() {
 
   const submitVacancy = async (status: VacancyStatus) => {
     if (!requireAuth()) return;
-    if (!title.trim()) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
-      return;
-    }
-    if (!description.trim()) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
+
+    const parsed = vacancyFormSchema.safeParse({ title, description, salaryMin, salaryMax });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;
     }
 
@@ -158,27 +157,12 @@ export default function CreateVacancyScreen() {
       return;
     }
 
-    const parseSalary = (v: string) => {
+    const toSalary = (v: string) => {
       const value = v.trim();
-      if (!value) return undefined;
-      if (!/^\d+$/.test(value)) throw new Error(tr('validation.salaryNumber'));
-      return Number.parseInt(value, 10);
+      return value ? Number.parseInt(value, 10) : undefined;
     };
-
-    let parsedMin: number | undefined;
-    let parsedMax: number | undefined;
-    try {
-      parsedMin = parseSalary(salaryMin);
-      parsedMax = parseSalary(salaryMax);
-    } catch (e) {
-      Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error'));
-      return;
-    }
-
-    if (parsedMin !== undefined && parsedMax !== undefined && parsedMin > parsedMax) {
-      Alert.alert(tr('common.error'), tr('validation.salaryRange'));
-      return;
-    }
+    const parsedMin = toSalary(salaryMin);
+    const parsedMax = toSalary(salaryMax);
 
     try {
       await createVacancy.mutateAsync({

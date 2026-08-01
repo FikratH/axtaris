@@ -17,6 +17,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { LanguageSkill } from '@/types/models';
 import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profileSections';
+import { languageSchema, firstIssueMessage } from '@/services/validation';
 
 export default function LanguageFormScreen() {
   const { colors, typography: t } = useTheme();
@@ -59,8 +60,9 @@ export default function LanguageFormScreen() {
   const handleSave = async () => {
     if (!profile) return;
 
-    if (!language.trim()) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
+    const parsed = languageSchema.safeParse({ language });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;
     }
 

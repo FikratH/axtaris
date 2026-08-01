@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Application, ApplicationStatus, Notification } from '@/types/models';
 import { engagementService } from '@/services/engagementService';
@@ -72,11 +73,24 @@ export function useUpdateApplicationReview(userId?: string) {
 }
 
 export function useNotifications(userId?: string) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     enabled: !!userId,
     queryKey: engagementQueryKeys.notifications(userId || 'unknown'),
     queryFn: () => engagementService.fetchNotifications(userId || ''),
+    refetchInterval: userId ? 30000 : false, // light fallback so unread state stays fresh without realtime
   });
+
+  useEffect(() => {
+    if (!userId) return;
+    const unsubscribe = engagementService.subscribeToNotifications(userId, () => {
+      queryClient.invalidateQueries({ queryKey: engagementQueryKeys.notifications(userId) });
+    });
+    return unsubscribe;
+  }, [userId, queryClient]);
+
+  return query;
 }
 
 export function useMarkNotificationRead(userId?: string) {

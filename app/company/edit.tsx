@@ -13,6 +13,7 @@ import { useEmployerCompany, useUpdateEmployerCompany } from '@/hooks/useVacancy
 import { useGuestGate } from '@/hooks/useGuestGate';
 import { safeBack } from '@/utils/navigation';
 import { toUserMessage } from '@/utils/errorMessage';
+import { companyProfileSchema, firstIssueMessage } from '@/services/validation';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function EditCompanyScreen() {
@@ -50,7 +51,12 @@ export default function EditCompanyScreen() {
 
   const handleSave = async () => {
     if (!requireAuth()) return;
-    if (!name.trim()) { Alert.alert(tr('common.error'), tr('validation.required')); return; }
+
+    const parsed = companyProfileSchema.safeParse({ name, website });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
+      return;
+    }
 
     if (!company) {
       return;

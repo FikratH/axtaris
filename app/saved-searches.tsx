@@ -43,7 +43,7 @@ export default function SavedSearchesScreen() {
   const limit = entitlements.savedSearches; // number | null (null = unlimited)
   const atLimit = limit !== null && searches.length >= limit;
 
-  const runSearch = (search: SavedSearch) => {
+  const runSearch = React.useCallback((search: SavedSearch) => {
     router.push({
       pathname: '/(candidate)/search',
       params: {
@@ -53,9 +53,9 @@ export default function SavedSearchesScreen() {
         savedSkills: (search.filters.skills ?? []).join(','),
       },
     } as never);
-  };
+  }, [router]);
 
-  const confirmDelete = (search: SavedSearch) => {
+  const confirmDelete = React.useCallback((search: SavedSearch) => {
     Alert.alert(tr('savedSearch.deleteTitle'), tr('savedSearch.deleteMessage'), [
       { text: tr('common.cancel'), style: 'cancel' },
       {
@@ -72,7 +72,47 @@ export default function SavedSearchesScreen() {
         },
       },
     ]);
-  };
+  }, [deleteSearch, tr]);
+
+  const renderItem = React.useCallback(({ item }: { item: SavedSearch }) => {
+    const filterBits = [
+      item.filters.query,
+      item.filters.city,
+      item.filters.workType ? getWorkTypeLabel(tr, item.filters.workType) : undefined,
+      ...(item.filters.skills ?? []),
+    ].filter(Boolean);
+
+    return (
+      <View style={[styles.searchRow, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
+        <TouchableOpacity style={styles.searchPressable} activeOpacity={0.7} onPress={() => runSearch(item)}>
+          <View style={[styles.searchIcon, { backgroundColor: colors.primaryLight }]}>
+            <SearchIcon size={18} color={colors.primary} strokeWidth={1.9} />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={styles.nameRow}>
+              <Text style={[{ color: colors.textPrimary, flexShrink: 1 }, t.labelSmall]} numberOfLines={1}>
+                {item.name}
+              </Text>
+              {item.newMatchCount && item.newMatchCount > 0 ? (
+                <Badge label={tr('savedSearch.newMatches', { count: item.newMatchCount })} variant="success" style={{ marginLeft: 8 }} />
+              ) : null}
+            </View>
+            <Text style={[{ color: colors.textTertiary, marginTop: 3 }, t.caption]} numberOfLines={1}>
+              {filterBits.length > 0 ? filterBits.join(' · ') : tr('savedSearch.allJobs')}
+            </Text>
+          </View>
+          <Play size={16} color={colors.textTertiary} strokeWidth={1.8} fill={colors.textTertiary} />
+        </TouchableOpacity>
+        <Pressable
+          onPress={() => confirmDelete(item)}
+          hitSlop={8}
+          style={[styles.deleteBtn, { backgroundColor: colors.error + '12', borderColor: colors.error + '24' }]}
+        >
+          <Trash2 size={15} color={colors.error} strokeWidth={1.9} />
+        </Pressable>
+      </View>
+    );
+  }, [colors, t, tr, runSearch, confirmDelete]);
 
   const renderHeader = () => (
     <View style={[styles.header, { paddingHorizontal: s.xl }]}>
@@ -141,46 +181,6 @@ export default function SavedSearchesScreen() {
       </View>
     </View>
   );
-
-  const renderItem = ({ item }: { item: SavedSearch }) => {
-    const filterBits = [
-      item.filters.query,
-      item.filters.city,
-      item.filters.workType ? getWorkTypeLabel(tr, item.filters.workType) : undefined,
-      ...(item.filters.skills ?? []),
-    ].filter(Boolean);
-
-    return (
-      <View style={[styles.searchRow, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-        <TouchableOpacity style={styles.searchPressable} activeOpacity={0.7} onPress={() => runSearch(item)}>
-          <View style={[styles.searchIcon, { backgroundColor: colors.primaryLight }]}>
-            <SearchIcon size={18} color={colors.primary} strokeWidth={1.9} />
-          </View>
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <View style={styles.nameRow}>
-              <Text style={[{ color: colors.textPrimary, flexShrink: 1 }, t.labelSmall]} numberOfLines={1}>
-                {item.name}
-              </Text>
-              {item.newMatchCount && item.newMatchCount > 0 ? (
-                <Badge label={tr('savedSearch.newMatches', { count: item.newMatchCount })} variant="success" style={{ marginLeft: 8 }} />
-              ) : null}
-            </View>
-            <Text style={[{ color: colors.textTertiary, marginTop: 3 }, t.caption]} numberOfLines={1}>
-              {filterBits.length > 0 ? filterBits.join(' · ') : tr('savedSearch.allJobs')}
-            </Text>
-          </View>
-          <Play size={16} color={colors.textTertiary} strokeWidth={1.8} fill={colors.textTertiary} />
-        </TouchableOpacity>
-        <Pressable
-          onPress={() => confirmDelete(item)}
-          hitSlop={8}
-          style={[styles.deleteBtn, { backgroundColor: colors.error + '12', borderColor: colors.error + '24' }]}
-        >
-          <Trash2 size={15} color={colors.error} strokeWidth={1.9} />
-        </Pressable>
-      </View>
-    );
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

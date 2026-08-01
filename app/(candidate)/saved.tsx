@@ -9,7 +9,7 @@ import {
   useSavedJobIds,
   useToggleSavedJob,
 } from '@/hooks/useCandidateVacancyActions';
-import { useCandidateVacancies } from '@/hooks/useVacancyQueries';
+import { useSavedVacancies } from '@/hooks/useVacancyQueries';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
@@ -28,12 +28,14 @@ export default function SavedScreen() {
   } = useSavedJobIds(user?.id);
   const toggleSave = useToggleSavedJob(user?.id);
   const {
-    data: vacancies = [],
+    data: savedVacancies = [],
     isLoading,
     isError,
     refetch,
-  } = useCandidateVacancies();
-  const savedJobs = vacancies.filter((v) => savedJobIds.includes(v.id));
+  } = useSavedVacancies(savedJobIds);
+  // Fetched by id (any status) so closed/filled saved jobs still appear;
+  // filtered by the live id set so an un-save is reflected instantly.
+  const savedJobs = savedVacancies.filter((v) => savedJobIds.includes(v.id));
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

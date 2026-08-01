@@ -286,39 +286,13 @@ class TalentService {
       return invite;
     }
 
-    const { data, error } = await getSupabase()
-      .from('candidate_invites')
-      .insert({
-        company_id: input.companyId,
-        candidate_id: input.candidateId,
-        vacancy_id: input.vacancyId || null,
-        message: input.message || null,
-        status: 'pending',
-      })
-      .select('id, company_id, candidate_id, vacancy_id, message, status, created_at, responded_at')
-      .single();
-    if (error) throw new Error(error.message);
-
-    // Best-effort notification to the candidate.
-    if (input.candidateUserId) {
-      try {
-        await getSupabase().from('notifications').insert({
-          user_id: input.candidateUserId,
-          type: 'system',
-          title: input.companyName ? `${input.companyName} invited you` : 'You have a new invitation',
-          body: input.message || 'An employer invited you to apply.',
-          data: { type: 'invite', inviteId: (data as { id: string }).id },
-        });
-      } catch {
-        // notifications insert is best-effort.
-      }
-    }
-
-    const row = data as {
+    type InviteRow = {
       id: string; company_id: string; candidate_id: string; vacancy_id: string | null;
       message: string | null; status: InviteStatus; created_at: string; responded_at: string | null;
     };
-    return {
+    const inviteColumns =
+      'id, company_id, candidate_id, vacancy_id, message, status, created_at, responded_at';
+    const mapRow = (row: InviteRow): CandidateInvite => ({
       id: row.id,
       companyId: row.company_id,
       companyName: input.companyName,
@@ -330,7 +304,42 @@ class TalentService {
       status: row.status,
       createdAt: row.created_at,
       respondedAt: row.responded_at || undefined,
-    };
+    });
+
+    // Idempotent: if this company already invited this candidate, return the
+    // existing invite instead of creating a duplicate row (+ duplicate
+    // notification). The UI's "invited" flag is local component state, lost on
+    // remount, so without this a re-visit lets the same invite fire twice.
+    const existing = await getSupabase()
+      .from('candidate_invites')
+      .select(inviteColumns)
+      .eq('company_id', input.companyId)
+      .eq('candidate_id', input.candidateId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existing.data) {
+      return mapRow(existing.data as InviteRow);
+    }
+
+    const { data, error } = await getSupabase()
+      .from('candidate_invites')
+      .insert({
+        company_id: input.companyId,
+        candidate_id: input.candidateId,
+        vacancy_id: input.vacancyId || null,
+        message: input.message || null,
+        status: 'pending',
+      })
+      .select(inviteColumns)
+      .single();
+    if (error) throw new Error(error.message);
+
+    // The candidate notification is delivered by an AFTER INSERT trigger on
+    // candidate_invites (SECURITY DEFINER) — a client-side notifications
+    // insert is correctly denied by RLS, so it is not attempted here.
+
+    return mapRow(data as InviteRow);
   }
 
   async listCandidateInvites(userId: string): Promise<CandidateInvite[]> {

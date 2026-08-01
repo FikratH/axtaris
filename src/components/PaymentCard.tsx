@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useTheme } from '@/theme/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { Wifi } from 'lucide-react-native';
 import type { SubscriptionPlanCode } from '@/types/models';
 
@@ -49,6 +50,7 @@ interface PaymentCardProps {
 }
 
 export function PaymentCard({ number, name, expiry, cvv, flipped, plan, shakeKey = 0 }: PaymentCardProps) {
+  const { t: tr } = useTranslation();
   const flip = useSharedValue(0);
   const shake = useSharedValue(0);
   const brand = detectBrand(number);
@@ -93,11 +95,11 @@ export function PaymentCard({ number, name, expiry, cvv, flipped, plan, shakeKey
           <Text style={styles.number}>{displayNumber(number)}</Text>
           <View style={styles.cardBottomRow}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.label}>CARD HOLDER</Text>
+              <Text style={styles.label} numberOfLines={1}>{tr('checkout.cardHolder')}</Text>
               <Text style={styles.value} numberOfLines={1}>{name ? name.toUpperCase() : 'YOUR NAME'}</Text>
             </View>
             <View>
-              <Text style={styles.label}>EXPIRES</Text>
+              <Text style={styles.label} numberOfLines={1}>{tr('checkout.expires')}</Text>
               <Text style={styles.value}>{expiry || 'MM/YY'}</Text>
             </View>
           </View>
@@ -231,7 +233,7 @@ const styles = StyleSheet.create({
   brand: { color: '#FFFFFF', fontSize: 18, fontWeight: '800', letterSpacing: 1, fontStyle: 'italic' },
   number: { color: '#FFFFFF', fontSize: 21, letterSpacing: 2, fontWeight: '600' },
   cardBottomRow: { flexDirection: 'row', alignItems: 'flex-end' },
-  label: { color: 'rgba(255,255,255,0.6)', fontSize: 8, letterSpacing: 1, marginBottom: 3 },
+  label: { color: 'rgba(255,255,255,0.6)', fontSize: 8, letterSpacing: 1, marginBottom: 3, textTransform: 'uppercase' },
   value: { color: '#FFFFFF', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
   magstripe: { height: 40, backgroundColor: 'rgba(0,0,0,0.55)', marginHorizontal: -22, marginTop: 4 },
   cvvRow: { alignItems: 'flex-end', marginTop: 16 },

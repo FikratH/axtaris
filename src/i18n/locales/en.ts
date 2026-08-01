@@ -33,6 +33,7 @@ export default {
     cardHolder: 'Cardholder name',
     cardHolderPlaceholder: 'Full name',
     expiry: 'Expiry',
+    expires: 'Expires',
     cvv: 'CVV',
     pay: 'Pay {{price}}',
     processing: 'Processing payment…',
@@ -672,6 +673,8 @@ export default {
     salaryNumber: 'Salary must be a number',
     salaryRange: 'Minimum salary cannot exceed the maximum',
     dateRange: 'End date cannot be before the start date',
+    invalidUrl: 'Enter a valid URL',
+    otpCode: 'Enter the 6-digit code',
   },
   experienceLevel: {
     no_experience: 'No experience',
@@ -692,6 +695,7 @@ export default {
     unsupportedFileType: 'Unsupported file type',
     fileExceedsSizeLimit: 'Selected file exceeds the allowed size limit',
     fileReadFailed: 'Failed to read the selected file',
+    userNotFound: 'User not found',
   },
   subscription: {
     title: 'Subscription',

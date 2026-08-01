@@ -6,6 +6,78 @@ these are the genuinely-remaining steps.
 
 ---
 
+## 🔒 2026-08-01 — Production-readiness audit + fixes pass
+
+A full deep audit (bugs, security, features, i18n, perf, types) plus a first
+tranche of fixes. Baseline verified: **`tsc` clean · Jest 112/112 · `expo export
+--platform web` builds · app boots web with 0 console errors**.
+
+### ✅ Fixed this pass (code, all verified)
+- **P0 PII/RLS lockdown** — new migration `supabase/migrations/202608010001_rls_pii_lockdown.sql`:
+  - `profiles` SELECT was `USING(true)` (any anon-key caller could dump every
+    email/phone/push-token) → now `TO authenticated`.
+  - `work_experiences`/`education`/`language_skills`/`certifications` had **RLS
+    disabled entirely** (anon read+write+delete) → RLS enabled with owner-CRUD +
+    admin + employer-relationship read policies.
+  - `candidate_profiles` SELECT `USING(true)` → `TO authenticated` and now
+    **enforces the `is_discoverable` opt-out server-side**.
+- **Invite notifications** — new migration `202608010002_invite_notification_trigger.sql`
+  (client insert was RLS-denied; now an `AFTER INSERT` SECURITY DEFINER trigger).
+- **Store readiness** — `app.json`: removed unjustified Android `RECORD_AUDIO`;
+  added iOS camera/photo purpose strings + `microphonePermission:false` via the
+  `expo-image-picker` plugin config.
+- **Pricing contradiction** — employer comparison table now 19/49 AZN to match
+  the plan cards + checkout (`subscriptionService.ts`).
+- **Saved jobs no longer vanish** when a vacancy closes (`fetchVacanciesByIds` +
+  `useSavedVacancies`, `saved.tsx`).
+- **Company edit** now invalidates public company/top-companies caches
+  (`useVacancyQueries.ts`).
+- **Idempotent talent invites** — no more double-invite on remount (`talentService.ts`).
+- **AppState-driven token refresh** on native — prevents avoidable logouts (`supabase.ts`).
+- **Keyboard** no longer covers the applicant-notes field (`applicant/[id].tsx`).
+- **Talent list virtualized** — `ScrollView`+`.map` → `FlatList` (`talent.tsx`).
+
+### ✅ Migrations APPLIED + verified (2026-08-01)
+`npx supabase db push` applied both migrations to production. Verified with an
+anonymous anon-key REST scrape: `profiles`, `work_experiences`, `education` now
+return `[]` to anon (were full dumps); public `vacancies` still 200. **P0 closed.**
+
+### ✅ Wave 2 fixes (also shipped + verified: tsc 0 · Jest 112/112 · web export · 0 console errors on 5 screens)
+- **Perf** — virtualized `viewers.tsx`, `company/[id].tsx`, `invites.tsx` (→ FlatList);
+  `React.memo` on `VacancyCard`; `useCallback` renderItems across 8 list screens.
+- **Notifications realtime** — Supabase channel on `notifications` (mock-guarded) +
+  30s fallback poll + pull-to-refresh (`RefreshControl`) in `notifications.tsx`.
+- **zod validation** — vacancy create/edit, all 4 profile sub-editors, company edit,
+  profile edit, OTP now validate on submit (schemas in `validation.ts`).
+- **i18n polish** — "CARD HOLDER"/"EXPIRES" + raw thrown errors localized (az/ru/en,
+  parity green); RU-truncation guards on stat/tile labels.
+- **Design foundation** — refined elevation tokens (navy-tinted, diffuse); card + CTA
+  lift; input focus rings; branded empty-state halos.
+
+### Audit false-positives / corrections (verified, no action)
+- Status-change candidate notification **already works** (existing
+  `applications_notify_candidate` AFTER UPDATE trigger) — not a bug.
+- The sub-entity dedupe/reconcile **genuinely self-heals** — verified vs schema.
+- **T-028 is a false lead**: `nativewind`/`tailwindcss` aren't installed at all;
+  `react-native-worklets` is a **required Reanimated-4 peer** (do NOT remove).
+- `MASTER_PLAN.md` is stale (lists React Query/push as not-done — both shipped).
+
+### ⏳ Genuinely remaining (deliberately not done blind)
+- **RLS residual (P1)**: authenticated users can still read another user's
+  `email`/`phone` (row-level RLS can't hide columns). Correct fix = a
+  SECURITY-DEFINER contact RPC + column-level revoke, repointing the employer-
+  applicant and admin-users read paths. **Left for a follow-up with employer+admin
+  test accounts** — shipping it blind risks breaking a paying-customer flow.
+- **`expo-image`** for avatar disk-caching — a native module; needs a native rebuild
+  to validate, so deferred until the iOS sim is available.
+- **IAP compliance (P1 decision — yours)**: in-app card checkout for digital subs
+  violates App Store 3.1.1 / Play Billing. Move to StoreKit/Play Billing or remove
+  the in-app sale from the binary (overlaps monetization scope).
+- **Smoke-test after the RLS migration**: sign in as an employer and confirm
+  applicant-detail (name/experience) + talent search still populate.
+
+---
+
 ## ✅ Completed this pass
 
 - **Localization** — every user‑visible hardcoded string / raw enum is now
@@ -61,9 +133,12 @@ supabase functions deploy send-push
 The DB trigger (or backend) that calls `send-push` must pass this value in the
 `x-push-secret` header. Without `PUSH_SECRET` set, the endpoint safely rejects everything.
 The app registers each device's Expo push token on sign-in (native builds; web is a
-safe no-op). To fire a push automatically whenever an in-app notification is created,
-add a trigger on `public.notifications` that calls `send-push` via `net.http_post`
-(pg_net). Web push (Netlify) is a separate future item.
+safe no-op). The notification→push trigger is now provided:
+`supabase/migrations/202608020001_push_delivery_trigger.sql` (pg_net, exception-safe,
+reads PUSH_SECRET from Vault). To turn pushes on: deploy `send-push --no-verify-jwt`,
+`supabase secrets set PUSH_SECRET=…`, store the same value via
+`select vault.create_secret('<PUSH_SECRET>', 'push_secret');`, then `supabase db push`.
+Web push (Netlify) is a separate future item.
 
 ### 3. Admin panel access
 The `is_admin()` RLS migration is applied. Promote a user to admin:

@@ -261,6 +261,28 @@ class VacancyService {
     return sortFeaturedFirst(rows.map(mapVacancy));
   }
 
+  /**
+   * Fetch vacancies by id regardless of status. Used by the Saved tab so a
+   * saved job that the employer later closed/filled still shows (and can be
+   * un-saved) instead of silently vanishing from the active feed.
+   */
+  async fetchVacanciesByIds(ids: string[]): Promise<Vacancy[]> {
+    if (!ids.length) return [];
+
+    if (shouldUseMockBackend()) {
+      return mockVacancies.filter((vacancy) => ids.includes(vacancy.id));
+    }
+
+    const { data, error } = await getSupabase()
+      .from('vacancies')
+      .select(vacancySelect)
+      .in('id', ids);
+
+    if (error) throw new Error(error.message);
+
+    return ((data || []) as SupabaseVacancyRow[]).map(mapVacancy);
+  }
+
   async fetchEmployerVacancies(userId: string): Promise<Vacancy[]> {
     if (!userId) return [];
 

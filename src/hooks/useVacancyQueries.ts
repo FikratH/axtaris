@@ -41,6 +41,15 @@ export function useCandidateVacancies() {
   });
 }
 
+export function useSavedVacancies(ids: string[]) {
+  const sortedIds = [...ids].sort();
+  return useQuery({
+    enabled: sortedIds.length > 0,
+    queryKey: ['vacancies', 'saved', sortedIds] as const,
+    queryFn: () => vacancyService.fetchVacanciesByIds(sortedIds),
+  });
+}
+
 export function useEmployerVacancies(userId?: string) {
   return useQuery({
     enabled: !!userId,
@@ -76,7 +85,7 @@ export function useUpdateEmployerCompany(userId?: string) {
       companyId: string;
       input: CompanyMutationInput;
     }) => vacancyService.updateEmployerCompany(companyId, input),
-    onSuccess: (company) => {
+    onSuccess: (company, variables) => {
       if (userId) {
         queryClient.setQueryData<Company | null>(
           vacancyQueryKeys.employerCompany(userId),
@@ -85,6 +94,13 @@ export function useUpdateEmployerCompany(userId?: string) {
       }
 
       queryClient.invalidateQueries({ queryKey: vacancyQueryKeys.all });
+      // Also refresh the public company views so an edit to name/logo
+      // propagates to company/[id], the vacancy→company link, and the
+      // home "Top Companies" strip (all keyed under ['companies']).
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      queryClient.invalidateQueries({
+        queryKey: vacancyQueryKeys.companyVacancies(variables.companyId),
+      });
     },
   });
 }

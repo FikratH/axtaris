@@ -42,6 +42,19 @@ export function Input({
     ? colors.borderFocus
     : colors.inputBorder;
 
+  // Soft focus ring — a subtle primary glow signals the active field without
+  // shifting layout (falls back to the error color when the field is invalid).
+  const focusRing: ViewStyle =
+    isFocused
+      ? {
+          shadowColor: error ? colors.error : colors.primary,
+          shadowOffset: { width: 0, height: 0 },
+          shadowOpacity: 0.18,
+          shadowRadius: 4,
+          elevation: 2,
+        }
+      : {};
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
@@ -63,6 +76,7 @@ export function Input({
             borderRadius: r.md,
             paddingHorizontal: s.lg,
           },
+          focusRing,
         ]}
       >
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}

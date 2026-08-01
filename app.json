@@ -27,9 +27,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": [
-        "android.permission.RECORD_AUDIO"
-      ]
+      "permissions": []
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -40,7 +38,14 @@
       "expo-font",
       "expo-secure-store",
       "expo-document-picker",
-      "expo-image-picker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AxtarIS uses your photo library so you can set a profile picture, company logo, or share an image in chat.",
+          "cameraPermission": "AxtarIS uses your camera so you can take a profile picture or company logo.",
+          "microphonePermission": false
+        }
+      ],
       "expo-notifications"
     ],
     "experiments": {

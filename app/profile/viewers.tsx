@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -124,103 +124,110 @@ export default function ProfileViewersScreen() {
   const weeklyViews = summary?.weeklyViews ?? 0;
   const viewers = summary?.viewers ?? [];
 
+  const listHeader = (
+    <>
+      {/* ── Summary stats ── */}
+      <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
+        <View style={styles.stat}>
+          <Text style={[{ color: colors.primary }, t.headingLarge]}>{totalViews}</Text>
+          <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]}>
+            {tr('viewers.totalViews')}
+          </Text>
+        </View>
+        <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
+        <View style={styles.stat}>
+          <Text style={[{ color: colors.accent }, t.headingLarge]}>{weeklyViews}</Text>
+          <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]}>
+            {tr('viewers.thisWeek')}
+          </Text>
+        </View>
+      </View>
+
+      {isLocked ? (
+        <>
+          {/* ── Upgrade CTA ── */}
+          <View style={[styles.ctaCard, { backgroundColor: colors.primaryLight, borderColor: colors.primary + '33' }]}>
+            <View style={[styles.ctaIcon, { backgroundColor: colors.primary }]}>
+              <Sparkles size={18} color="#FFFFFF" strokeWidth={1.9} />
+            </View>
+            <Text style={[{ color: colors.textPrimary, marginTop: 12 }, t.labelMedium]}>
+              {tr('viewers.upgradeTitle')}
+            </Text>
+            <Text style={[{ color: colors.textSecondary, marginTop: 6, lineHeight: 20 }, t.bodySmall]}>
+              {tr('viewers.upgradeSubtitle')}
+            </Text>
+            <View style={{ marginTop: 14 }}>
+              <Button
+                title={tr('viewers.upgradeCta')}
+                onPress={() => router.push('/checkout?plan=pro&audience=candidate' as never)}
+                size="md"
+              />
+            </View>
+          </View>
+
+          {/* ── Blurred teaser list ── */}
+          <Text style={[{ color: colors.textSecondary, marginTop: 24, marginBottom: 10 }, t.overline]}>
+            {tr('viewers.recentViewers')}
+          </Text>
+          {Array.from({ length: 4 }).map((_, index) => (
+            <View
+              key={index}
+              style={[styles.teaserRow, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
+            >
+              <View style={[styles.teaserAvatar, { backgroundColor: colors.surfaceSecondary }]}>
+                <Lock size={14} color={colors.textTertiary} strokeWidth={1.8} />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <View style={[styles.teaserBar, { backgroundColor: colors.surfaceSecondary, width: 160 - index * 22 }]} />
+                <View style={[styles.teaserBar, { backgroundColor: colors.surfaceSecondary, width: 80, marginTop: 8, height: 9 }]} />
+              </View>
+            </View>
+          ))}
+        </>
+      ) : viewers.length > 0 ? (
+        <Text style={[{ color: colors.textSecondary, marginTop: 24, marginBottom: 10 }, t.overline]}>
+          {tr('viewers.recentViewers')}
+        </Text>
+      ) : null}
+    </>
+  );
+
+  const renderViewer = ({ item: viewer, index }: { item: (typeof viewers)[number]; index: number }) => (
+    <View style={[styles.viewerRow, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
+      <Avatar name={viewer.companyName} uri={viewer.companyLogoUrl} size={44} />
+      <View style={{ flex: 1, marginLeft: 12 }}>
+        <Text style={[{ color: colors.textPrimary }, t.labelSmall]} numberOfLines={1}>
+          {viewer.companyName || tr('viewers.aCompany')}
+        </Text>
+        <Text style={[{ color: colors.textTertiary, marginTop: 3 }, t.caption]}>
+          {formatViewedAt(viewer.viewedAt)}
+        </Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
       {renderHeader()}
-      <ScrollView
+      <FlatList
+        data={isLocked ? [] : viewers}
+        keyExtractor={(viewer, index) => `${viewer.companyId}-${index}`}
+        renderItem={renderViewer}
+        ListHeaderComponent={listHeader}
+        ListEmptyComponent={
+          isLocked ? null : (
+            <View style={{ marginTop: 32 }}>
+              <EmptyState
+                title={tr('viewers.emptyTitle')}
+                subtitle={tr('viewers.emptySubtitle')}
+                icon={<Eye size={48} color={colors.textTertiary} strokeWidth={1.2} />}
+              />
+            </View>
+          )
+        }
         contentContainerStyle={{ padding: s.xl, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
-      >
-        {/* ── Summary stats ── */}
-        <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}>
-          <View style={styles.stat}>
-            <Text style={[{ color: colors.primary }, t.headingLarge]}>{totalViews}</Text>
-            <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]}>
-              {tr('viewers.totalViews')}
-            </Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
-          <View style={styles.stat}>
-            <Text style={[{ color: colors.accent }, t.headingLarge]}>{weeklyViews}</Text>
-            <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]}>
-              {tr('viewers.thisWeek')}
-            </Text>
-          </View>
-        </View>
-
-        {isLocked ? (
-          <>
-            {/* ── Upgrade CTA ── */}
-            <View style={[styles.ctaCard, { backgroundColor: colors.primaryLight, borderColor: colors.primary + '33' }]}>
-              <View style={[styles.ctaIcon, { backgroundColor: colors.primary }]}>
-                <Sparkles size={18} color="#FFFFFF" strokeWidth={1.9} />
-              </View>
-              <Text style={[{ color: colors.textPrimary, marginTop: 12 }, t.labelMedium]}>
-                {tr('viewers.upgradeTitle')}
-              </Text>
-              <Text style={[{ color: colors.textSecondary, marginTop: 6, lineHeight: 20 }, t.bodySmall]}>
-                {tr('viewers.upgradeSubtitle')}
-              </Text>
-              <View style={{ marginTop: 14 }}>
-                <Button
-                  title={tr('viewers.upgradeCta')}
-                  onPress={() => router.push('/checkout?plan=pro&audience=candidate' as never)}
-                  size="md"
-                />
-              </View>
-            </View>
-
-            {/* ── Blurred teaser list ── */}
-            <Text style={[{ color: colors.textSecondary, marginTop: 24, marginBottom: 10 }, t.overline]}>
-              {tr('viewers.recentViewers')}
-            </Text>
-            {Array.from({ length: 4 }).map((_, index) => (
-              <View
-                key={index}
-                style={[styles.teaserRow, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
-              >
-                <View style={[styles.teaserAvatar, { backgroundColor: colors.surfaceSecondary }]}>
-                  <Lock size={14} color={colors.textTertiary} strokeWidth={1.8} />
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <View style={[styles.teaserBar, { backgroundColor: colors.surfaceSecondary, width: 160 - index * 22 }]} />
-                  <View style={[styles.teaserBar, { backgroundColor: colors.surfaceSecondary, width: 80, marginTop: 8, height: 9 }]} />
-                </View>
-              </View>
-            ))}
-          </>
-        ) : viewers.length === 0 ? (
-          <View style={{ marginTop: 32 }}>
-            <EmptyState
-              title={tr('viewers.emptyTitle')}
-              subtitle={tr('viewers.emptySubtitle')}
-              icon={<Eye size={48} color={colors.textTertiary} strokeWidth={1.2} />}
-            />
-          </View>
-        ) : (
-          <>
-            <Text style={[{ color: colors.textSecondary, marginTop: 24, marginBottom: 10 }, t.overline]}>
-              {tr('viewers.recentViewers')}
-            </Text>
-            {viewers.map((viewer, index) => (
-              <View
-                key={`${viewer.companyId}-${index}`}
-                style={[styles.viewerRow, { backgroundColor: colors.surface, borderColor: colors.cardBorder }]}
-              >
-                <Avatar name={viewer.companyName} uri={viewer.companyLogoUrl} size={44} />
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={[{ color: colors.textPrimary }, t.labelSmall]} numberOfLines={1}>
-                    {viewer.companyName || tr('viewers.aCompany')}
-                  </Text>
-                  <Text style={[{ color: colors.textTertiary, marginTop: 3 }, t.caption]}>
-                    {formatViewedAt(viewer.viewedAt)}
-                  </Text>
-                </View>
-              </View>
-            ))}
-          </>
-        )}
-      </ScrollView>
+      />
     </View>
   );
 }

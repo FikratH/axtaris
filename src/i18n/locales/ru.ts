@@ -33,6 +33,7 @@ export default {
     cardHolder: 'Имя владельца карты',
     cardHolderPlaceholder: 'Имя и фамилия',
     expiry: 'Срок',
+    expires: 'Срок',
     cvv: 'CVV',
     pay: 'Оплатить {{price}}',
     processing: 'Обработка платежа…',
@@ -672,6 +673,8 @@ export default {
     salaryNumber: 'Зарплата должна быть числом',
     salaryRange: 'Минимальная зарплата не может быть больше максимальной',
     dateRange: 'Дата окончания не может быть раньше даты начала',
+    invalidUrl: 'Введите корректный URL',
+    otpCode: 'Введите 6-значный код',
   },
   experienceLevel: {
     no_experience: 'Без опыта',
@@ -692,6 +695,7 @@ export default {
     unsupportedFileType: 'Неподдерживаемый тип файла',
     fileExceedsSizeLimit: 'Выбранный файл превышает допустимый размер',
     fileReadFailed: 'Не удалось прочитать выбранный файл',
+    userNotFound: 'Пользователь не найден',
   },
   subscription: {
     title: 'Подписка',

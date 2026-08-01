@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -176,10 +176,15 @@ export default function EmployerApplicantDetailScreen() {
   }
 
   return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
     <ScrollView
       style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
       contentContainerStyle={{ paddingTop: insets.top + 12, paddingHorizontal: s.xl, paddingBottom: insets.bottom + 32 }}
       showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
     >
       <View style={styles.topRow}>
         <TouchableOpacity onPress={() => safeBack(router, '/(employer)/applicants')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
@@ -412,6 +417,7 @@ export default function EmployerApplicantDetailScreen() {
         </Card>
       ) : null}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

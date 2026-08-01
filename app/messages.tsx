@@ -20,11 +20,11 @@ export default function MessagesScreen() {
   const user = useAuthStore((st) => st.user);
   const { data: conversations = [], isLoading } = useConversations(user?.id);
 
-  const openThread = (c: Conversation) => {
+  const openThread = React.useCallback((c: Conversation) => {
     router.push({ pathname: '/chat/[id]', params: { id: c.id, subject: getConversationTitle(c, user?.role, tr) } } as never);
-  };
+  }, [router, user?.role, tr]);
 
-  const renderItem = ({ item }: { item: Conversation }) => {
+  const renderItem = React.useCallback(({ item }: { item: Conversation }) => {
     const support = item.kind === 'support';
     const title = getConversationTitle(item, user?.role, tr);
     return (
@@ -50,7 +50,7 @@ export default function MessagesScreen() {
         </View>
       </TouchableOpacity>
     );
-  };
+  }, [openThread, colors, s, t, user?.role, tr]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

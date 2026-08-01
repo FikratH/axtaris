@@ -124,8 +124,8 @@ const employerSubscriptionFeatureRows: SubscriptionFeatureComparisonRow[] = [
     id: 'price',
     label: '30 günlük qiymət',
     free: '0 AZN',
-    pro: '29 AZN',
-    premium: '99 AZN',
+    pro: '19 AZN',
+    premium: '49 AZN',
   },
   {
     id: 'vacancy-visibility',

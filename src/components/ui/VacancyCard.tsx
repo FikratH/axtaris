@@ -71,7 +71,7 @@ function AnimatedSaveButton({
   );
 }
 
-export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchScore, applied }: VacancyCardProps) {
+function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchScore, applied }: VacancyCardProps) {
   const { colors, radius: r, spacing: s, typography: t, elevation: e, isDark } = useTheme();
   const { t: tr } = useTranslation();
 
@@ -153,6 +153,8 @@ export function VacancyCard({ vacancy, onPress, onSave, saved, compact, matchSco
     </TouchableOpacity>
   );
 }
+
+export const VacancyCard = React.memo(VacancyCardComponent);
 
 const styles = StyleSheet.create({
   container: {

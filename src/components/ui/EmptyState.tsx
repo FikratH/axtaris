@@ -16,7 +16,16 @@ export function EmptyState({ icon, title, subtitle, actionTitle, onAction }: Emp
 
   return (
     <View style={styles.container}>
-      {icon && <View style={[styles.iconContainer, { marginBottom: s.xl }]}>{icon}</View>}
+      {icon && (
+        <View
+          style={[
+            styles.iconContainer,
+            { backgroundColor: colors.primaryLight, marginBottom: s.xl },
+          ]}
+        >
+          {icon}
+        </View>
+      )}
       <Text style={[styles.title, { color: colors.textPrimary, ...t.headingSmall }]}>{title}</Text>
       {subtitle && (
         <Text style={[styles.subtitle, { color: colors.textTertiary, ...t.bodyMedium, marginTop: s.sm }]}>
@@ -41,7 +50,11 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   iconContainer: {
-    opacity: 0.6,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     textAlign: 'center',

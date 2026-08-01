@@ -18,7 +18,7 @@ export default function CompaniesScreen() {
   const insets = useSafeAreaInsets();
   const { data: companies = [], isLoading } = useTopCompanies(50);
 
-  const renderItem = ({ item }: { item: TopCompany }) => (
+  const renderItem = React.useCallback(({ item }: { item: TopCompany }) => (
     <TouchableOpacity
       activeOpacity={0.7}
       onPress={() => router.push({ pathname: '/company/[id]', params: { id: item.id } } as never)}
@@ -51,7 +51,7 @@ export default function CompaniesScreen() {
         </View>
       </View>
     </TouchableOpacity>
-  );
+  ), [router, colors, s, t, tr]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

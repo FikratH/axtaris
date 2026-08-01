@@ -125,7 +125,7 @@ export default function ApplicantsScreen() {
     ? [...filtered].sort((a, b) => (rankMap[b.id]?.score ?? 0) - (rankMap[a.id]?.score ?? 0))
     : filtered;
 
-  const handleOpenCv = (application: Application) => {
+  const handleOpenCv = React.useCallback((application: Application) => {
     const cvUrl = application.candidate?.cvUrl || application.cvUrl;
 
     if (!cvUrl) {
@@ -137,9 +137,9 @@ export default function ApplicantsScreen() {
       pathname: '/cv-preview',
       params: { ref: cvUrl, name: application.candidate?.user?.fullName || tr('cv.title') },
     } as never);
-  };
+  }, [router, tr]);
 
-  const renderApplicant = ({ item }: { item: Application }) => {
+  const renderApplicant = React.useCallback(({ item }: { item: Application }) => {
     const candidate = item.candidate;
     const candidateSkills = candidate?.skills ?? [];
     const hasCv = !!(item.cvUrl || candidate?.cvUrl);
@@ -272,7 +272,7 @@ export default function ApplicantsScreen() {
         ) : null}
       </Card>
     );
-  };
+  }, [colors, s, t, r, tr, rankMap, updateStatus, router, handleOpenCv, openingCvId]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

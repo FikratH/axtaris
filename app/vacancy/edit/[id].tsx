@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useVacancyQueries';
 import { useEmployerEntitlements } from '@/hooks/useEntitlements';
 import { aiService } from '@/services/aiService';
+import { vacancyFormSchema, firstIssueMessage } from '@/services/validation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Chip } from '@/components/ui/Chip';
@@ -41,13 +42,7 @@ function splitLines(value: string): string[] {
 
 function parseOptionalAmount(value: string): number | undefined {
   const trimmed = value.trim();
-  if (!trimmed) return undefined;
-
-  if (!/^\d+$/.test(trimmed)) {
-    throw new Error('Salary must be a number');
-  }
-
-  return Number.parseInt(trimmed, 10);
+  return trimmed ? Number.parseInt(trimmed, 10) : undefined;
 }
 
 export default function EditVacancyScreen() {
@@ -185,8 +180,9 @@ export default function EditVacancyScreen() {
   const submitVacancy = async (status: VacancyStatus) => {
     if (!id || !vacancy) return;
 
-    if (!title.trim() || !description.trim()) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
+    const parsed = vacancyFormSchema.safeParse({ title, description, salaryMin, salaryMax });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;
     }
 
@@ -197,20 +193,8 @@ export default function EditVacancyScreen() {
       return;
     }
 
-    let nextSalaryMin: number | undefined;
-    let nextSalaryMax: number | undefined;
-    try {
-      nextSalaryMin = parseOptionalAmount(salaryMin);
-      nextSalaryMax = parseOptionalAmount(salaryMax);
-    } catch {
-      Alert.alert(tr('common.error'), tr('validation.salaryNumber'));
-      return;
-    }
-
-    if (nextSalaryMin !== undefined && nextSalaryMax !== undefined && nextSalaryMin > nextSalaryMax) {
-      Alert.alert(tr('common.error'), tr('validation.salaryRange'));
-      return;
-    }
+    const nextSalaryMin = parseOptionalAmount(salaryMin);
+    const nextSalaryMax = parseOptionalAmount(salaryMax);
 
     try {
       await updateVacancy.mutateAsync({

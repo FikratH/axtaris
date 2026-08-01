@@ -38,9 +38,12 @@ export function Button({
   style,
   textStyle,
 }: ButtonProps) {
-  const { colors, radius: r, spacing: s } = useTheme();
+  const { colors, radius: r, spacing: s, elevation: e, isDark } = useTheme();
 
   const isDisabled = disabled || loading;
+  // Filled CTAs get a soft lift so the primary action reads as raised; the
+  // brand-tinted shadow keeps it feeling intentional rather than heavy.
+  const isFilled = variant === 'primary' || variant === 'destructive';
 
   const containerStyles: ViewStyle[] = [
     styles.base,
@@ -48,6 +51,7 @@ export function Button({
       borderRadius: r.lg,
       opacity: isDisabled ? 0.5 : 1,
     },
+    isFilled && !isDisabled && !isDark ? e.sm : {},
     fullWidth ? styles.fullWidth : {},
   ];
 

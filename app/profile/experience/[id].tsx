@@ -17,6 +17,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { WorkExperience } from '@/types/models';
 import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profileSections';
+import { experienceSchema, firstIssueMessage } from '@/services/validation';
 
 export default function ExperienceFormScreen() {
   const { colors, typography: t } = useTheme();
@@ -113,18 +114,9 @@ export default function ExperienceFormScreen() {
   const handleSave = async () => {
     if (!profile) return;
 
-    if (!jobTitle.trim() || !company.trim() || !startDate) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
-      return;
-    }
-
-    if (!isCurrent && !endDate) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
-      return;
-    }
-
-    if (!isCurrent && endDate && endDate < startDate) {
-      Alert.alert(tr('common.error'), tr('validation.dateRange'));
+    const parsed = experienceSchema.safeParse({ jobTitle, company, startDate, endDate, isCurrent });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;
     }
 

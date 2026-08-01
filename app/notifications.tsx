@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -43,6 +44,7 @@ export default function NotificationsScreen() {
     data: notifications = [],
     isLoading,
     isError,
+    isRefetching,
     refetch,
   } = useNotifications(user?.id);
   const markRead = useMarkNotificationRead(user?.id);
@@ -68,7 +70,7 @@ export default function NotificationsScreen() {
     ...section.data.map((item) => ({ kind: 'item' as const, notification: item })),
   ]);
 
-  const renderItem = ({ item }: { item: typeof allItems[0] }) => {
+  const renderItem = useCallback(({ item }: { item: typeof allItems[0] }) => {
     if (item.kind === 'header') {
       return (
         <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, paddingHorizontal: s.xl, marginTop: s.xl, marginBottom: s.sm }]}>
@@ -125,7 +127,7 @@ export default function NotificationsScreen() {
         )}
       </TouchableOpacity>
     );
-  };
+  }, [colors, t, s, r, markRead, router, user]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}> 
@@ -178,6 +180,14 @@ export default function NotificationsScreen() {
           keyExtractor={(item) => item.kind === 'header' ? item.id : item.notification.id}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 24 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={() => refetch()}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
           ListEmptyComponent={
             <EmptyState
               title={tr('notifications.empty')}

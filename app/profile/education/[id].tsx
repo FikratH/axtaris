@@ -17,6 +17,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { Education } from '@/types/models';
 import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profileSections';
+import { educationSchema, firstIssueMessage } from '@/services/validation';
 
 export default function EducationFormScreen() {
   const { colors, typography: t } = useTheme();
@@ -68,18 +69,16 @@ export default function EducationFormScreen() {
   const handleSave = async () => {
     if (!profile) return;
 
-    if (!degree.trim() || !fieldOfStudy.trim() || !institution.trim() || !startDate) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
-      return;
-    }
-
-    if (!isCurrent && !endDate) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
-      return;
-    }
-
-    if (!isCurrent && endDate && endDate < startDate) {
-      Alert.alert(tr('common.error'), tr('validation.dateRange'));
+    const parsed = educationSchema.safeParse({
+      degree,
+      fieldOfStudy,
+      institution,
+      startDate,
+      endDate,
+      isCurrent,
+    });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;
     }
 

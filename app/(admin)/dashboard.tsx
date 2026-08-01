@@ -100,9 +100,9 @@ export default function AdminDashboardScreen() {
                       <Icon size={18} color={tile.color} strokeWidth={1.8} />
                     </View>
                     <Text style={[{ color: colors.textPrimary, marginTop: 10 }, t.displaySmall]}>{tile.value}</Text>
-                    <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={1}>{tile.label}</Text>
+                    <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={2} adjustsFontSizeToFit>{tile.label}</Text>
                     {tile.sub ? (
-                      <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.caption]} numberOfLines={1}>{tile.sub}</Text>
+                      <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.caption]} numberOfLines={2} adjustsFontSizeToFit>{tile.sub}</Text>
                     ) : null}
                   </>
                 ) : (

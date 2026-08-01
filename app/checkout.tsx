@@ -135,7 +135,7 @@ export default function CheckoutScreen() {
       timers.current.push(setTimeout(resolve, 1700));
     });
     try {
-      if (!user?.id) throw new Error('User not found');
+      if (!user?.id) throw new Error(tr('errors.userNotFound'));
       await subscriptionService.activatePlan(user.id, plan, audience);
       invalidateAfterActivation(user.id);
       haptic('success');

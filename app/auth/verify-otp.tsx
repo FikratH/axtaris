@@ -7,6 +7,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/authService';
+import { otpSchema } from '@/services/validation';
 import { OTPInput } from '@/components/ui/OTPInput';
 import { Button } from '@/components/ui/Button';
 import { safeBack } from '@/utils/navigation';
@@ -53,6 +54,11 @@ export default function VerifyOTPScreen() {
   }, [router, verificationEmail]);
 
   const handleVerify = async (code: string) => {
+    if (!otpSchema.safeParse({ code }).success) {
+      setError(true);
+      return;
+    }
+
     setLoading(true);
     setError(false);
     try {

@@ -69,3 +69,124 @@ export const forgotPasswordSchema = z.object({
 });
 
 export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
+
+// ── Reusable optional fields for content editors ────────────
+
+// Accepts a bare domain ("example.com") or a full URL ("https://example.com/x").
+const optionalUrlField = z
+  .string()
+  .optional()
+  .refine(
+    (val) =>
+      !val ||
+      !val.trim() ||
+      /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$/i.test(val.trim()),
+    { message: 'validation.invalidUrl' }
+  );
+
+const optionalSalaryField = z
+  .string()
+  .optional()
+  .refine((val) => !val || !val.trim() || /^\d+$/.test(val.trim()), {
+    message: 'validation.salaryNumber',
+  });
+
+// ── Vacancy (create + edit) ─────────────────────────────────
+
+export const vacancyFormSchema = z
+  .object({
+    title: z.string().trim().min(1, 'validation.required'),
+    description: z.string().trim().min(1, 'validation.required'),
+    salaryMin: optionalSalaryField,
+    salaryMax: optionalSalaryField,
+  })
+  .refine(
+    (data) => {
+      const min = data.salaryMin?.trim();
+      const max = data.salaryMax?.trim();
+      if (!min || !max) return true;
+      return Number.parseInt(min, 10) <= Number.parseInt(max, 10);
+    },
+    { message: 'validation.salaryRange', path: ['salaryMax'] }
+  );
+
+// ── Candidate profile (portfolio URL) ───────────────────────
+
+export const candidateProfileSchema = z.object({
+  portfolioUrl: optionalUrlField,
+});
+
+// ── Employer company ────────────────────────────────────────
+
+export const companyProfileSchema = z.object({
+  name: z.string().trim().min(1, 'validation.required'),
+  website: optionalUrlField,
+});
+
+// ── Work experience ─────────────────────────────────────────
+
+export const experienceSchema = z
+  .object({
+    jobTitle: z.string().trim().min(1, 'validation.required'),
+    company: z.string().trim().min(1, 'validation.required'),
+    startDate: z.string().min(1, 'validation.required'),
+    endDate: z.string().optional(),
+    isCurrent: z.boolean(),
+  })
+  .refine((data) => data.isCurrent || !!data.endDate, {
+    message: 'validation.required',
+    path: ['endDate'],
+  })
+  .refine((data) => data.isCurrent || !data.endDate || data.endDate >= data.startDate, {
+    message: 'validation.dateRange',
+    path: ['endDate'],
+  });
+
+// ── Education ───────────────────────────────────────────────
+
+export const educationSchema = z
+  .object({
+    degree: z.string().trim().min(1, 'validation.required'),
+    fieldOfStudy: z.string().trim().min(1, 'validation.required'),
+    institution: z.string().trim().min(1, 'validation.required'),
+    startDate: z.string().min(1, 'validation.required'),
+    endDate: z.string().optional(),
+    isCurrent: z.boolean(),
+  })
+  .refine((data) => data.isCurrent || !!data.endDate, {
+    message: 'validation.required',
+    path: ['endDate'],
+  })
+  .refine((data) => data.isCurrent || !data.endDate || data.endDate >= data.startDate, {
+    message: 'validation.dateRange',
+    path: ['endDate'],
+  });
+
+// ── Language ────────────────────────────────────────────────
+
+export const languageSchema = z.object({
+  language: z.string().trim().min(1, 'validation.required'),
+});
+
+// ── Certification ───────────────────────────────────────────
+
+export const certificationSchema = z.object({
+  name: z.string().trim().min(1, 'validation.required'),
+  issuer: z.string().trim().min(1, 'validation.required'),
+  issueDate: z.string().min(1, 'validation.required'),
+  credentialUrl: optionalUrlField,
+});
+
+// ── OTP verification ────────────────────────────────────────
+
+export const otpSchema = z.object({
+  code: z.string().regex(/^\d{6}$/, 'validation.otpCode'),
+});
+
+/**
+ * The first zod issue message (an i18n key) for surfacing a single inline/dialog
+ * error on screens that validate on submit via `safeParse`.
+ */
+export function firstIssueMessage(error: z.ZodError): string {
+  return error.issues[0]?.message ?? 'errors.generic';
+}

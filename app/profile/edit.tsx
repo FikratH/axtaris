@@ -21,6 +21,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { safeBack } from '@/utils/navigation';
 import { toUserMessage } from '@/utils/errorMessage';
+import { candidateProfileSchema, firstIssueMessage } from '@/services/validation';
 import { ChevronLeft, Plus } from 'lucide-react-native';
 
 type Availability = NonNullable<CandidateProfile['availability']>;
@@ -73,6 +74,12 @@ export default function EditProfileScreen() {
   };
 
   const handleSave = async () => {
+    const parsed = candidateProfileSchema.safeParse({ portfolioUrl });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
+      return;
+    }
+
     try {
       await updateProfile.mutateAsync({
         title,

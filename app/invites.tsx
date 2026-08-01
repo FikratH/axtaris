@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,75 +48,82 @@ export default function InvitesScreen() {
     }
   };
 
-  return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
-      contentContainerStyle={{ paddingBottom: 40, paddingTop: insets.top + 12, paddingHorizontal: 20 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.topRow}>
-        <TouchableOpacity onPress={() => safeBack(router, '/(candidate)/home')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
-          <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
-        </TouchableOpacity>
-        <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('invites.title')}</Text>
+  const listHeader = (
+    <View style={styles.topRow}>
+      <TouchableOpacity onPress={() => safeBack(router, '/(candidate)/home')} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
+        <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
+      </TouchableOpacity>
+      <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.headingMedium]}>{tr('invites.title')}</Text>
+    </View>
+  );
+
+  const renderInvite = ({ item: invite }: { item: (typeof invites)[number] }) => (
+    <Card padding="lg" style={{ marginBottom: 12 }}>
+      <View style={styles.cardHeader}>
+        <View style={[styles.companyIcon, { backgroundColor: colors.primaryLight, borderRadius: r.md }]}>
+          <Building2 size={18} color={colors.primary} strokeWidth={1.8} />
+        </View>
+        <View style={{ flex: 1, marginLeft: s.md }}>
+          <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{invite.companyName || tr('talent.anEmployer')}</Text>
+          {invite.vacancyTitle ? (
+            <Text style={[{ color: colors.textSecondary, marginTop: 1 }, t.bodySmall]}>{invite.vacancyTitle}</Text>
+          ) : null}
+        </View>
+        {invite.status !== 'pending' ? (
+          <Badge
+            label={invite.status === 'accepted' ? tr('invites.accepted') : tr('invites.declined')}
+            variant={invite.status === 'accepted' ? 'success' : 'default'}
+          />
+        ) : null}
       </View>
 
-      {isLoading ? (
-        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-          <ActivityIndicator size="large" color={colors.primary} />
+      {invite.message ? (
+        <Text style={[{ color: colors.textSecondary, marginTop: s.md, lineHeight: 20 }, t.bodySmall]}>{invite.message}</Text>
+      ) : null}
+
+      {invite.status === 'pending' ? (
+        <View style={styles.actions}>
+          <View style={{ flex: 1 }}>
+            <Button
+              title={tr('invites.accept')}
+              onPress={() => handleRespond(invite.id, 'accepted', invite.vacancyId)}
+              variant="primary"
+              size="sm"
+              loading={respond.isPending && respond.variables?.inviteId === invite.id}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button
+              title={tr('invites.decline')}
+              onPress={() => handleRespond(invite.id, 'declined')}
+              variant="ghost"
+              size="sm"
+            />
+          </View>
         </View>
-      ) : invites.length === 0 ? (
-        <EmptyState title={tr('invites.emptyTitle')} subtitle={tr('invites.emptyBody')} />
-      ) : (
-        invites.map((invite) => (
-          <Card key={invite.id} padding="lg" style={{ marginBottom: 12 }}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.companyIcon, { backgroundColor: colors.primaryLight, borderRadius: r.md }]}>
-                <Building2 size={18} color={colors.primary} strokeWidth={1.8} />
-              </View>
-              <View style={{ flex: 1, marginLeft: s.md }}>
-                <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{invite.companyName || tr('talent.anEmployer')}</Text>
-                {invite.vacancyTitle ? (
-                  <Text style={[{ color: colors.textSecondary, marginTop: 1 }, t.bodySmall]}>{invite.vacancyTitle}</Text>
-                ) : null}
-              </View>
-              {invite.status !== 'pending' ? (
-                <Badge
-                  label={invite.status === 'accepted' ? tr('invites.accepted') : tr('invites.declined')}
-                  variant={invite.status === 'accepted' ? 'success' : 'default'}
-                />
-              ) : null}
-            </View>
+      ) : null}
+    </Card>
+  );
 
-            {invite.message ? (
-              <Text style={[{ color: colors.textSecondary, marginTop: s.md, lineHeight: 20 }, t.bodySmall]}>{invite.message}</Text>
-            ) : null}
-
-            {invite.status === 'pending' ? (
-              <View style={styles.actions}>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    title={tr('invites.accept')}
-                    onPress={() => handleRespond(invite.id, 'accepted', invite.vacancyId)}
-                    variant="primary"
-                    size="sm"
-                    loading={respond.isPending && respond.variables?.inviteId === invite.id}
-                  />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Button
-                    title={tr('invites.decline')}
-                    onPress={() => handleRespond(invite.id, 'declined')}
-                    variant="ghost"
-                    size="sm"
-                  />
-                </View>
-              </View>
-            ) : null}
-          </Card>
-        ))
-      )}
-    </ScrollView>
+  return (
+    <FlatList
+      style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}
+      contentContainerStyle={{ paddingBottom: 40, paddingTop: insets.top + 12, paddingHorizontal: 20 }}
+      data={invites}
+      keyExtractor={(invite) => invite.id}
+      renderItem={renderInvite}
+      ListHeaderComponent={listHeader}
+      ListEmptyComponent={
+        isLoading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        ) : (
+          <EmptyState title={tr('invites.emptyTitle')} subtitle={tr('invites.emptyBody')} />
+        )
+      }
+      showsVerticalScrollIndicator={false}
+    />
   );
 }
 

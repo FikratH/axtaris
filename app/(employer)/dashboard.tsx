@@ -133,7 +133,7 @@ export default function EmployerDashboardScreen() {
               <stat.icon size={18} color={stat.color} strokeWidth={1.8} />
             </View>
             <Text style={[{ color: colors.textPrimary, marginTop: 10 }, t.displaySmall]}>{stat.value}</Text>
-            <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={1}>{stat.label}</Text>
+            <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={2} adjustsFontSizeToFit>{stat.label}</Text>
           </StaggeredItem>
         ))}
       </View>

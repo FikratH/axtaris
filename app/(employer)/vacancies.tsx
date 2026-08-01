@@ -68,7 +68,7 @@ export default function VacanciesScreen() {
 
   const filtered = filter === 'all' ? allVacancies : allVacancies.filter((v) => v.status === filter);
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = React.useCallback((id: string, title: string) => {
     Alert.alert(
       tr('common.confirm'),
       tr('employer.deleteVacancyConfirm', { title }),
@@ -87,9 +87,9 @@ export default function VacanciesScreen() {
         },
       ]
     );
-  };
+  }, [deleteVacancy, tr]);
 
-  const renderVacancy = ({ item }: { item: Vacancy }) => {
+  const renderVacancy = React.useCallback(({ item }: { item: Vacancy }) => {
     const isActive = item.status === 'active';
     const isPaused = item.status === 'paused';
     const isClosed = item.status === 'closed';
@@ -191,7 +191,7 @@ export default function VacanciesScreen() {
         </View>
       </Card>
     );
-  };
+  }, [colors, t, tr, router, updateVacancyStatus, handleDelete]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>

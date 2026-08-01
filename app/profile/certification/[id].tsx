@@ -15,6 +15,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { Certification } from '@/types/models';
 import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profileSections';
+import { certificationSchema, firstIssueMessage } from '@/services/validation';
 
 export default function CertificationFormScreen() {
   const { colors, typography: t } = useTheme();
@@ -60,8 +61,9 @@ export default function CertificationFormScreen() {
   const handleSave = async () => {
     if (!profile) return;
 
-    if (!name.trim() || !issuer.trim() || !issueDate) {
-      Alert.alert(tr('common.error'), tr('validation.required'));
+    const parsed = certificationSchema.safeParse({ name, issuer, issueDate, credentialUrl });
+    if (!parsed.success) {
+      Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;
     }
 
