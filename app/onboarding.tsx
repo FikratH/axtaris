@@ -14,7 +14,6 @@ import Animated, {
   withTiming,
   withSpring,
   withDelay,
-  withRepeat,
   Easing,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -110,26 +109,16 @@ function FloatingChip({
   stepKey: number;
 }) {
   const enter = useSharedValue(0);
-  const drift = useSharedValue(0);
 
   useEffect(() => {
     enter.value = 0;
-    enter.value = withDelay(180 + index * 90, withSpring(1, { damping: 13, stiffness: 160 }));
+    // Settle cleanly, no overshoot, then stay put (no perpetual drift).
+    enter.value = withDelay(220 + index * 90, withSpring(1, { damping: 18, stiffness: 150 }));
   }, [stepKey]);
-
-  useEffect(() => {
-    drift.value = withDelay(
-      index * 400,
-      withRepeat(withTiming(1, { duration: 2400 + index * 300, easing: Easing.inOut(Easing.sin) }), -1, true)
-    );
-  }, []);
 
   const style = useAnimatedStyle(() => ({
     opacity: enter.value,
-    transform: [
-      { translateY: (drift.value - 0.5) * 10 + (1 - enter.value) * 8 },
-      { scale: 0.85 + enter.value * 0.15 },
-    ],
+    transform: [{ translateY: (1 - enter.value) * 10 }, { scale: 0.92 + enter.value * 0.08 }],
   }));
 
   return (
@@ -160,32 +149,24 @@ function HeroAura({
   chips: { icon: React.ReactNode; label: string; color: string; bg: string; position: object }[];
   stepKey: number;
 }) {
-  const scale = useSharedValue(0.6);
+  const scale = useSharedValue(0.82);
   const opacity = useSharedValue(0);
-  const float = useSharedValue(0);
 
   useEffect(() => {
-    scale.value = 0.6;
+    scale.value = 0.82;
     opacity.value = 0;
-    scale.value = withDelay(60, withSpring(1, { damping: 12, stiffness: 150 }));
-    opacity.value = withDelay(60, withTiming(1, { duration: 340 }));
+    // Smooth, well-damped settle (no bounce) — then rest. No perpetual float.
+    scale.value = withDelay(60, withSpring(1, { damping: 18, stiffness: 140 }));
+    opacity.value = withDelay(60, withTiming(1, { duration: 360, easing: Easing.out(Easing.quad) }));
   }, [stepKey]);
-
-  useEffect(() => {
-    float.value = withRepeat(
-      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
-      -1,
-      true
-    );
-  }, []);
 
   const tileStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
-    transform: [{ scale: scale.value }, { translateY: (float.value - 0.5) * 12 }],
+    transform: [{ scale: scale.value }],
   }));
   const auraStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value * 0.55,
-    transform: [{ scale: 0.85 + scale.value * 0.25 }],
+    opacity: opacity.value * 0.5,
+    transform: [{ scale: 0.9 + scale.value * 0.1 }],
   }));
 
   return (

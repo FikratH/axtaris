@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/axtaris_splash_logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A1628"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
       "supportsTablet": true,
@@ -22,10 +22,8 @@
     "android": {
       "package": "az.axtaris.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0A1628",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       },
       "permissions": []
     },
