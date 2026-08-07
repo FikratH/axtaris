@@ -36,7 +36,12 @@ interface InviteRow {
  *   insert:          from().insert().select().single()
  * `existing` decides which branch sendInvite takes; `wasInsertCalled` proves it.
  */
-function createInviteSupabase(opts: { existing: InviteRow | null; inserted: InviteRow | null }) {
+function createInviteSupabase(opts: {
+  existing: InviteRow | null;
+  inserted: InviteRow | null;
+  /** Error returned by the existing-invite lookup (PostgREST yields data: null with it). */
+  existingError?: { message: string };
+}) {
   let insertCalled = false;
 
   const from = () => {
@@ -49,7 +54,11 @@ function createInviteSupabase(opts: { existing: InviteRow | null; inserted: Invi
         insertCalled = true;
         return builder;
       },
-      maybeSingle: () => Promise.resolve({ data: opts.existing, error: null }),
+      maybeSingle: () =>
+        Promise.resolve({
+          data: opts.existingError ? null : opts.existing,
+          error: opts.existingError ?? null,
+        }),
       single: () => Promise.resolve({ data: opts.inserted, error: null }),
     };
     return builder;
@@ -98,5 +107,41 @@ describe('talentService.sendInvite — Supabase idempotency', () => {
 
     expect(invite.id).toBe('inv-new');
     expect(fake.wasInsertCalled()).toBe(true);
+  });
+
+  // BUG (P1, still unfixed at time of writing): the existing-invite lookup at
+  // talentService.ts:319-329 destructures nothing and never inspects
+  // `existing.error`. PostgREST returns `{ data: null, error }` on a transient
+  // failure (network blip, RLS evaluation error, 500), so `if (existing.data)` is
+  // false and control falls straight through to the INSERT — creating a duplicate
+  // invite AND a duplicate candidate notification (the AFTER INSERT trigger in
+  // 202608010002_invite_notification_trigger.sql fires per row).
+  //
+  // This is not merely the narrow double-tap race: it makes duplicates a routine
+  // outcome on flaky mobile networks. There is also no DB backstop —
+  // 202607230001_talent_and_monetization.sql:54-65 creates only NON-unique indexes
+  // on candidate_invites, unlike `applications`, whose identical check-then-insert
+  // is protected by UNIQUE(vacancy_id, candidate_id).
+  //
+  // Fix: mirror candidateVacancyService.applyToVacancy:791 —
+  //   `const { data: existing, error: existingError } = await ...;
+  //    if (existingError) throw new Error(existingError.message);`
+  // and add a unique index on candidate_invites(company_id, candidate_id) so the
+  // race has a real backstop. Un-skip this test with that fix.
+  it.skip('throws instead of inserting when the existing-invite lookup fails', async () => {
+    const fake = createInviteSupabase({
+      existing: null,
+      inserted: null,
+      existingError: { message: 'network error' },
+    });
+    mockGetSupabase.mockReturnValue(fake.client);
+
+    await expect(
+      talentService.sendInvite({ companyId: 'c1', candidateId: 'cand-1' })
+    ).rejects.toThrow();
+
+    // The critical assertion: a failed lookup must never be treated as "no
+    // existing invite", because that silently sends a second invite.
+    expect(fake.wasInsertCalled()).toBe(false);
   });
 });
