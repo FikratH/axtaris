@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet, ViewStyle, ImageStyle } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, ImageStyle } from 'react-native';
+import { Image } from 'expo-image';
 import { useTheme } from '@/theme/ThemeContext';
 import { Camera } from 'lucide-react-native';
 import { SvgUri } from 'react-native-svg';

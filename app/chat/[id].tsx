@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, Send, ImagePlus, X, Briefcase } from 'lucide-react-native';
@@ -50,7 +50,7 @@ function ChatImageBubble({ imageUrl, onOpen }: { imageUrl: string; onOpen: (url:
   }
   return (
     <TouchableOpacity onPress={() => onOpen(url)} activeOpacity={0.9}>
-      <Image source={{ uri: url }} style={styles.imageThumb} resizeMode="cover" />
+      <Image source={{ uri: url }} style={styles.imageThumb} contentFit="cover" />
     </TouchableOpacity>
   );
 }
@@ -221,7 +221,7 @@ export default function ChatThreadScreen() {
           <TouchableOpacity style={[styles.fullscreenClose, { top: insets.top + 12 }]} onPress={() => setFullscreenUrl(null)} hitSlop={12}>
             <X size={26} color="#FFFFFF" strokeWidth={2} />
           </TouchableOpacity>
-          {fullscreenUrl ? <Image source={{ uri: fullscreenUrl }} style={styles.fullscreenImage} resizeMode="contain" /> : null}
+          {fullscreenUrl ? <Image source={{ uri: fullscreenUrl }} style={styles.fullscreenImage} contentFit="contain" /> : null}
         </Pressable>
       </Modal>
 

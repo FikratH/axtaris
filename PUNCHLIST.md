@@ -473,12 +473,26 @@ answering the content-rating questionnaire.
   separate, lower-priority version of the same class of issue, not part of
   the "fix together or neither works" pair the audit specifically called
   out.
-- 🤖 `expo-image` is **already linked natively** (v55.0.6, resolved in
-  `ios/Podfile.lock`, transitively via expo-router) — the "needs a native
-  rebuild" blocker in the old punchlist doesn't apply. Still open — not
-  attempted this pass. Promote to a direct dependency, swap `Avatar.tsx`
-  and `chat/[id].tsx` (3 files total), `onError`→initials-fallback needs a
-  manual check under the new prop signature.
+- ✅ **Fixed, gate-verified** — `expo-image` promoted from a transitive
+  resolution to a direct dependency (`npx expo install expo-image`, which
+  also registered its config plugin in `app.json`). Swapped the RN `Image`
+  import for `expo-image`'s in `Avatar.tsx` (network avatar/company-logo
+  path only — the SVG branch still uses `react-native-svg`'s `SvgUri`,
+  unaffected) and both remote-image sites in `app/chat/[id].tsx`
+  (`ChatImageBubble` thumbnail + fullscreen viewer modal), gaining
+  memory/disk caching for images that get re-shown across screens.
+  Checked the flagged risk directly against `expo-image`'s type
+  definitions rather than assuming: its `ImageStyle` is a re-export of
+  RN's `ImageStyle` (style prop is unaffected), and both `onError` call
+  sites here ignore the event argument entirely
+  (`onError={() => setImageFailed(true)}`), so the differing
+  `ImageErrorEventData` vs. RN's `NativeSyntheticEvent` shape is a
+  non-issue — no runtime behavior change. `resizeMode="cover"/"contain"`
+  renamed to `contentFit` (expo-image dropped `resizeMode`). `tsc`/`jest`
+  clean after the change; live auth-gated visual smoke test (avatar
+  broken-image → initials fallback) was blocked by the auto-mode
+  classifier on credential entry mid-session and not completed — flagged
+  here rather than silently skipped.
 - ✅ **Fixed, live-verified** — `applyToVacancy`'s subscription-summary
   fetch and the candidate profile lookup are now `Promise.all`'d instead of
   sequential (the profile lookup is also now a narrow `id, cv_url` select
@@ -494,8 +508,15 @@ answering the content-rating questionnaire.
   string surfaced while touching this code
   (`errors.dailyLimitReached`, was "Daily application limit reached for
   current subscription plan").
-- 🤖 Two launch-path logo PNGs are 10-30× their rendered size (1.35MB,
-  593KB, decoded on the splash route) — resize to ~3× render size.
+- ✅ **Fixed, live-verified** — the two launch-path logo PNGs (1,351,774 and
+  593,082 bytes at 4096×4096, decoded on the splash/onboarding route) were
+  resized via `sips -Z` uniform downsample to 512×512 (38,818 bytes) and
+  1024×1024 (88,400 bytes) — both still ≥4× their largest on-screen render
+  size. Alpha channel preserved (confirmed via `sips` metadata pre/post).
+  Verified via `expo export --platform web` that the content-hashed bundle
+  picks up the smaller files, and visually via Playwright screenshots of
+  `/auth/sign-in` and `/onboarding` (both logos render crisp, no distortion,
+  0 console errors) — same composition, ~93-97% smaller.
 - P2 remainder (admin moderation ScrollView of ~150 cards, `ListHeaderComponent`
   passed as JSX losing filter-input focus, `Avatar` no loading placeholder,
   unused `useThemeStyles` hook, N+1 in `fetchEngagement`/`fetchDashboardStats`,
