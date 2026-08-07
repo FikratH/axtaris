@@ -161,7 +161,12 @@ export interface Company {
   verificationStatus: VerificationStatus;
   rating?: number;
   vacancyCount?: number;
-  ownerId: string;
+  // Omitted entirely from guest-reachable fetches (browse/search/detail) —
+  // only present when fetched via an authenticated-only path that legitimately
+  // needs it (e.g. the employer's own company, or a candidate's own applications
+  // for the "message employer" flow). See vacancyService.ts's
+  // publicCompanySelect vs companySelect split.
+  ownerId?: string;
   createdAt: string;
   updatedAt: string;
 }

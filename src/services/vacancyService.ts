@@ -16,7 +16,11 @@ export interface SupabaseCompanyRow {
   founded_year: number | null;
   verification_status: Company['verificationStatus'];
   rating: number | null;
-  owner_id: string;
+  // Absent when fetched via publicCompanySelect (see below) — that's every
+  // guest-reachable browse/search/detail path. anon has no column privilege
+  // on companies.owner_id (F5), so a select that names it fails outright
+  // under an anon session, not just under RLS.
+  owner_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -84,6 +88,9 @@ export interface CompanyMutationInput {
   foundedYear?: number;
 }
 
+// Includes owner_id — only safe for authenticated-only fetch paths (the
+// employer's own company, or a candidate's own applications). Never use this
+// for a guest-reachable browse/search/detail query; use publicCompanySelect.
 export const companySelect = `
   id,
   name,
@@ -98,6 +105,30 @@ export const companySelect = `
   verification_status,
   rating,
   owner_id,
+  created_at,
+  updated_at
+`;
+
+// Same as companySelect but omits owner_id — for every guest-reachable
+// fetch (browse/search/vacancy detail/company detail/top companies). AxtarIS
+// has a real anon-role "guest browsing" mode (app/_layout.tsx guestRole), so
+// these run under the anon role in normal use, not just via direct API
+// testing. anon has no column privilege on companies.owner_id; a select
+// that names it fails outright for these callers, not just gets filtered
+// by RLS. See PUNCHLIST.md F5 for the full history of this constraint.
+const publicCompanySelect = `
+  id,
+  name,
+  industry,
+  description,
+  logo_url,
+  cover_url,
+  website,
+  employee_count,
+  location,
+  founded_year,
+  verification_status,
+  rating,
   created_at,
   updated_at
 `;
@@ -131,11 +162,48 @@ export const vacancySelect = `
   )
 `;
 
+// Same shape as vacancySelect, embedding publicCompanySelect instead — for
+// the same guest-reachable functions publicCompanySelect is for.
+const publicVacancySelect = `
+  id,
+  title,
+  description,
+  requirements,
+  responsibilities,
+  benefits,
+  salary_min,
+  salary_max,
+  salary_currency,
+  show_salary,
+  city,
+  work_type,
+  experience_level,
+  skills,
+  company_id,
+  status,
+  applicant_count,
+  view_count,
+  response_rate,
+  expires_at,
+  screening_questions,
+  created_at,
+  updated_at,
+  companies (
+    ${publicCompanySelect}
+  )
+`;
+
 // Same as `vacancySelect` but additionally requests the `is_featured` column.
 // Used only in code paths that first try the featured behavior and fall back to
 // the plain select if the column doesn't exist in this environment yet, so the
 // shared `vacancySelect` stays safe for callers that never touch featuring.
 const vacancySelectWithFeatured = vacancySelect.replace(
+  'companies (',
+  'is_featured,\n  companies ('
+);
+
+// publicVacancySelect's is_featured counterpart — same reasoning as above.
+const publicVacancySelectWithFeatured = publicVacancySelect.replace(
   'companies (',
   'is_featured,\n  companies ('
 );
@@ -238,7 +306,7 @@ class VacancyService {
     // fall back to the plain select so the feed never breaks.
     const featured = await supa
       .from('vacancies')
-      .select(vacancySelectWithFeatured)
+      .select(publicVacancySelectWithFeatured)
       .eq('status', 'active')
       .order('is_featured', { ascending: false })
       .order('created_at', { ascending: false });
@@ -247,7 +315,7 @@ class VacancyService {
     if (featured.error) {
       const base = await supa
         .from('vacancies')
-        .select(vacancySelect)
+        .select(publicVacancySelect)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
 
@@ -403,7 +471,7 @@ class VacancyService {
 
     const { data, error } = await getSupabase()
       .from('companies')
-      .select(companySelect)
+      .select(publicCompanySelect)
       .eq('id', id)
       .maybeSingle();
 
@@ -424,7 +492,7 @@ class VacancyService {
 
     const { data, error } = await getSupabase()
       .from('vacancies')
-      .select(vacancySelect)
+      .select(publicVacancySelect)
       .eq('company_id', companyId)
       .eq('status', 'active')
       .order('created_at', { ascending: false });
@@ -443,7 +511,7 @@ class VacancyService {
 
     const { data, error } = await getSupabase()
       .from('vacancies')
-      .select(vacancySelect)
+      .select(publicVacancySelect)
       .eq('id', id)
       .maybeSingle();
 
@@ -466,7 +534,7 @@ class VacancyService {
 
     const supa = getSupabase();
     const [companiesRes, vacanciesRes] = await Promise.all([
-      supa.from('companies').select(companySelect).limit(200),
+      supa.from('companies').select(publicCompanySelect).limit(200),
       supa.from('vacancies').select('company_id').eq('status', 'active').limit(5000),
     ]);
 
