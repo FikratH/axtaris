@@ -1,8 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRootNavigationState, useRouter } from 'expo-router';
 import { UserRole } from '@/types/models';
 import { getNotificationsModule, registerForPushNotifications } from '@/services/pushService';
+
+type NotificationResponse = {
+  notification?: { request?: { content?: { data?: unknown } } };
+};
 
 /**
  * Registers the device for push (native only) once a user is signed in, and
@@ -10,7 +14,9 @@ import { getNotificationsModule, registerForPushNotifications } from '@/services
  */
 export function usePushNotifications(userId?: string, role?: UserRole) {
   const router = useRouter();
+  const navigationState = useRootNavigationState();
   const registeredFor = useRef<string | null>(null);
+  const handledLaunchResponse = useRef(false);
 
   useEffect(() => {
     if (Platform.OS === 'web' || !userId) {
@@ -26,7 +32,11 @@ export function usePushNotifications(userId?: string, role?: UserRole) {
     const Notifications = getNotificationsModule();
     if (!Notifications) return;
 
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
+    // The nav tree isn't mounted yet on the first render after launch —
+    // routing before then is a silent no-op, so wait for it.
+    if (!navigationState?.key) return;
+
+    const handleResponse = (response: NotificationResponse | null | undefined) => {
       const data = (response?.notification?.request?.content?.data ?? {}) as Record<string, unknown>;
       const vacancyId = data.vacancyId ? String(data.vacancyId) : undefined;
       const applicationId = data.applicationId ? String(data.applicationId) : undefined;
@@ -36,8 +46,22 @@ export function usePushNotifications(userId?: string, role?: UserRole) {
       } else if (vacancyId) {
         router.push({ pathname: '/vacancy/[id]', params: { id: vacancyId } } as never);
       }
-    });
+    };
+
+    // Killed-state launch: the app was opened BY tapping a notification, so
+    // the live listener below never fires for it — it only catches taps
+    // that happen while already running/backgrounded.
+    if (!handledLaunchResponse.current) {
+      handledLaunchResponse.current = true;
+      Notifications.getLastNotificationResponseAsync?.()
+        .then((response: NotificationResponse | null | undefined) => {
+          if (response) handleResponse(response);
+        })
+        .catch(() => {});
+    }
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(handleResponse);
 
     return () => subscription.remove();
-  }, [userId, role, router]);
+  }, [userId, role, router, navigationState?.key]);
 }

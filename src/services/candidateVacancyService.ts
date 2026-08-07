@@ -350,36 +350,24 @@ async function reconcileChildRows<T>(
   toRow: (item: T, index: number) => Record<string, unknown>
 ) {
   const supabase = getSupabase();
-  const hasItems = nextItems.length > 0;
-  let keepIds: string[] = [];
 
-  if (hasItems) {
-    const { data, error } = await supabase
-      .from(table)
-      .insert(nextItems.map((item, index) => toRow(item, index)))
-      .select('id');
+  // The insert-then-delete used to be two separate round trips, which let
+  // two overlapping saves (double-tap, two devices) each delete rows the
+  // other had just inserted — reproducible total data loss. The RPC does
+  // both inside one transaction, serialized per (candidate, table) via an
+  // advisory lock, so overlapping saves resolve to ordinary last-write-wins
+  // instead.
+  const { data, error } = await supabase.rpc('reconcile_candidate_child_rows', {
+    p_table: table,
+    p_candidate_id: candidateId,
+    p_rows: nextItems.map((item, index) => toRow(item, index)),
+  });
 
-    if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
-    keepIds = ((data || []) as Array<{ id: string }>).map((row) => row.id);
-
-    // The insert reported success but returned no rows (e.g. a table with an
-    // INSERT policy but no SELECT policy). Refuse to continue — otherwise the
-    // delete below would wipe every existing row for this candidate.
-    if (keepIds.length === 0) {
-      throw new Error(i18n.t('common.error'));
-    }
+  if (nextItems.length > 0 && (!data || (data as Array<{ id: string }>).length === 0)) {
+    throw new Error(i18n.t('common.error'));
   }
-
-  // Delete strategy keys off the caller's intent, not the insert result: when
-  // there are desired items keep the freshly-inserted ids and drop everything
-  // else (self-heals legacy duplicates); when the desired set is empty, clear all.
-  const baseDelete = supabase.from(table).delete().eq('candidate_id', candidateId);
-  const { error: deleteError } = hasItems
-    ? await baseDelete.not('id', 'in', `(${keepIds.join(',')})`)
-    : await baseDelete;
-
-  if (deleteError) throw new Error(deleteError.message);
 }
 
 async function syncWorkExperiences(

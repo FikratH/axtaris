@@ -175,6 +175,21 @@ touched `profiles`/`candidate_profiles`).
 
 ## 2. P0 — Crash/data-loss bugs
 
+**Status: all three ✅ fixed, live-verified.** `202608070006` +
+`202608070007` (search_path hotfix — `uuid_generate_v4()` lives in the
+`extensions` schema in this project, not `public`; same class of "SET
+search_path narrowed too far" mistake as Wave 1's `is_admin()` regression,
+caught immediately via a live RPC call rather than shipped blind) added
+`reconcile_candidate_child_rows`, a SECURITY DEFINER RPC that does the
+insert+delete in one statement and serializes concurrent calls per
+`(candidate, table)` via `pg_advisory_xact_lock`. Live-tested with two
+genuinely concurrent (parallel, backgrounded) requests against a real seed
+candidate: result was one surviving row (last-write-wins), never zero.
+`candidateVacancyService.reconcile.test.ts` rewritten around the RPC and
+all 4 tests pass (the previously-skipped concurrency test now runs and
+passes for real, via a fake that simulates the advisory-lock serialization).
+2.2 and 2.3 are one-file client-only fixes, applied and `tsc`/`jest`-clean.
+
 ### 2.1 🤖 Concurrent profile saves can wipe an entire child table
 `src/services/candidateVacancyService.ts:346-383` (`reconcileChildRows`) is
 insert-first/delete-after, untransacted, no concurrency token. Two overlapping

@@ -210,7 +210,7 @@ function AppContent() {
         return;
       }
 
-      if (hasOnboarded === false && !isOnboardingRoute && !isRootRoute && !isLegalRoute) {
+      if (hasOnboarded === false && !isOnboardingRoute && !isRootRoute && !isLegalRoute && !isAuthRoute) {
         router.replace('/onboarding');
       } else if (!isRootRoute && !isAuthRoute && !isOnboardingRoute && !isLegalRoute) {
         router.replace('/auth/role-select');

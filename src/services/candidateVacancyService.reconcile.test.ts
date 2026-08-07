@@ -2,10 +2,10 @@
  * Read-side dedupe and write-side reconcile of candidate child tables.
  *
  * Both live only on the Supabase path — `mapCandidateProfile` de-duplicates child
- * rows on read, and `reconcileChildRows` inserts-fresh-then-deletes-others on
- * write — so they are exercised against a hand-rolled fake Supabase client rather
- * than the in-memory mock. `./supabase` is mocked so `shouldUseMockBackend()` is
- * false and `getSupabase()` returns our fake.
+ * rows on read, and `reconcileChildRows` calls the `reconcile_candidate_child_rows`
+ * RPC on write — so they are exercised against a hand-rolled fake Supabase client
+ * rather than the in-memory mock. `./supabase` is mocked so `shouldUseMockBackend()`
+ * is false and `getSupabase()` returns our fake.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -45,37 +45,24 @@ const baseProfileRow = {
 interface FakeConfig {
   /** Row returned by every candidate_profiles .maybeSingle() read. */
   profileRow: Record<string, unknown> | null;
-  /** Ids the DB "returns" from each child-table insert().select('id'). */
+  /** Ids the RPC "returns" from each reconcile call, keyed by table. */
   insertIds: Record<string, string[]>;
 }
 
+type RpcCall = { table: string; candidateId: string; rows: unknown[] };
+
 /**
- * Minimal chainable stand-in for the Supabase query builder covering only the
- * chains candidateVacancyService actually issues:
+ * Minimal chainable stand-in for the Supabase query builder, covering only the
+ * chains candidateVacancyService actually issues for reads:
  *   - candidate_profiles: select().eq().maybeSingle()  and  update().eq()
- *   - child tables:       insert().select('id')        and  delete().eq().not()
- * It records every insert/delete so tests can assert the reconcile strategy.
+ * Writes to the 4 child tables go through `.rpc('reconcile_candidate_child_rows')`
+ * instead of `.from(table)` — see `withRpc` below.
  */
-function createFakeSupabase(config: FakeConfig) {
-  const inserts: Array<{ table: string; rows: unknown[] }> = [];
-  const deletes: Array<{ table: string; not?: [string, string, string] }> = [];
+function createFakeSupabase(config: FakeConfig, rpcImpl?: (call: RpcCall) => Promise<{ data: unknown; error: unknown }>) {
+  const rpcCalls: RpcCall[] = [];
 
-  const from = (table: string) => {
-    const state: { op?: 'insert' | 'update' | 'delete'; not?: [string, string, string] } = {};
-
-    const resolveTerminal = () => {
-      if (state.op === 'insert') {
-        return { data: (config.insertIds[table] || []).map((id) => ({ id })), error: null };
-      }
-      if (state.op === 'delete') {
-        deletes.push({ table, not: state.not });
-        return { error: null };
-      }
-      if (state.op === 'update') {
-        return { error: null };
-      }
-      return { data: null, error: null };
-    };
+  const from = (_table: string) => {
+    const state: { op?: 'update' } = {};
 
     const builder: Record<string, unknown> = {
       select: () => builder,
@@ -87,29 +74,32 @@ function createFakeSupabase(config: FakeConfig) {
         state.op = 'update';
         return builder;
       },
-      insert: (rows: unknown[]) => {
-        state.op = 'insert';
-        inserts.push({ table, rows });
-        return builder;
-      },
-      delete: () => {
-        state.op = 'delete';
-        return builder;
-      },
-      not: (col: string, op: string, val: string) => {
-        state.not = [col, op, val];
-        return builder;
-      },
       maybeSingle: () => Promise.resolve({ data: config.profileRow, error: null }),
-      single: () => Promise.resolve(resolveTerminal()),
       then: (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) =>
-        Promise.resolve(resolveTerminal()).then(onF, onR),
+        Promise.resolve({ error: null }).then(onF, onR),
     };
 
     return builder;
   };
 
-  return { client: { from } as unknown as SupabaseClient, inserts, deletes };
+  const rpc = (fnName: string, args: Record<string, unknown>) => {
+    if (fnName !== 'reconcile_candidate_child_rows') {
+      return Promise.resolve({ data: null, error: null });
+    }
+    const call: RpcCall = {
+      table: args.p_table as string,
+      candidateId: args.p_candidate_id as string,
+      rows: args.p_rows as unknown[],
+    };
+    rpcCalls.push(call);
+
+    if (rpcImpl) return rpcImpl(call);
+
+    const ids = config.insertIds[call.table] || [];
+    return Promise.resolve({ data: ids.map((id) => ({ id })), error: null });
+  };
+
+  return { client: { from, rpc } as unknown as SupabaseClient, rpcCalls };
 }
 
 describe('candidateVacancyService.fetchCandidateProfile — read-side dedupe', () => {
@@ -172,8 +162,8 @@ describe('candidateVacancyService.fetchCandidateProfile — read-side dedupe', (
 });
 
 describe('candidateVacancyService.updateCandidateProfile — write-side reconcile', () => {
-  it('inserts fresh child rows then deletes only the others (never a full wipe)', async () => {
-    const { client, inserts, deletes } = createFakeSupabase({
+  it('reconciles via a single RPC call carrying the full desired row set', async () => {
+    const { client, rpcCalls } = createFakeSupabase({
       profileRow: baseProfileRow,
       insertIds: {
         work_experiences: ['w-new-1', 'w-new-2'],
@@ -191,19 +181,19 @@ describe('candidateVacancyService.updateCandidateProfile — write-side reconcil
       ],
     });
 
-    const weInsert = inserts.find((i) => i.table === 'work_experiences');
-    expect(weInsert?.rows).toHaveLength(2);
-
-    // delete-others: scoped to NOT the freshly inserted ids, so the just-written
-    // rows survive and any legacy duplicates are cleaned up.
-    const weDelete = deletes.find((d) => d.table === 'work_experiences');
-    expect(weDelete?.not).toEqual(['id', 'in', '(w-new-1,w-new-2)']);
+    // Exactly one round trip for work_experiences — insert and delete used to
+    // be two separate requests a concurrent save could interleave with; now
+    // the whole reconcile is a single atomic call.
+    const weCalls = rpcCalls.filter((c) => c.table === 'work_experiences');
+    expect(weCalls).toHaveLength(1);
+    expect(weCalls[0].rows).toHaveLength(2);
+    expect(weCalls[0].candidateId).toBe('cand-1');
   });
 
-  it('refuses (throws) when the insert returns no ids, without deleting existing rows', async () => {
-    const { client, deletes } = createFakeSupabase({
+  it('refuses (throws) when the RPC returns no ids for a non-empty desired set', async () => {
+    const { client } = createFakeSupabase({
       profileRow: baseProfileRow,
-      // Insert "succeeds" but returns no rows (e.g. INSERT policy, no SELECT policy).
+      // RPC "succeeds" but returns no rows (e.g. a bug or an RLS surprise).
       insertIds: { work_experiences: [] },
     });
     mockGetSupabase.mockReturnValue(client);
@@ -215,132 +205,67 @@ describe('candidateVacancyService.updateCandidateProfile — write-side reconcil
         ],
       })
     ).rejects.toThrow();
-
-    // The guard must fire BEFORE any delete on work_experiences.
-    expect(deletes.find((d) => d.table === 'work_experiences')).toBeUndefined();
   });
 });
 
 /**
- * Stateful variant of the fake: it actually STORES rows, so a delete can destroy
- * them. The stateless fake above can only observe the shape of each call, which is
- * why it cannot see the interleaving defect below.
- *
- * `barrierCount` inserts must arrive before any of them resolve, which pins the
- * interleaving to: A-insert, B-insert, A-delete, B-delete — the ordering two
- * concurrent saves produce whenever both round-trips overlap.
+ * Simulates the server-side behavior of the reconcile_candidate_child_rows
+ * RPC closely enough to exercise the concurrency fix: each call is one atomic
+ * insert+delete, and calls for the SAME (candidate, table) are serialized via
+ * a promise chain — standing in for the real function's
+ * `pg_advisory_xact_lock`. A second overlapping call only starts once the
+ * first has fully "committed", so it sees the first call's rows as already
+ * there instead of racing to delete them.
  */
-function createStatefulSupabase(barrierCount: number) {
+function createSerializingStatefulSupabase() {
   const tables: Record<string, Array<{ id: string }>> = {
     work_experiences: [],
     education: [],
     language_skills: [],
     certifications: [],
   };
+  const locks = new Map<string, Promise<unknown>>();
   let seq = 0;
-  let arrived = 0;
-  let release!: () => void;
-  const gate = new Promise<void>((resolve) => {
-    release = resolve;
-  });
 
-  const hitBarrier = async () => {
-    arrived += 1;
-    if (arrived >= barrierCount) release();
-    await gate;
-  };
+  const rpc = (fnName: string, args: Record<string, unknown>) => {
+    if (fnName !== 'reconcile_candidate_child_rows') return Promise.resolve({ data: null, error: null });
 
-  const from = (table: string) => {
-    const state: { op?: string; not?: string[] } = {};
-    let pendingRows: unknown[] = [];
+    const table = args.p_table as string;
+    const candidateId = args.p_candidate_id as string;
+    const rows = args.p_rows as unknown[];
+    const lockKey = `${candidateId}:${table}`;
 
-    const runInsert = async () => {
-      const ids = pendingRows.map(() => `${table}-${(seq += 1)}`);
-      await hitBarrier();
-      tables[table].push(...ids.map((id) => ({ id })));
+    const run = async () => {
+      const ids = rows.map(() => `${table}-${(seq += 1)}`);
+      tables[table] = [...ids.map((id) => ({ id }))]; // last writer replaces the set
       return { data: ids.map((id) => ({ id })), error: null };
     };
 
-    const runDelete = async () => {
-      if (state.not) {
-        const keep = state.not[2].replace(/[()]/g, '').split(',');
-        tables[table] = tables[table].filter((row) => keep.includes(row.id));
-      } else {
-        tables[table] = [];
-      }
-      return { error: null };
-    };
-
-    const terminal = () => {
-      if (state.op === 'insert') return runInsert();
-      if (state.op === 'delete') return runDelete();
-      return Promise.resolve({ error: null });
-    };
-
-    const builder: Record<string, unknown> = {
-      select: () => builder,
-      eq: () => builder,
-      order: () => builder,
-      limit: () => builder,
-      in: () => builder,
-      update: () => {
-        state.op = 'update';
-        return builder;
-      },
-      insert: (rows: unknown[]) => {
-        state.op = 'insert';
-        pendingRows = rows;
-        return builder;
-      },
-      delete: () => {
-        state.op = 'delete';
-        return builder;
-      },
-      not: (col: string, op: string, val: string) => {
-        state.not = [col, op, val];
-        return builder;
-      },
-      maybeSingle: () => Promise.resolve({ data: baseProfileRow, error: null }),
-      single: () => terminal(),
-      then: (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) => terminal().then(onF, onR),
-    };
-
-    return builder;
+    const previous = locks.get(lockKey) || Promise.resolve();
+    const next = previous.then(run, run);
+    locks.set(lockKey, next);
+    return next;
   };
 
-  return { client: { from } as unknown as SupabaseClient, tables };
+  const from = () => ({
+    select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: baseProfileRow, error: null }) }) }),
+    update: () => ({ eq: () => Promise.resolve({ error: null }) }),
+  });
+
+  return { client: { from, rpc } as unknown as SupabaseClient, tables };
 }
 
 describe('candidateVacancyService.updateCandidateProfile — concurrent saves', () => {
-  // BUG (P0 data loss, still unfixed at time of writing): reconcileChildRows
-  // (candidateVacancyService.ts:346-383) is insert-first/delete-after with no
-  // transaction and no optimistic-concurrency token. Each call deletes every row
-  // that is not in ITS OWN freshly-inserted id set, so two overlapping saves
-  // annihilate each other:
-  //
-  //   A: INSERT -> keepIds [a1]
-  //   B: INSERT -> keepIds [b1]                 (table holds a1, b1)
-  //   A: DELETE WHERE candidate_id=C AND id NOT IN (a1)  -> destroys b1
-  //   B: DELETE WHERE candidate_id=C AND id NOT IN (b1)  -> destroys a1
-  //   => ZERO rows. Every work experience is gone.
-  //
-  // Verified: with the barrier below, the table ends EMPTY today.
-  //
-  // Reachability is not theoretical. updateCandidateProfile:574-585 reconciles ALL
-  // FOUR child tables on EVERY call (normalizeCandidateProfile falls back to the
-  // fetched profile for any key not in `updates`), so any two overlapping profile
-  // mutations collide even when they touch different sections. The Delete button at
-  // app/profile/experience/[id].tsx:301 passes no `loading` prop, and the inline
-  // delete on app/(candidate)/profile.tsx:113-129 is a bare Pressable with no
-  // pending guard — so Save-then-Delete and two rapid deletes both overlap freely.
-  //
-  // Fix: move the reconcile server-side into a single SECURITY DEFINER RPC so
-  // insert+delete are one transaction, or scope the delete by a per-save token
-  // (e.g. delete only rows whose `updated_at` predates this save) instead of by
-  // "not in my ids". A client-side mutex is not sufficient — two devices race too.
-  // Un-skip this test with that fix.
-  it.skip('does not destroy a concurrent save\'s rows (both writers survive)', async () => {
-    const fake = createStatefulSupabase(2);
+  // Was a P0 data-loss bug: reconcileChildRows used to be insert-then-delete
+  // as two SEPARATE requests, so two overlapping saves each deleted the
+  // other's freshly-inserted rows, leaving zero. Fixed by
+  // supabase/migrations/202608070006_reconcile_child_rows_rpc.sql — insert
+  // and delete now happen inside one SECURITY DEFINER function call,
+  // serialized per (candidate, table) with pg_advisory_xact_lock, so
+  // overlapping saves resolve to last-write-wins instead of mutual
+  // destruction.
+  it('does not destroy a concurrent save\'s rows (last writer wins, never zero)', async () => {
+    const fake = createSerializingStatefulSupabase();
     mockGetSupabase.mockReturnValue(fake.client);
 
     await Promise.all([
@@ -356,8 +281,6 @@ describe('candidateVacancyService.updateCandidateProfile — concurrent saves', 
       }),
     ]);
 
-    // Today this is [] — a total wipe. A correct reconcile leaves the last writer's
-    // row (or both), but never nothing.
     expect(fake.tables.work_experiences.length).toBeGreaterThan(0);
   });
 });
