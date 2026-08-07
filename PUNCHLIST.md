@@ -321,14 +321,22 @@ answering the content-rating questionnaire.
 ## 4. P1 (bugs, i18n, perf) — fix after P0s, before/soon after launch
 
 ### Bugs (code-reviewer)
-- 🤖 Talent invites still double-fire on a transient network error —
-  `talentService.ts:319-329` checks `existing.data` but never
-  `existing.error`, so a PostgREST blip falls through to a duplicate INSERT.
-  (Sibling `applyToVacancy:791` already checks correctly — same fix.)
-- 🤖 No unique index on `candidate_invites` + invite quota (`invitesPerMonth`)
-  is enforced **client-side only** — a free employer can spam unlimited
-  invites via direct PostgREST calls. Add a unique index + move the quota
-  check into the RLS insert policy or a trigger.
+- ✅ **Fixed, live-verified** — talent invites double-firing on a transient
+  network error (`talentService.ts` now checks `existing.error` before
+  falling through to INSERT, matching `applyToVacancy`) **and** the missing
+  DB backstop (`idx_candidate_invites_company_candidate_unique`, migration
+  `202608070008` — checked for existing duplicate rows first, zero found).
+  Live-tested via direct REST: first invite 201, an identical second insert
+  409s with a unique-constraint violation. Previously-skipped regression
+  test now runs and passes.
+- 🤖 **Still open**: invite quota (`invitesPerMonth`) is enforced
+  **client-side only** — a free employer can still spam invites up to the
+  unique-per-candidate limit (i.e. one invite per distinct candidate, but
+  unlimited distinct candidates) via direct PostgREST calls, since nothing
+  server-side checks the plan's monthly cap. Needs a quota-check trigger or
+  RLS policy addition, deliberately not attempted this pass (same class of
+  change as the reconcile-RPC and RLS fixes that needed live hotfixing
+  earlier in this session — wanted a fresh look rather than rushing it).
 - 🤖 Saved jobs / applied-to jobs still vanish from the UI once a vacancy
   leaves `active` — the *client* fix shipped, but `vacancies_select` RLS
   (`202605060000:354`) still gates on `status='active' OR owned`, so a

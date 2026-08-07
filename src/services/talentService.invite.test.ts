@@ -128,7 +128,7 @@ describe('talentService.sendInvite — Supabase idempotency', () => {
   //    if (existingError) throw new Error(existingError.message);`
   // and add a unique index on candidate_invites(company_id, candidate_id) so the
   // race has a real backstop. Un-skip this test with that fix.
-  it.skip('throws instead of inserting when the existing-invite lookup fails', async () => {
+  it('throws instead of inserting when the existing-invite lookup fails', async () => {
     const fake = createInviteSupabase({
       existing: null,
       inserted: null,

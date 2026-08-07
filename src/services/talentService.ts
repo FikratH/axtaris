@@ -324,6 +324,7 @@ class TalentService {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (existing.error) throw new Error(existing.error.message);
     if (existing.data) {
       return mapRow(existing.data as InviteRow);
     }
