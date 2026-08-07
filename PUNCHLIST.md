@@ -543,21 +543,34 @@ reasonable future addition but wasn't part of this finding's scope.
   query replacing the `.limit(20)` fetch-and-filter). Re-audited the
   entire `src/services/` tree for any other capped-`.limit(20)` quota
   counter — none exists; this punchlist line was stale.
-- 🤖 **Partially addressed, rest flagged open** — 5-minute realtime
-  message gap with no push safety net. Added the missing
-  `refetchInterval: 15000` fallback to `useMessages` (`useChat.ts`),
-  matching the pattern `useConversations` already had — a genuinely
-  cheap, contained fix for the "realtime socket silently dropped"
-  half of this bug. **Still open, not attempted**: chat messages never
-  insert a `notifications` row, so there is no push-notification safety
-  net at all for a message sent while the recipient's app isn't
-  foregrounded/subscribed (traced: `send-push` only triggers off
-  `AFTER INSERT ON notifications`, and nothing in `chatService.ts`
-  writes to that table). Closing this fully means inserting a
-  notification row on message send (with sender-exclusion and probably
-  a "recipient already has this thread open" suppression check) — a
-  real feature addition, not a cleanup-pass-sized fix, so left open by
-  design rather than rushed.
+- ✅ **Fixed, live-verified** — 5-minute realtime message gap with no push
+  safety net. Two parts, both closed:
+  1. `refetchInterval: 15000` fallback added to `useMessages`
+     (`useChat.ts`), matching the pattern `useConversations` already had —
+     covers the "realtime socket silently dropped" half.
+  2. **Push notification on message send** (`202608070016`) — chat
+     messages never inserted a `notifications` row, so there was no push
+     fallback at all while the recipient's app wasn't
+     foregrounded/subscribed (`send-push` only triggers off
+     `AFTER INSERT ON notifications`, and nothing wrote to that table).
+     Added an `AFTER INSERT ON messages` trigger
+     (`create_message_notification`), mirroring the existing
+     application-notification pattern exactly
+     (`create_application_insert_notification`/
+     `create_application_status_notification`) — a DB trigger, not
+     client-side code, so it fires even if the sending client crashes or
+     closes immediately after sending. Resolves the recipient as
+     "whichever participant isn't the sender," no-ops cleanly for support
+     conversations (`participant_b IS NULL`). Required
+     `ALTER TYPE notification_type ADD VALUE 'new_message'`. No changes
+     needed to the push pipeline itself — `send-push`'s trigger has no
+     type filter, so it picks up the new notification type automatically.
+     **Live-verified against production**: sent a real message → a
+     `notifications` row appeared for the correct recipient (not the
+     sender) with the sender's real name as the title and the message
+     body, correct `type='new_message'` and `data` payload → sent a
+     message into a support conversation → succeeded with no notification
+     (correct no-op, no error). All test rows cleaned up after.
 
 ### i18n (i18n-auditor)
 - ✅ **Fixed** — AI-assist English fallback text (vacancy
