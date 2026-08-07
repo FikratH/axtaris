@@ -394,7 +394,10 @@ class SubscriptionService {
         user_id: userId,
         plan: planCode,
         status: 'active',
-        price_amount: nextPlan.monthlyPriceAzn || 0,
+        // Free during beta — no payment processor is wired up, so no charge
+        // ever actually occurs. Recording the plan's list price here would
+        // be a phantom transaction that never happened.
+        price_amount: 0,
         price_currency: 'AZN',
         billing_interval: 'month',
         started_at: now.toISOString(),
@@ -466,7 +469,8 @@ class SubscriptionService {
       user_id: userId,
       plan: planCode,
       status: 'active',
-      price_amount: nextPlan.monthlyPriceAzn || 0,
+      // Free during beta — see the matching comment in activatePlan above.
+      price_amount: 0,
       price_currency: 'AZN',
       billing_interval: 'month',
       started_at: now.toISOString(),

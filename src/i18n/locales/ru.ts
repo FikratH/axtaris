@@ -3,8 +3,8 @@ export default {
     upgrade: 'Обновить',
     upgradeTo: 'Перейти на {{plan}}',
     maybeLater: 'Позже',
-    socialProof: 'Присоединяйтесь к тысячам профессионалов на AxtarIS',
-    socialProofSub: 'Нам доверяют по всему Азербайджану — чтобы найти работу и нанимать быстрее',
+    socialProof: 'Создано для соискателей и работодателей в Азербайджане',
+    socialProofSub: 'Более быстрый способ найти работу и нанимать',
     mostPopular: 'Самый популярный',
     proTag: 'Pro',
     limit: {
@@ -814,7 +814,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '29 AZN / 30 дней',
+            priceLabel: '19 AZN / 30 дней',
             visibilityLabel: 'Приоритетная поддержка и настройка',
             highlights: [
               'Приоритетная поддержка и помощь с настройкой найма',
@@ -824,7 +824,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '99 AZN / 30 дней',
+            priceLabel: '49 AZN / 30 дней',
             visibilityLabel: 'Выделенная VIP-поддержка',
             highlights: [
               'Выделенная VIP-поддержка от команды AxtarIS',
@@ -837,8 +837,8 @@ export default {
           price: {
             label: 'Цена за 30 дней',
             free: 'Бесплатно',
-            pro: '29 AZN',
-            premium: '99 AZN',
+            pro: '19 AZN',
+            premium: '49 AZN',
           },
           vacancyVisibility: {
             label: 'Продвижение вакансии',

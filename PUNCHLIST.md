@@ -229,6 +229,22 @@ readiness.
 
 ## 3. P0 — Store compliance (blocks submission to both stores)
 
+**Status:** §3.1 (checkout rewrite), §3.3 (pricing mismatch), §3.4 (stale
+`ios/`) ✅ fixed and live-verified in a real browser session (signed in as
+a seed candidate, activated a plan end-to-end, confirmed the success flow
+and a real DB write — no card form anywhere, "Free during beta" +
+included-benefits + coming-soon note render correctly in az). Also applied:
+`supportsTablet: false` (removes the iPad-screenshot requirement — flip
+back if iPad screenshots get produced), `expo-secure-store` faceIDPermission
+disabled, Android `monochromeImage` wired to the existing asset, and the
+unsubstantiated "join thousands" social-proof copy softened in all 3
+locales. §3.2 (real privacy/terms copy) and §3.5/§3.6 remain 🧑 owner
+items — see §8.
+**Pricing correction note:** project memory resolves the 29/99-vs-19/49
+mismatch the audit flagged — 19/49 is the deliberate, later value (shipped
+2026-07-23, "owner wants supply growth"); the locale files had the stale
+pre-revision number. Fixed *toward* 19/49, not away from it.
+
 ### 3.1 🧑 decision + 🤖 implementation — In-app card checkout is fake and non-compliant
 `app/checkout.tsx` collects a real card number/expiry/CVV, Luhn-validates
 locally, then **sleeps 1700ms and never contacts a payment processor** — no

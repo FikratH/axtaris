@@ -3,8 +3,8 @@ export default {
     upgrade: 'Yüksəlt',
     upgradeTo: '{{plan}} planına keç',
     maybeLater: 'Sonra',
-    socialProof: 'AxtarIS-də minlərlə peşəkara qoşulun',
-    socialProofSub: 'İşə düzəlmək və daha sürətli işə götürmək üçün Azərbaycanda etibarlı',
+    socialProof: 'Azərbaycanda iş axtaranlar və işəgötürənlər üçün',
+    socialProofSub: 'İşə düzəlmək və işə götürmək üçün daha sürətli yol',
     mostPopular: 'Ən populyar',
     proTag: 'Pro',
     limit: {
@@ -814,7 +814,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '29 AZN / 30 günlük',
+            priceLabel: '19 AZN / 30 günlük',
             visibilityLabel: 'Prioritet dəstək və quraşdırma',
             highlights: [
               'Prioritet dəstək və işə qəbul üzrə quraşdırma köməyi',
@@ -824,7 +824,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '99 AZN / 30 günlük',
+            priceLabel: '49 AZN / 30 günlük',
             visibilityLabel: 'Fərdi VIP dəstək',
             highlights: [
               'AxtarIS komandasından fərdi VIP dəstək',
@@ -837,8 +837,8 @@ export default {
           price: {
             label: '30 günlük qiymət',
             free: 'Pulsuz',
-            pro: '29 AZN',
-            premium: '99 AZN',
+            pro: '19 AZN',
+            premium: '49 AZN',
           },
           vacancyVisibility: {
             label: 'Vakansiya tanıtımı',

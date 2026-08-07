@@ -3,8 +3,8 @@ export default {
     upgrade: 'Upgrade',
     upgradeTo: 'Upgrade to {{plan}}',
     maybeLater: 'Maybe later',
-    socialProof: 'Join thousands of professionals on AxtarIS',
-    socialProofSub: 'Trusted across Azerbaijan to get hired and to hire faster',
+    socialProof: 'Built for job seekers and employers in Azerbaijan',
+    socialProofSub: 'A faster way to get hired and to hire',
     mostPopular: 'Most popular',
     proTag: 'Pro',
     limit: {
@@ -814,7 +814,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '29 AZN / 30 days',
+            priceLabel: '19 AZN / 30 days',
             visibilityLabel: 'Priority support & onboarding',
             highlights: [
               'Priority support and hiring setup help',
@@ -824,7 +824,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '99 AZN / 30 days',
+            priceLabel: '49 AZN / 30 days',
             visibilityLabel: 'Dedicated VIP support',
             highlights: [
               'Dedicated VIP support from the AxtarIS team',
@@ -837,8 +837,8 @@ export default {
           price: {
             label: '30-day price',
             free: 'Free',
-            pro: '29 AZN',
-            premium: '99 AZN',
+            pro: '19 AZN',
+            premium: '49 AZN',
           },
           vacancyVisibility: {
             label: 'Vacancy promotion',
