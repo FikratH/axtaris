@@ -733,6 +733,7 @@ export default {
     missingImage: 'Image is missing',
     searchNameRequired: 'Search name is required',
     dailyLimitReached: 'Daily application limit reached for your current plan',
+    saveToggleFailed: 'Could not update saved jobs. Please try again.',
   },
   subscription: {
     title: 'Subscription',

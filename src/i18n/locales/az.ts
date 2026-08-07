@@ -733,6 +733,7 @@ export default {
     missingImage: 'Şəkil əskikdir',
     searchNameRequired: 'Axtarış adı tələb olunur',
     dailyLimitReached: 'Cari planınız üçün gündəlik müraciət limitinə çatmısınız',
+    saveToggleFailed: 'Saxlanılan vakansiyalar yenilənmədi. Yenidən cəhd edin.',
   },
   subscription: {
     title: 'Abunəlik',

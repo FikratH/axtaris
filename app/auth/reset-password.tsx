@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { toUserMessage } from '@/utils/errorMessage';
 import * as Linking from 'expo-linking';
@@ -193,85 +193,92 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
-      ]}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <TouchableOpacity
-        onPress={() => router.replace('/auth/sign-in')}
-        style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
+        ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.replace('/auth/sign-in')}
+          style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+        >
+          <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
+        </TouchableOpacity>
 
-      <View style={[styles.header, { marginTop: s['4xl'] }]}> 
-        <View style={[styles.lockIcon, { backgroundColor: colors.primaryLight, borderRadius: r.xl }]}> 
-          <LockKeyhole size={32} color={colors.primary} strokeWidth={1.5} />
+        <View style={[styles.header, { marginTop: s['4xl'] }]}>
+          <View style={[styles.lockIcon, { backgroundColor: colors.primaryLight, borderRadius: r.xl }]}>
+            <LockKeyhole size={32} color={colors.primary} strokeWidth={1.5} />
+          </View>
+          <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s['2xl'] }]}>
+            {tr('auth.resetTitle')}
+          </Text>
         </View>
-        <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s['2xl'] }]}> 
-          {tr('auth.resetTitle')}
-        </Text>
-      </View>
 
-      <View style={{ marginTop: s['4xl'] }}>
-        <Controller
-          control={control}
-          name="password"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label={tr('auth.password')}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              placeholder="••••••••"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              error={fieldError('password')}
-              rightIcon={
-                showPassword
-                  ? <EyeOff size={18} color={colors.textTertiary} strokeWidth={1.8} />
-                  : <Eye size={18} color={colors.textTertiary} strokeWidth={1.8} />
-              }
-              onRightIconPress={() => setShowPassword((current) => !current)}
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="confirmPassword"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label={tr('auth.confirmPassword')}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              placeholder="••••••••"
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              error={fieldError('confirmPassword')}
-            />
-          )}
-        />
-
-        <View style={{ marginTop: s.xl }}>
-          <Button
-            title={tr('common.save')}
-            onPress={handleSubmit(onSubmit)}
-            loading={submitting}
-            size="lg"
+        <View style={{ marginTop: s['4xl'] }}>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label={tr('auth.password')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="••••••••"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                error={fieldError('password')}
+                rightIcon={
+                  showPassword
+                    ? <EyeOff size={18} color={colors.textTertiary} strokeWidth={1.8} />
+                    : <Eye size={18} color={colors.textTertiary} strokeWidth={1.8} />
+                }
+                onRightIconPress={() => setShowPassword((current) => !current)}
+              />
+            )}
           />
+
+          <Controller
+            control={control}
+            name="confirmPassword"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label={tr('auth.confirmPassword')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="••••••••"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                error={fieldError('confirmPassword')}
+              />
+            )}
+          />
+
+          <View style={{ marginTop: s.xl }}>
+            <Button
+              title={tr('common.save')}
+              onPress={handleSubmit(onSubmit)}
+              loading={submitting}
+              size="lg"
+            />
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
   },
   stateContainer: {

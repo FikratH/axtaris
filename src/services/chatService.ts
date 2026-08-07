@@ -152,11 +152,16 @@ class ChatService {
 
     if (error) throw new Error(error.message);
 
-    // Best-effort denormalized preview for the conversation list.
-    await getSupabase()
+    // Best-effort denormalized preview for the conversation list — the
+    // message itself is already committed, so a failure here shouldn't fail
+    // the send, but it must not be silently swallowed either.
+    const { error: previewError } = await getSupabase()
       .from('conversations')
       .update({ last_message: text, last_message_at: (data as MessageRow).created_at })
       .eq('id', conversationId);
+    if (previewError) {
+      console.warn('[chatService.sendMessage] conversation preview update failed:', previewError.message);
+    }
 
     return mapMessage(data as MessageRow);
   }
@@ -211,10 +216,13 @@ class ChatService {
 
     if (error) throw new Error(error.message);
 
-    await getSupabase()
+    const { error: previewError } = await getSupabase()
       .from('conversations')
       .update({ last_message: body || '📷', last_message_at: (data as MessageRow).created_at })
       .eq('id', conversationId);
+    if (previewError) {
+      console.warn('[chatService.sendImageMessage] conversation preview update failed:', previewError.message);
+    }
 
     return mapMessage(data as MessageRow);
   }
@@ -329,7 +337,18 @@ class ChatService {
       .select('*')
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      // Lost an insert race against the unique (participant_a) WHERE kind='support'
+      // index — fetch the row the other concurrent call created.
+      const { data: retry } = await supa
+        .from('conversations')
+        .select('*')
+        .eq('kind', 'support')
+        .eq('participant_a', userId)
+        .limit(1);
+      if (retry && retry.length > 0) return mapConversation(retry[0] as ConversationRow);
+      throw new Error(error.message);
+    }
     return mapConversation(data as ConversationRow);
   }
 

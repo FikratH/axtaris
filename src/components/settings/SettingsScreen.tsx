@@ -73,6 +73,7 @@ export function SettingsScreen({ showBackButton = true }: { showBackButton?: boo
       router.push('/auth/sign-in');
       return;
     }
+    if (startSupport.isPending) return;
     if (!isPremium) {
       Alert.alert(tr('settings.supportPremiumTitle'), tr('settings.supportPremiumMessage'), [
         { text: tr('common.cancel'), style: 'cancel' },
@@ -316,6 +317,7 @@ export function SettingsScreen({ showBackButton = true }: { showBackButton?: boo
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={handleContactSupport}
+            disabled={startSupport.isPending}
             style={[styles.optionRow, { paddingHorizontal: s.lg, paddingVertical: s.lg }]}
           >
             <LifeBuoy size={18} color={colors.primary} strokeWidth={1.8} style={{ marginRight: 10 }} />

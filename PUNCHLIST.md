@@ -380,12 +380,76 @@ answering the content-rating questionnaire.
   how many RLS bugs turned up elsewhere in this same pass, not relying on
   RLS alone here felt worth the extra query. Live-tested: the filtered
   query returns only the calling employer's own applications.
-- P2 bugs (certification expiry not validated, duplicate support-conversation
-  double-tap, 5-minute realtime message gap with no push safety net, 3 auth
-  screens with no keyboard-avoidance and no scroll escape, silent optimistic-
-  bookmark rollback, unchecked conversation-preview update, usage counter
-  saturating at 20 rows) — full list with file:line in the code-reviewer
-  transcript; low urgency, batch into a cleanup pass.
+- ✅ **Fixed, test-verified** — certification expiry not validated.
+  `certificationSchema` (`src/services/validation.ts`) gained an
+  `expiryDate: z.string().optional()` field and a `.refine` mirroring
+  `experienceSchema`'s pattern (`!expiryDate || expiryDate >= issueDate`,
+  path `['expiryDate']`); `app/profile/certification/[id].tsx`'s save
+  handler now passes `expiryDate` into the `safeParse` call (it was
+  collected in state and written to the model already, just never
+  validated). Un-skipped the pre-written
+  `validation.test.ts` test that documented this exact gap.
+- ✅ **Fixed, live-verified** — duplicate support-conversation on
+  double-tap. Client-side: `handleContactSupport`
+  (`SettingsScreen.tsx`) now early-returns while
+  `startSupport.isPending`, and the button itself is `disabled` during
+  the mutation. Data-layer: found and confirmed a **live duplicate** in
+  production (one user had 2 support conversations — one real with a
+  message from Jul 15, one empty stray from this session's own testing
+  earlier today). Deleted the empty duplicate (user-confirmed before the
+  delete, per the no-destructive-ops-without-confirmation constraint),
+  then added migration `202608070010_support_conversation_unique_index.sql`
+  (partial unique index on `conversations(participant_a) WHERE
+  kind='support'`, applied live), plus a race-retry in
+  `getOrCreateSupportConversation` (`chatService.ts`) matching the
+  existing pattern in the sibling `getOrCreateApplicationConversation` —
+  on insert conflict, re-fetch and return the row the other caller
+  created instead of throwing.
+- ✅ **Fixed** — 3 auth screens with no keyboard-avoidance/scroll escape.
+  `verify-otp.tsx`, `forgot-password.tsx` (form state only — the
+  post-submit "check your email" state has no inputs, left as a plain
+  `View`), and `reset-password.tsx` now wrap their forms in
+  `KeyboardAvoidingView` + `ScrollView` with `keyboardShouldPersistTaps
+  ="handled"`, matching the working pattern already used by
+  `sign-in.tsx`/`sign-up.tsx`. Container styles switched `flex: 1` →
+  `flexGrow: 1` where reused as `contentContainerStyle` (the former
+  silently defeats scrolling once content exceeds the viewport with the
+  keyboard open).
+- ✅ **Fixed** — silent optimistic-bookmark rollback. `useToggleSavedJob`
+  (`useCandidateVacancyActions.ts`) already rolled back the optimistic
+  save/unsave on failure but told the user nothing; `onError` now also
+  shows an `Alert` (new `errors.saveToggleFailed` key, all 3 locales).
+  Fixed once in the hook rather than at each of the 3 fire-and-forget
+  call sites (`saved.tsx`, `home.tsx`, `vacancy/[id].tsx`).
+- ✅ **Fixed** — unchecked conversation-preview update. Both
+  `sendMessage` and `sendImageMessage` (`chatService.ts`) update the
+  conversation's denormalized `last_message`/`last_message_at` as a
+  best-effort call after the message insert already succeeded; the
+  `{ error }` was previously discarded entirely. Now captured and
+  `console.warn`'d — deliberately not thrown/surfaced to the user, since
+  the message itself already sent successfully and this is just a
+  list-preview staleness risk, not a failed send.
+- ✅ **Verified already fixed, not a live bug** — "usage counter
+  saturating at 20 rows" was the same `applicationsUsedToday` undercount
+  already closed earlier in this pass (§3.1's quota fix, exact-count
+  query replacing the `.limit(20)` fetch-and-filter). Re-audited the
+  entire `src/services/` tree for any other capped-`.limit(20)` quota
+  counter — none exists; this punchlist line was stale.
+- 🤖 **Partially addressed, rest flagged open** — 5-minute realtime
+  message gap with no push safety net. Added the missing
+  `refetchInterval: 15000` fallback to `useMessages` (`useChat.ts`),
+  matching the pattern `useConversations` already had — a genuinely
+  cheap, contained fix for the "realtime socket silently dropped"
+  half of this bug. **Still open, not attempted**: chat messages never
+  insert a `notifications` row, so there is no push-notification safety
+  net at all for a message sent while the recipient's app isn't
+  foregrounded/subscribed (traced: `send-push` only triggers off
+  `AFTER INSERT ON notifications`, and nothing in `chatService.ts`
+  writes to that table). Closing this fully means inserting a
+  notification row on message send (with sender-exclusion and probably
+  a "recipient already has this thread open" suppression check) — a
+  real feature addition, not a cleanup-pass-sized fix, so left open by
+  design rather than rushed.
 
 ### i18n (i18n-auditor)
 - ✅ **Fixed** — AI-assist English fallback text (vacancy

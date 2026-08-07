@@ -7,6 +7,8 @@ import {
 } from '@/services/candidateVacancyService';
 import { vacancyQueryKeys } from './useVacancyQueries';
 import { subscriptionQueryKeys } from './useSubscriptionQueries';
+import { Alert } from '@/utils/dialog';
+import i18n from '@/i18n';
 
 export const candidateVacancyActionKeys = {
   savedJobIds: (userId: string) => ['saved-jobs', userId] as const,
@@ -55,6 +57,7 @@ export function useToggleSavedJob(userId?: string) {
       if (context?.previous && userId) {
         queryClient.setQueryData(queryKey, context.previous);
       }
+      Alert.alert(i18n.t('common.error'), i18n.t('errors.saveToggleFailed'));
     },
     onSettled: () => {
       if (!userId) return;

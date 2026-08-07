@@ -34,6 +34,7 @@ export function useMessages(conversationId?: string) {
     queryKey: chatKeys.messages(conversationId),
     queryFn: () => chatService.getMessages(conversationId || ''),
     enabled: !!conversationId,
+    refetchInterval: 15000, // light fallback so an open thread stays fresh if the realtime socket drops (e.g. after backgrounding)
   });
 
   useEffect(() => {

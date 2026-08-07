@@ -62,7 +62,7 @@ export default function CertificationFormScreen() {
   const handleSave = async () => {
     if (!profile) return;
 
-    const parsed = certificationSchema.safeParse({ name, issuer, issueDate, credentialUrl });
+    const parsed = certificationSchema.safeParse({ name, issuer, issueDate, expiryDate, credentialUrl });
     if (!parsed.success) {
       Alert.alert(tr('common.error'), tr(firstIssueMessage(parsed.error)));
       return;

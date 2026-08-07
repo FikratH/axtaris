@@ -184,19 +184,7 @@ describe('certificationSchema', () => {
     expect(firstIssueMessage(result.error)).toBe('validation.invalidUrl');
   });
 
-  // BUG (P2, still unfixed at time of writing): certifications are the only
-  // date-bearing profile section with NO end-before-start check. `expiryDate` is a
-  // real user-editable field (app/profile/certification/[id].tsx:39 state, :162
-  // DateField, :75 written to the model as `expiryDate`) and it is part of the
-  // read-side dedupe key, but the screen's safeParse call at :64 passes only
-  // { name, issuer, issueDate, credentialUrl } — expiryDate is never handed to the
-  // schema, and the schema has no rule for it either. A certification issued in
-  // 2023 that "expires" in 2020 saves cleanly on both create and edit.
-  // Fix: add `expiryDate: z.string().optional()` to the object and a refinement
-  // mirroring experienceSchema's (`!expiryDate || expiryDate >= issueDate`, path
-  // ['expiryDate'], message 'validation.dateRange'), then pass expiryDate at the
-  // call site. Un-skip this test with that fix.
-  it.skip('rejects an expiry date earlier than the issue date', () => {
+  it('rejects an expiry date earlier than the issue date', () => {
     const result = certificationSchema.safeParse({ ...base, expiryDate: '2020-01-01' });
 
     expect(result.success).toBe(false);

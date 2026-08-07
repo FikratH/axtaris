@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { toUserMessage } from '@/utils/errorMessage';
 import { useRouter } from 'expo-router';
@@ -76,52 +76,65 @@ export default function ForgotPasswordScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 20 }]}>
-      <TouchableOpacity
-        onPress={() => safeBack(router, '/auth/sign-in')}
-        style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={[styles.formContainer, { paddingTop: insets.top + 20 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
-      </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => safeBack(router, '/auth/sign-in')}
+          style={[styles.backButton, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+        >
+          <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
+        </TouchableOpacity>
 
-      <FadeInView delay={50} style={[styles.header, { marginTop: s['3xl'] }]}>
-        <Image source={LOGO_ICON} style={styles.logoIcon} resizeMode="contain" />
-        <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s.lg }]}>
-          {tr('auth.resetTitle')}
-        </Text>
-        <Text style={[{ color: colors.textSecondary, ...t.bodyMedium, marginTop: s.sm }]}>
-          {tr('auth.resetSubtitle')}
-        </Text>
-      </FadeInView>
+        <FadeInView delay={50} style={[styles.header, { marginTop: s['3xl'] }]}>
+          <Image source={LOGO_ICON} style={styles.logoIcon} resizeMode="contain" />
+          <Text style={[{ color: colors.textPrimary, ...t.displaySmall, marginTop: s.lg }]}>
+            {tr('auth.resetTitle')}
+          </Text>
+          <Text style={[{ color: colors.textSecondary, ...t.bodyMedium, marginTop: s.sm }]}>
+            {tr('auth.resetSubtitle')}
+          </Text>
+        </FadeInView>
 
-      <FadeInView delay={150} style={{ marginTop: s['3xl'] }}>
-        <Controller
-          control={control}
-          name="email"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              label={tr('auth.email')}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              placeholder="name@example.com"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={fieldError('email')}
-            />
-          )}
-        />
-        <View style={{ marginTop: s.xl }}>
-          <Button title={tr('auth.sendResetLink')} onPress={handleSubmit(onSubmit)} loading={loading} size="lg" />
-        </View>
-      </FadeInView>
-    </View>
+        <FadeInView delay={150} style={{ marginTop: s['3xl'] }}>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <Input
+                label={tr('auth.email')}
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                placeholder="name@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                error={fieldError('email')}
+              />
+            )}
+          />
+          <View style={{ marginTop: s.xl }}>
+            <Button title={tr('auth.sendResetLink')} onPress={handleSubmit(onSubmit)} loading={loading} size="lg" />
+          </View>
+        </FadeInView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 24,
+  },
+  formContainer: {
+    flexGrow: 1,
     paddingHorizontal: 24,
   },
   backButton: {

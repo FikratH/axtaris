@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Alert } from '@/utils/dialog';
 import { toUserMessage } from '@/utils/errorMessage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -99,11 +99,17 @@ export default function VerifyOTPScreen() {
   };
 
   return (
-    <View
-      style={[
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+    <ScrollView
+      contentContainerStyle={[
         styles.container,
-        { backgroundColor: colors.background, paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
+        { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 24 },
       ]}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
       <TouchableOpacity
         onPress={handleBack}
@@ -147,18 +153,19 @@ export default function VerifyOTPScreen() {
         )}
       </View>
 
+    </ScrollView>
       {loading && (
         <View style={[styles.loadingOverlay, { backgroundColor: colors.surfaceOverlay }]}>
           <Text style={[{ color: '#FFFFFF', ...t.labelMedium }]}>{tr('common.loading')}</Text>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     paddingHorizontal: 24,
   },
   backButton: {

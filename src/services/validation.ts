@@ -170,12 +170,18 @@ export const languageSchema = z.object({
 
 // ── Certification ───────────────────────────────────────────
 
-export const certificationSchema = z.object({
-  name: z.string().trim().min(1, 'validation.required'),
-  issuer: z.string().trim().min(1, 'validation.required'),
-  issueDate: z.string().min(1, 'validation.required'),
-  credentialUrl: optionalUrlField,
-});
+export const certificationSchema = z
+  .object({
+    name: z.string().trim().min(1, 'validation.required'),
+    issuer: z.string().trim().min(1, 'validation.required'),
+    issueDate: z.string().min(1, 'validation.required'),
+    expiryDate: z.string().optional(),
+    credentialUrl: optionalUrlField,
+  })
+  .refine((data) => !data.expiryDate || data.expiryDate >= data.issueDate, {
+    message: 'validation.dateRange',
+    path: ['expiryDate'],
+  });
 
 // ── OTP verification ────────────────────────────────────────
 

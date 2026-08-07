@@ -733,6 +733,7 @@ export default {
     missingImage: 'Отсутствует изображение',
     searchNameRequired: 'Требуется название поиска',
     dailyLimitReached: 'Достигнут дневной лимит откликов для вашего текущего плана',
+    saveToggleFailed: 'Не удалось обновить сохранённые вакансии. Попробуйте ещё раз.',
   },
   subscription: {
     title: 'Подписка',
