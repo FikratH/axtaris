@@ -10,36 +10,42 @@ each one, in order.
 
 ## 0. Where things stand right now
 
-- **Security**: all live-exploitable P0s closed and verified against
-  production (admin escalation, CV IDOR — code fixed but **not yet
-  deployed**, see §1 below —, PII column exposure, application-hijack,
-  DM-anyone). See `PUNCHLIST.md` §0-§1.
+- **Security**: every P0 and P1 finding from the original audit is closed
+  and live-verified against production, including F5 (companies.owner_id
+  anon exposure) which needed a 4-step fix across two sessions to close
+  without a regression, and both Edge Functions with security fixes are
+  now deployed live (§1). See `PUNCHLIST.md` §0-§1 for the full record.
 - **Data loss**: the concurrent-save bug that could wipe a candidate's
   entire work history is fixed and live-tested under real concurrency.
 - **Store compliance**: the fake card-checkout screen is replaced with an
-  honest free-during-beta activation flow. No screen collects card details
-  anywhere in the app.
-- **Build**: `npx tsc --noEmit`, `npx jest` (186/186, all passing — the
-  certification-expiry-validation test that used to be an intentional skip
-  now runs and passes too), `npx expo export --platform web`,
-  `npm run supabase:verify`, and `npm run supabase:smoke` all pass as of
-  the last commit on `master`.
-- **Since this file was first generated**: a full P2 cleanup batch shipped
-  (certification expiry validation, support-conversation dedup + DB unique
-  index, 3 auth screens' keyboard-avoidance, silent bookmark-rollback
-  feedback, unchecked conversation-preview updates), `expo-image` adoption
-  for cached avatars/chat images, the oversized logo PNGs were resized
-  (~95% smaller), a safe RLS-refactor prerequisite for the still-open F5
-  finding (companies.owner_id anon exposure — see `PUNCHLIST.md` §1.5 for
-  why the actual column revoke stays open), and a server-side backstop for
-  the employer invite-quota entitlement (previously client-enforced only).
-  Full detail in `PUNCHLIST.md`.
-- **Android production build**: ✅ finished successfully — re-run at the
-  end of this pass to pick up every fix (profile `production`,
-  distribution `store`, commit `a9bb94d`, finished 8/7/2026 7:16 PM). AAB:
+  honest free-during-beta activation flow (no screen collects card details
+  anywhere in the app), and chat now has real report + block affordances
+  (Apple Guideline 1.2 for UGC/1:1 messaging apps) — see §4's content
+  rating note, now resolved rather than open.
+- **Build**: `npx tsc --noEmit`, `npx jest` (192/192, all passing), `npx
+  expo export --platform web`, `npm run supabase:verify`, and `npm run
+  supabase:smoke` all pass as of the last commit on `master`.
+- **Since this file was first generated, two full passes shipped**: a P2
+  cleanup batch (certification expiry validation, support-conversation
+  dedup + DB unique index, 3 auth screens' keyboard-avoidance, silent
+  bookmark-rollback feedback, unchecked conversation-preview updates),
+  `expo-image` adoption for cached avatars/chat images, the oversized logo
+  PNGs resized (~95% smaller), a server-side backstop for the employer
+  invite-quota entitlement (previously client-enforced only), chat
+  report + block (new `blocked_users` table + RLS enforcement at the
+  `messages_insert` policy), a push-notification safety net for chat
+  messages (new `AFTER INSERT` trigger, mirrors the existing
+  application-notification pattern), and — the big one — F5 fully closed
+  (companies.owner_id is no longer readable by the anon role at all,
+  live-verified both via direct REST and a full real-browser guest-mode
+  walkthrough). Full detail in `PUNCHLIST.md`.
+- **Android production build**: ✅ finished successfully, re-run to pick
+  up every fix through this pass (profile `production`, distribution
+  `store`, commit `a9bb94d`, finished 8/7/2026 7:16 PM). AAB:
   https://expo.dev/artifacts/eas/UIOPY5pMl3xFlG0shYTOYAI30sWpCqXh6OcxJj48Mz4.aab
-  — this is the build to submit once §1-§5 below are done (an earlier
-  build from commit `dd84488` also exists but is stale; use this one).
+  — **stale as of the F5/report-block/push-notification commits above**;
+  run `eas build --profile production --platform android` once more right
+  before actually submitting (§7).
 - **iOS build**: blocked, see §5.
 
 ---
@@ -127,7 +133,7 @@ descriptions, CV parsing) no longer silently fall back to templates.
 | App icon | Already have `assets/icon.png` (1024×1024, no alpha) ✅ | Need a 512×512 32-bit PNG export |
 | App description / subtitle / keywords | Required, az/ru/en | Short + full description, az/ru/en |
 | Category | Required | Required |
-| Content rating questionnaire | Age rating questionnaire | IARC questionnaire — **the app has 1:1 messaging and user-generated content (chat, CVs)**; confirm the client actually exposes report + block in chat/profiles before answering (a `moderation_flags` table exists server-side, but this pass didn't trace whether the UI surfaces report/block — check `app/chat/[id].tsx` and profile screens) |
+| Content rating questionnaire | Age rating questionnaire | IARC questionnaire — the app has 1:1 messaging and user-generated content (chat, CVs); ✅ report + block are now implemented and live-verified in chat (`app/chat/[id].tsx`'s details panel), answer the UGC/messaging questions accordingly |
 | Demo reviewer account | Strongly recommended — the app is auth-gated behind role selection | Same |
 | Privacy policy URL | Required in listing | Required in listing + Data Safety form |
 | Support URL / email | Required | Required |
@@ -213,10 +219,10 @@ Then, in App Store Connect / Play Console:
   gateway integration) — a deliberate, documented decision to ship free
   during beta instead (`PUNCHLIST.md` §3.1). Revisit when ready to charge.
 - Crash reporting (Sentry) — not wired up; separate task.
-- The remaining open items in `PUNCHLIST.md` (F5's companies.owner_id anon
-  column exposure — a prerequisite RLS refactor shipped this pass, the
-  actual revoke needs a client select-constant split first, see §1.5 for
-  the exact plan; the lucide bundle trim, blocked on an upstream package
-  export-map fix; the chat push-notification safety net, needs a
-  notifications-row-on-message-send feature) — none are store-submission
-  blockers; fix opportunistically post-launch.
+- The one remaining open item in `PUNCHLIST.md`: the lucide icon-bundle
+  trim (~120KB gzip, ~11% of the JS bundle for ~70 of 1704 shipped icons)
+  — a real fix (deep ESM imports) was tried and reverted after it broke
+  Jest module resolution (the package's `exports` map doesn't allow it);
+  what's left needs either an upstream package fix or a Metro/jest config
+  change that deserves its own dedicated validation pass, not a quick
+  patch. Not a store-submission blocker; fix opportunistically post-launch.
