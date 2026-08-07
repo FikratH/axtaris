@@ -337,15 +337,24 @@ answering the content-rating questionnaire.
   RLS policy addition, deliberately not attempted this pass (same class of
   change as the reconcile-RPC and RLS fixes that needed live hotfixing
   earlier in this session — wanted a fresh look rather than rushing it).
-- 🤖 Saved jobs / applied-to jobs still vanish from the UI once a vacancy
-  leaves `active` — the *client* fix shipped, but `vacancies_select` RLS
-  (`202605060000:354`) still gates on `status='active' OR owned`, so a
-  candidate can't read a job they saved/applied to after it closes. Extend
-  the policy.
-- 🤖 "Pay 0 AZN" when the plans query fails (`app/checkout.tsx:83-84`, no
-  `isError` guard) — activates a paid plan at a UI-displayed price of zero.
-  Becomes moot if §3.1 ships (no prices shown), but add the guard regardless
-  for data integrity (`price_amount` persistence).
+- ✅ **Fixed, live-verified** — saved/applied-to vacancies no longer vanish
+  once they leave `active`. Extended `vacancies_select` (migration
+  `202608070009`) via a new SECURITY DEFINER `candidate_has_vacancy_access()`
+  helper rather than an inline subquery — the policy has no `TO` clause
+  (anon must evaluate it too) and `applications_select_candidate` already
+  references `vacancies`, so an inline check would have recreated the exact
+  candidate_profiles↔applications recursion `202608020002` already had to
+  fix once. Live-verified: anon browsing unaffected, the owning employer's
+  update still works, and a candidate with a real saved-job row *or* a real
+  application both correctly keep seeing the vacancy after it's closed —
+  the two "control" accounts I first picked as unrelated turned out (per a
+  ground-truth query) to already have real seed applications to that
+  vacancy, which is why they could see it too; not a bug.
+- ✅ **Structurally fixed as a side effect of §3.1** — "Pay 0 AZN" when the
+  plans query fails is no longer reachable: the rewritten `checkout.tsx`
+  doesn't read `plans[].monthlyPriceAzn` or render a price/pay amount at
+  all anymore, and `subscriptionService` always persists `price_amount: 0`
+  now regardless of plan.
 - 🤖 Blank paywall / wrong plan on query failure — `app/subscription.tsx`
   never reads `isError`; employers have no error branch at all and fall back
   to `currentPlan='free'`, so a paying Premium employer is told to buy the
