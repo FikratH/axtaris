@@ -406,16 +406,26 @@ answering the content-rating questionnaire.
   for UI branching in `vacancy/[id].tsx`, service-layer `Error`
   construction in `api.ts`, and an unrelated `message` data field in
   `talentService.ts`). tsc clean, jest green, expo export builds.
-- 🤖 14 English service-thrown strings ("Candidate profile not found",
-  "Vacancy not found", etc.) reach az/ru dialogs even through
-  `toUserMessage` (it deliberately passes short app strings through
-  verbatim) — convert these ~11 files to i18n keys.
-- 🤖 Hardcoded AZ city chips on `app/(candidate)/search.tsx:38` shown to
-  RU/EN users (the vacancy-create screen already does this correctly via
-  `getSuggestions('cities', lang)` — same fix here).
-- 🤖 `app/(admin)/finance.tsx:63` KPI tile missing the truncation guard its
-  sibling `dashboard.tsx:103` has — confirmed to actually clip in az/ru
-  (e.g. "Abunəçi başına gəlir", 20 chars) while looking fine in en-only QA.
+- ✅ **Fixed** — the English service-thrown strings ("Candidate profile not
+  found", "Vacancy not found", "Company not found", "Application not
+  found", "Rating must be between 1 and 5", "Empty message", "Missing
+  image", "Subscription (summary) not found", "Search name is required",
+  "Company and candidate are required") now go through `i18n.t()` under
+  new `errors.*` keys, translated in all 3 locales, across
+  `candidateVacancyService.ts`, `vacancyService.ts`, `talentService.ts`,
+  `engagementService.ts`, `chatService.ts`, `subscriptionService.ts`, and
+  `candidateGrowthService.ts`. One scripted-edit mistake caught immediately
+  by the tsc/jest gate: the import got inserted mid-statement inside a
+  multi-line import block in `engagementService.ts` (broke compilation),
+  fixed before this landed. `talentService.test.ts` updated to assert
+  against the translated string via the real `i18n.t()` call instead of a
+  hardcoded English duplicate, so it can't silently drift from the source
+  key again.
+- ✅ **Fixed** — hardcoded AZ city chips on `app/(candidate)/search.tsx`
+  replaced with `getSuggestions('cities', lang)`, matching the pattern
+  already used correctly on the vacancy-create screen.
+- ✅ **Fixed** — `app/(admin)/finance.tsx` KPI tile now has the same
+  `numberOfLines={2} adjustsFontSizeToFit` guard its dashboard sibling has.
 - P2 misc (salary min/max suffix hardcoded English, onboarding "Bakı" label,
   checkout demo-fill "Test User", card placeholder "YOUR NAME", raw DB enums
   rendered as labels in admin, `admin.evt.*` dynamic key with no fallback) —

@@ -29,6 +29,7 @@ import {
   updateMockApplicationReview,
   updateMockApplicationStatus,
 } from './mockEngagementState';
+import i18n from '@/i18n';
 
 interface CandidateProfileRow {
   id: string;
@@ -463,11 +464,11 @@ class EngagementService {
       const application = getMockApplicationById(applicationId);
 
       if (!application) {
-        throw new Error('Application not found');
+        throw new Error(i18n.t('errors.applicationNotFound'));
       }
 
       if (application.vacancy?.company?.ownerId !== userId) {
-        throw new Error('Application not found');
+        throw new Error(i18n.t('errors.applicationNotFound'));
       }
 
       return updateMockApplicationStatus(applicationId, status);
@@ -581,18 +582,18 @@ class EngagementService {
     const employerRating = review.employerRating ?? null;
 
     if (employerRating !== null && (employerRating < 1 || employerRating > 5)) {
-      throw new Error('Rating must be between 1 and 5');
+      throw new Error(i18n.t('errors.ratingRange'));
     }
 
     if (shouldUseMockBackend()) {
       const application = getMockApplicationById(applicationId);
 
       if (!application) {
-        throw new Error('Application not found');
+        throw new Error(i18n.t('errors.applicationNotFound'));
       }
 
       if (application.vacancy?.company?.ownerId !== userId) {
-        throw new Error('Application not found');
+        throw new Error(i18n.t('errors.applicationNotFound'));
       }
 
       return updateMockApplicationReview(applicationId, {

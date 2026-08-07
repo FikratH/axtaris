@@ -60,7 +60,7 @@ export default function AdminFinanceScreen() {
               <k.Icon size={18} color={k.tint} strokeWidth={2} />
             </View>
             <Text style={[{ color: colors.textPrimary, marginTop: 10 }, t.headingSmall]}>{k.value}</Text>
-            <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]}>{k.label}</Text>
+            <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]} numberOfLines={2} adjustsFontSizeToFit>{k.label}</Text>
           </Card>
         ))}
       </View>

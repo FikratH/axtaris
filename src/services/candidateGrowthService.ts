@@ -6,6 +6,7 @@ import type {
 } from '@/types/models';
 import { mockCompanies } from './mockData';
 import { getSupabase, shouldUseMockBackend } from './supabase';
+import i18n from '@/i18n';
 
 /**
  * Candidate growth surfaces: "who viewed your profile" and saved searches.
@@ -252,7 +253,7 @@ class CandidateGrowthService {
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      throw new Error('Search name is required');
+      throw new Error(i18n.t('errors.searchNameRequired'));
     }
 
     if (shouldUseMockBackend()) {

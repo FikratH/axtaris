@@ -35,12 +35,13 @@ import { WorkType } from '@/types/models';
 import { getWorkTypeLabel } from '@/utils/labels';
 import { Search as SearchIcon, SlidersHorizontal, SearchX, BookmarkPlus, Bookmark } from 'lucide-react-native';
 import { toUserMessage } from '@/utils/errorMessage';
-
-const cities = ['Bakı', 'Gəncə', 'Sumqayıt', 'Mingəçevir', 'Lənkəran'];
+import { getSuggestions } from '@/data/suggestions';
 
 export default function SearchScreen() {
   const { colors, spacing: s, typography: t, radius: r } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
+  const lang = i18n.language as 'az' | 'ru' | 'en';
+  const cities = useMemo(() => getSuggestions('cities', lang), [lang]);
   const router = useRouter();
   const insets = useSafeAreaInsets();
 

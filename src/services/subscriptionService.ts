@@ -10,6 +10,7 @@ import {
 import { mockCandidateProfile, mockUser } from './mockData';
 import { getSupabase, shouldUseMockBackend } from './supabase';
 import { getMockCandidateApplications } from './mockEngagementState';
+import i18n from '@/i18n';
 
 interface CandidateSubscriptionRow {
   id: string;
@@ -416,7 +417,7 @@ class SubscriptionService {
     const summary = await this.fetchCandidateSubscriptionSummary(userId);
 
     if (!summary) {
-      throw new Error('Subscription summary not found');
+      throw new Error(i18n.t('errors.subscriptionSummaryNotFound'));
     }
 
     return summary;

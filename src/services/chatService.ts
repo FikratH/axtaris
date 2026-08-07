@@ -1,5 +1,6 @@
 import { ChatMessage, Conversation, ConversationKind } from '@/types/models';
 import { getSupabase, shouldUseMockBackend } from './supabase';
+import i18n from '@/i18n';
 
 interface ConversationRow {
   id: string;
@@ -122,7 +123,7 @@ class ChatService {
   async sendMessage(conversationId: string, senderId: string, body: string): Promise<ChatMessage> {
     const text = body.trim();
     if (!conversationId || !senderId || !text) {
-      throw new Error('Empty message');
+      throw new Error(i18n.t('errors.emptyMessage'));
     }
 
     if (shouldUseMockBackend()) {
@@ -180,7 +181,7 @@ class ChatService {
     imageUrl: string,
     caption?: string
   ): Promise<ChatMessage> {
-    if (!conversationId || !senderId || !imageUrl) throw new Error('Missing image');
+    if (!conversationId || !senderId || !imageUrl) throw new Error(i18n.t('errors.missingImage'));
     const body = caption?.trim() || '';
 
     if (shouldUseMockBackend()) {

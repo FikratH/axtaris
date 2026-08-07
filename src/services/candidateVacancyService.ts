@@ -529,7 +529,7 @@ class CandidateVacancyService {
     const currentProfile = await this.fetchCandidateProfile(userId);
 
     if (!currentProfile) {
-      throw new Error('Candidate profile not found');
+      throw new Error(i18n.t('errors.candidateProfileNotFound'));
     }
 
     const nextProfile = normalizeCandidateProfile(currentProfile, updates);
@@ -574,7 +574,7 @@ class CandidateVacancyService {
 
     return this.fetchCandidateProfile(userId).then((profile) => {
       if (!profile) {
-        throw new Error('Candidate profile not found');
+        throw new Error(i18n.t('errors.candidateProfileNotFound'));
       }
 
       return profile;
@@ -695,7 +695,7 @@ class CandidateVacancyService {
     const subscriptionSummary = await subscriptionService.fetchCandidateSubscriptionSummary(userId);
 
     if (!subscriptionSummary) {
-      throw new Error('Subscription not found');
+      throw new Error(i18n.t('errors.subscriptionNotFound'));
     }
 
     if (
@@ -707,7 +707,7 @@ class CandidateVacancyService {
 
     if (shouldUseMockBackend()) {
       if (mockCandidateProfile.userId !== userId) {
-        throw new Error('Candidate profile not found');
+        throw new Error(i18n.t('errors.candidateProfileNotFound'));
       }
 
       const existing = getMockApplicationByVacancyId(vacancyId);
@@ -718,7 +718,7 @@ class CandidateVacancyService {
       const vacancy = mockVacancies.find((item) => item.id === vacancyId);
 
       if (!vacancy) {
-        throw new Error('Vacancy not found');
+        throw new Error(i18n.t('errors.vacancyNotFound'));
       }
 
       const application = addMockApplication({
@@ -744,7 +744,7 @@ class CandidateVacancyService {
     const profile = await this.fetchCandidateProfile(userId);
 
     if (!profile) {
-      throw new Error('Candidate profile not found');
+      throw new Error(i18n.t('errors.candidateProfileNotFound'));
     }
 
     const applicationSelect = `

@@ -6,6 +6,7 @@ import type {
   TalentSearchFilters,
 } from '@/types/models';
 import { getSupabase, shouldUseMockBackend } from './supabase';
+import i18n from '@/i18n';
 
 export interface TalentSearchResult {
   candidates: TalentCandidate[];
@@ -266,7 +267,7 @@ class TalentService {
     vacancyTitle?: string;
     message?: string;
   }): Promise<CandidateInvite> {
-    if (!input.companyId || !input.candidateId) throw new Error('Company and candidate are required');
+    if (!input.companyId || !input.candidateId) throw new Error(i18n.t('errors.companyAndCandidateRequired'));
     const nowIso = new Date().toISOString();
 
     if (shouldUseMockBackend()) {

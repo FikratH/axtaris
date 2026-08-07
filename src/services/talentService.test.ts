@@ -6,6 +6,7 @@
  * the Supabase path). The Supabase-path idempotency has its own coverage in
  * talentService.invite.test.ts.
  */
+import i18n from '@/i18n';
 
 describe('talentService invites (mock backend)', () => {
   let talent: typeof import('./talentService')['talentService'];
@@ -30,11 +31,12 @@ describe('talentService invites (mock backend)', () => {
   });
 
   it('requires both a company and a candidate', async () => {
+    const message = i18n.t('errors.companyAndCandidateRequired');
     await expect(talent.sendInvite({ companyId: '', candidateId: 'talent-1' })).rejects.toThrow(
-      'Company and candidate are required'
+      message
     );
     await expect(talent.sendInvite({ companyId: 'c1', candidateId: '' })).rejects.toThrow(
-      'Company and candidate are required'
+      message
     );
   });
 

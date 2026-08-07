@@ -1,6 +1,7 @@
 import { Company, ExperienceLevel, ScreeningQuestion, TopCompany, Vacancy, VacancyStatus, WorkType } from '@/types/models';
 import { mockCompanies, mockVacancies } from './mockData';
 import { getSupabase, shouldUseMockBackend } from './supabase';
+import i18n from '@/i18n';
 
 export interface SupabaseCompanyRow {
   id: string;
@@ -373,7 +374,7 @@ class VacancyService {
       const company = mockCompanies.find((item) => item.id === companyId);
 
       if (!company) {
-        throw new Error('Company not found');
+        throw new Error(i18n.t('errors.companyNotFound'));
       }
 
       Object.assign(company, mockPatch, { updatedAt: new Date().toISOString() });
@@ -572,7 +573,7 @@ class VacancyService {
       const company = mockCompanies.find((item) => item.id === input.companyId);
 
       if (!vacancy) {
-        throw new Error('Vacancy not found');
+        throw new Error(i18n.t('errors.vacancyNotFound'));
       }
 
       Object.assign(vacancy, {
@@ -658,7 +659,7 @@ class VacancyService {
       const vacancy = mockVacancies.find((item) => item.id === id);
 
       if (!vacancy) {
-        throw new Error('Vacancy not found');
+        throw new Error(i18n.t('errors.vacancyNotFound'));
       }
 
       return {
