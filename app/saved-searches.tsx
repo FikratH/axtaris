@@ -23,6 +23,7 @@ import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel } from '@/utils/labels';
 import { SavedSearch } from '@/types/models';
 import { ChevronLeft, Trash2, Search as SearchIcon, Sparkles, Play } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function SavedSearchesScreen() {
   const { colors, spacing: s, typography: t, radius: r } = useTheme();
@@ -66,7 +67,7 @@ export default function SavedSearchesScreen() {
             onError: (error) =>
               Alert.alert(
                 tr('common.error'),
-                error instanceof Error ? error.message : tr('common.error')
+                toUserMessage(error, tr)
               ),
           });
         },

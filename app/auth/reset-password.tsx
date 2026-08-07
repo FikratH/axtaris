@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Alert } from '@/utils/dialog';
+import { toUserMessage } from '@/utils/errorMessage';
 import * as Linking from 'expo-linking';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -134,7 +135,7 @@ export default function ResetPasswordScreen() {
 
         Alert.alert(
           tr('common.error'),
-          error instanceof Error ? error.message : tr('common.error'),
+          toUserMessage(error, tr),
           [{ text: tr('common.ok'), onPress: () => router.replace('/auth/forgot-password') }]
         );
       } finally {
@@ -170,10 +171,7 @@ export default function ResetPasswordScreen() {
         },
       ]);
     } catch (error) {
-      Alert.alert(
-        tr('common.error'),
-        error instanceof Error ? error.message : tr('common.error')
-      );
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     } finally {
       setSubmitting(false);
     }

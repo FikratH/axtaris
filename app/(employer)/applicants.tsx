@@ -23,6 +23,7 @@ import { fileStorageService } from '@/services/fileStorageService';
 import { useEmployerEntitlements } from '@/hooks/useEntitlements';
 import { aiService } from '@/services/aiService';
 import { Users as UsersIcon, MessageCircle, Sparkles } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -100,7 +101,7 @@ export default function ApplicantsScreen() {
       }
       setRankMap(map);
     } catch (error: any) {
-      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     } finally {
       setRanking(false);
     }
@@ -223,7 +224,7 @@ export default function ApplicantsScreen() {
                       onError: (e) =>
                         Alert.alert(
                           tr('common.error'),
-                          e instanceof Error ? e.message : tr('common.error')
+                          toUserMessage(e, tr)
                         ),
                     }
                   )
@@ -247,7 +248,7 @@ export default function ApplicantsScreen() {
                     onError: (e) =>
                       Alert.alert(
                         tr('common.error'),
-                        e instanceof Error ? e.message : tr('common.error')
+                        toUserMessage(e, tr)
                       ),
                   }
                 )

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Alert } from '@/utils/dialog';
+import { toUserMessage } from '@/utils/errorMessage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -78,8 +79,8 @@ export default function VerifyOTPScreen() {
       } else {
         setError(true);
       }
-    } catch (err: any) {
-      Alert.alert(tr('common.error'), err.message);
+    } catch (err) {
+      Alert.alert(tr('common.error'), toUserMessage(err, tr));
       setError(true);
     } finally {
       setLoading(false);
@@ -92,8 +93,8 @@ export default function VerifyOTPScreen() {
       await authService.resendOTP(verificationEmail);
       setCanResend(false);
       setResendTimer(60);
-    } catch (err: any) {
-      Alert.alert(tr('common.error'), err.message);
+    } catch (err) {
+      Alert.alert(tr('common.error'), toUserMessage(err, tr));
     }
   };
 

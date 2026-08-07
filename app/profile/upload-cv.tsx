@@ -19,6 +19,7 @@ import { useResumeDraftStore } from '@/store/resumeDraftStore';
 import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, FileUp, FileCheck, Trash2, Wand2 } from 'lucide-react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import { toUserMessage } from '@/utils/errorMessage';
 
 /** PDFs and DOCX carry embedded text we can parse; legacy .doc does not. */
 function isParsableCv(fileName?: string, mimeType?: string): boolean {
@@ -131,7 +132,7 @@ export default function UploadCVScreen() {
       setUploading(false);
       Alert.alert(
         tr('common.error'),
-        error instanceof Error ? error.message : tr('common.error')
+        toUserMessage(error, tr)
       );
       return;
     } finally {
@@ -161,7 +162,7 @@ export default function UploadCVScreen() {
     } catch (error) {
       Alert.alert(
         tr('common.error'),
-        error instanceof Error ? error.message : tr('common.error')
+        toUserMessage(error, tr)
       );
     }
   };

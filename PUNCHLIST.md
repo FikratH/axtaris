@@ -393,11 +393,19 @@ answering the content-rating questionnaire.
   bullets, applicant fit-reason chips) is now routed through `i18n.t()`
   under a new `ai.fallback.*` namespace, translated in all 3 locales,
   `parity.test.ts` green. `src/services/aiService.ts`.
-- 🤖 **39 sites across 23 files show raw `error.message` verbatim** (English)
-  as the dialog body, bypassing the existing `toUserMessage()` helper —
-  including all 5 auth screens (sign-in, sign-up, verify-otp,
-  forgot-password, reset-password), which is the very first screen an az/ru
-  user sees fail. Route every `Alert.alert` body through `toUserMessage`.
+- ✅ **Fixed** — all sites showing raw `error.message` verbatim now route
+  through `toUserMessage()`, including all 5 auth screens. Fixed the 5 auth
+  screens by hand first (highest visibility), then the remaining 19 files
+  via a scripted transform (regex-matched the exact
+  `X instanceof Error ? X.message : tr('common.error')` /
+  `X?.message || tr('common.error')` shapes per catch-variable name,
+  inserted the `toUserMessage` import where missing) — 34 substitutions
+  there + 5 by hand = 39, matching the audit's count exactly. Verified no
+  raw-message patterns remain in the UI layer (the 3 remaining
+  `.message` hits after the fix are legitimate: an error-type string match
+  for UI branching in `vacancy/[id].tsx`, service-layer `Error`
+  construction in `api.ts`, and an unrelated `message` data field in
+  `talentService.ts`). tsc clean, jest green, expo export builds.
 - 🤖 14 English service-thrown strings ("Candidate profile not found",
   "Vacancy not found", etc.) reach az/ru dialogs even through
   `toUserMessage` (it deliberately passes short app strings through

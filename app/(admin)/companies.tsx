@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { getVerificationPresentation } from '@/utils/labels';
 import { Company } from '@/types/models';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function AdminCompaniesScreen() {
   const { colors, spacing: s, typography: t } = useTheme();
@@ -22,7 +23,7 @@ export default function AdminCompaniesScreen() {
   const setVerification = useSetCompanyVerification();
 
   const onError = React.useCallback((e: unknown) =>
-    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error')), [tr]);
+    Alert.alert(tr('common.error'), toUserMessage(e, tr)), [tr]);
 
   const renderCompany = React.useCallback(({ item }: { item: Company }) => {
     const v = getVerificationPresentation(tr, item.verificationStatus);

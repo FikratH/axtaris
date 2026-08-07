@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Alert } from '@/utils/dialog';
+import { toUserMessage } from '@/utils/errorMessage';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -62,8 +63,8 @@ export default function SignInScreen() {
       } else {
         router.replace('/(candidate)/home');
       }
-    } catch (err: any) {
-      Alert.alert(tr('common.error'), err.message || tr('errors.signInFailed'));
+    } catch (err) {
+      Alert.alert(tr('common.error'), toUserMessage(err, tr));
     } finally {
       setLoading(false);
     }

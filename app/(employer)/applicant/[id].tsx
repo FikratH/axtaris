@@ -26,6 +26,7 @@ import { getLanguageLevelLabel } from '@/utils/labels';
 import { safeBack } from '@/utils/navigation';
 import { Briefcase, ChevronLeft, Download, Mail, MapPin, MessageCircle } from 'lucide-react-native';
 import { useStartApplicationChat } from '@/hooks/useChat';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const statusVariant: Record<ApplicationStatus, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
   pending: 'warning',
@@ -126,7 +127,7 @@ export default function EmployerApplicantDetailScreen() {
       });
       router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: conv.subject || tr('chat.title') } } as never);
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
@@ -139,7 +140,7 @@ export default function EmployerApplicantDetailScreen() {
         status,
       });
     } catch (error: any) {
-      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
@@ -154,7 +155,7 @@ export default function EmployerApplicantDetailScreen() {
       });
       Alert.alert(tr('common.done'));
     } catch (error: any) {
-      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 

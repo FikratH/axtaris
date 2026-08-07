@@ -26,6 +26,7 @@ import { getSuggestions } from '@/data/suggestions';
 import { createLocalItemId } from '@/utils/profileSections';
 import { ChevronLeft, X, Sparkles, Star } from 'lucide-react-native';
 import { WorkType, ExperienceLevel, VacancyStatus, ScreeningQuestion } from '@/types/models';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const workTypes: WorkType[] = ['full_time', 'part_time', 'remote', 'hybrid', 'onsite', 'internship'];
 
@@ -106,7 +107,7 @@ export default function CreateVacancyScreen() {
       if (result.requirements.length) setRequirements(result.requirements.join('\n'));
       if (result.responsibilities.length) setResponsibilities(result.responsibilities.join('\n'));
     } catch (error: any) {
-      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     } finally {
       setAiLoading(false);
     }
@@ -191,7 +192,7 @@ export default function CreateVacancyScreen() {
         [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/vacancies') }]
       );
     } catch (error: any) {
-      Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 

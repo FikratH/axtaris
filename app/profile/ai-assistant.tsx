@@ -17,6 +17,7 @@ import {
 } from '@/hooks/useCandidateVacancyActions';
 import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, Wand2, Lightbulb, Zap, CheckCircle2 } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function AIAssistantScreen() {
   const { colors, typography: t, isDark } = useTheme();
@@ -77,7 +78,7 @@ export default function AIAssistantScreen() {
       }
       setAppliedIds((prev) => [...prev, s.id]);
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     } finally {
       setApplyingId(null);
     }

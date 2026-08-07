@@ -29,6 +29,7 @@ import { CandidateProfileMutationInput } from '@/services/candidateVacancyServic
 import { Education, LanguageSkill, WorkExperience } from '@/types/models';
 import { createLocalItemId, dedupeBy } from '@/utils/profileSections';
 import { useResumeDraftStore } from '@/store/resumeDraftStore';
+import { toUserMessage } from '@/utils/errorMessage';
 
 type LanguageLevel = LanguageSkill['level'];
 
@@ -273,7 +274,7 @@ export default function ReviewCvScreen() {
       clearDraft();
       safeBack(router, '/(candidate)/profile');
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 

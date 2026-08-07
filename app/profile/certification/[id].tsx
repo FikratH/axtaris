@@ -16,6 +16,7 @@ import {
 import { Certification } from '@/types/models';
 import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profileSections';
 import { certificationSchema, firstIssueMessage } from '@/services/validation';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function CertificationFormScreen() {
   const { colors, typography: t } = useTheme();
@@ -82,7 +83,7 @@ export default function CertificationFormScreen() {
       });
       safeBack(router, '/(candidate)/profile');
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
@@ -105,7 +106,7 @@ export default function CertificationFormScreen() {
               });
               safeBack(router, '/(candidate)/profile');
             } catch (error) {
-              Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+              Alert.alert(tr('common.error'), toUserMessage(error, tr));
             }
           })();
         },

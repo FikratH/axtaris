@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Alert } from '@/utils/dialog';
+import { toUserMessage } from '@/utils/errorMessage';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -46,8 +47,8 @@ export default function ForgotPasswordScreen() {
       await authService.resetPassword(data.email);
       setSentEmail(data.email);
       setSent(true);
-    } catch (err: any) {
-      Alert.alert(tr('common.error'), err.message);
+    } catch (err) {
+      Alert.alert(tr('common.error'), toUserMessage(err, tr));
     } finally {
       setLoading(false);
     }

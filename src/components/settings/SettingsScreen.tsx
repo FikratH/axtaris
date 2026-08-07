@@ -16,6 +16,7 @@ import { getSubscriptionSettingsDescription } from '@/utils/subscriptionPresenta
 import { ChevronLeft, Check, ChevronRight, Crown, FileText, ShieldCheck, Trash2, UserPlus, X, LogOut, LifeBuoy } from 'lucide-react-native';
 import { useStartSupportChat } from '@/hooks/useChat';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
+import { toUserMessage } from '@/utils/errorMessage';
 
 /**
  * The unified Settings screen used by candidates, employers, and admins.
@@ -83,7 +84,7 @@ export function SettingsScreen({ showBackButton = true }: { showBackButton?: boo
       const conv = await startSupport.mutateAsync(tr('chat.support'));
       router.push({ pathname: '/chat/[id]', params: { id: conv.id, subject: tr('chat.support') } } as never);
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
@@ -107,7 +108,7 @@ export function SettingsScreen({ showBackButton = true }: { showBackButton?: boo
                     router.replace('/auth/role-select');
                     Alert.alert(tr('settings.deleteAccountSuccess'));
                   } catch (error) {
-                    Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+                    Alert.alert(tr('common.error'), toUserMessage(error, tr));
                   }
                 })();
               },

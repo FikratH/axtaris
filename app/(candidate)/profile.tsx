@@ -26,6 +26,7 @@ import { useCandidateEntitlements } from '@/hooks/useEntitlements';
 import { useProfileViewSummary } from '@/hooks/useGrowthQueries';
 import { fileStorageService } from '@/services/fileStorageService';
 import { userProfileService } from '@/services/userProfileService';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function CandidateProfileScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -73,7 +74,7 @@ export default function CandidateProfileScreen() {
       } catch (error) {
         Alert.alert(
           tr('common.error'),
-          error instanceof Error ? error.message : tr('common.error')
+          toUserMessage(error, tr)
         );
       }
     }
@@ -94,7 +95,7 @@ export default function CandidateProfileScreen() {
   };
 
   const handleDeleteError = (error: unknown) => {
-    Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+    Alert.alert(tr('common.error'), toUserMessage(error, tr));
   };
 
   const removeExperience = (id: string) => {

@@ -34,6 +34,7 @@ import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { WorkType } from '@/types/models';
 import { getWorkTypeLabel } from '@/utils/labels';
 import { Search as SearchIcon, SlidersHorizontal, SearchX, BookmarkPlus, Bookmark } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const cities = ['Bakı', 'Gəncə', 'Sumqayıt', 'Mingəçevir', 'Lənkəran'];
 
@@ -174,7 +175,7 @@ export default function SearchScreen() {
             { text: tr('savedSearch.viewSaved'), onPress: () => router.push('/saved-searches' as never) },
           ]),
         onError: (error) =>
-          Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error')),
+          Alert.alert(tr('common.error'), toUserMessage(error, tr)),
       }
     );
   };

@@ -18,6 +18,7 @@ import {
 import { LanguageSkill } from '@/types/models';
 import { createLocalItemId, removeListItem, upsertListItem } from '@/utils/profileSections';
 import { languageSchema, firstIssueMessage } from '@/services/validation';
+import { toUserMessage } from '@/utils/errorMessage';
 
 export default function LanguageFormScreen() {
   const { colors, typography: t } = useTheme();
@@ -78,7 +79,7 @@ export default function LanguageFormScreen() {
       });
       safeBack(router, '/(candidate)/profile');
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
   };
 
@@ -101,7 +102,7 @@ export default function LanguageFormScreen() {
               });
               safeBack(router, '/(candidate)/profile');
             } catch (error) {
-              Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+              Alert.alert(tr('common.error'), toUserMessage(error, tr));
             }
           })();
         },

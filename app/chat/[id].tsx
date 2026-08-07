@@ -28,6 +28,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { getConversationCounterparty, getConversationTitle } from '@/utils/chatPresentation';
+import { toUserMessage } from '@/utils/errorMessage';
 
 function ChatImageBubble({ imageUrl, onOpen }: { imageUrl: string; onOpen: (url: string) => void }) {
   const { colors } = useTheme();
@@ -103,7 +104,7 @@ export default function ChatThreadScreen() {
       });
       await sendImage.mutateAsync({ imageUrl: uploaded.url });
     } catch (error) {
-      Alert.alert(tr('common.error'), error instanceof Error ? error.message : tr('common.error'));
+      Alert.alert(tr('common.error'), toUserMessage(error, tr));
     } finally {
       setUploading(false);
     }

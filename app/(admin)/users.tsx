@@ -14,6 +14,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { AdminUserSummary, UserRole } from '@/types/models';
 import { Search as SearchIcon } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const roleActionLabel: Record<UserRole, string> = {
   admin: 'admin.makeAdmin',
@@ -33,7 +34,7 @@ export default function AdminUsersScreen() {
   const setActive = useSetUserActive();
 
   const onError = React.useCallback((e: unknown) =>
-    Alert.alert(tr('common.error'), e instanceof Error ? e.message : tr('common.error')), [tr]);
+    Alert.alert(tr('common.error'), toUserMessage(e, tr)), [tr]);
 
   const renderUser = React.useCallback(({ item }: { item: AdminUserSummary }) => (
     <Card padding="md" style={{ marginBottom: 10 }}>

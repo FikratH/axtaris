@@ -20,6 +20,7 @@ import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Vacancy, VacancyStatus } from '@/types/models';
 import { getWorkTypeLabel } from '@/utils/labels';
 import { Plus, Briefcase, Pause, Play, X, Trash2, Users, Eye, Pencil } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
 
 const statusConfig: Record<VacancyStatus, { variant: 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
   active: { variant: 'success' },
@@ -81,7 +82,7 @@ export default function VacanciesScreen() {
             try {
               await deleteVacancy.mutateAsync(id);
             } catch (error: any) {
-              Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+              Alert.alert(tr('common.error'), toUserMessage(error, tr));
             }
           },
         },
@@ -147,7 +148,7 @@ export default function VacanciesScreen() {
                     status: isActive ? 'paused' : 'active',
                   });
                 } catch (error: any) {
-                  Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+                  Alert.alert(tr('common.error'), toUserMessage(error, tr));
                 }
               }}
               variant="secondary"
@@ -170,7 +171,7 @@ export default function VacanciesScreen() {
                     status: 'closed',
                   });
                 } catch (error: any) {
-                  Alert.alert(tr('common.error'), error?.message || tr('common.error'));
+                  Alert.alert(tr('common.error'), toUserMessage(error, tr));
                 }
               }}
               variant="ghost"
