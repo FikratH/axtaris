@@ -376,14 +376,28 @@ answering the content-rating questionnaire.
   Live-tested via direct REST: first invite 201, an identical second insert
   409s with a unique-constraint violation. Previously-skipped regression
   test now runs and passes.
-- 🤖 **Still open**: invite quota (`invitesPerMonth`) is enforced
-  **client-side only** — a free employer can still spam invites up to the
-  unique-per-candidate limit (i.e. one invite per distinct candidate, but
-  unlimited distinct candidates) via direct PostgREST calls, since nothing
-  server-side checks the plan's monthly cap. Needs a quota-check trigger or
-  RLS policy addition, deliberately not attempted this pass (same class of
-  change as the reconcile-RPC and RLS fixes that needed live hotfixing
-  earlier in this session — wanted a fresh look rather than rushing it).
+- ✅ **Fixed, gate-verified** — invite quota (`invitesPerMonth`) was
+  enforced client-side only; a free employer could spam invites up to the
+  unique-per-candidate limit via direct PostgREST calls, since nothing
+  server-side checked the plan's monthly cap. Migration
+  `202608070012_employer_invite_quota_guard.sql` adds a `BEFORE INSERT`
+  trigger on `candidate_invites`, structurally mirroring the already-proven
+  `applications_quota_guard` pattern exactly: new
+  `resolve_employer_subscription_plan()` (parallels
+  `resolve_candidate_subscription_plan`) + `resolve_plan_invites_per_month()`
+  (free=5/pro=50/premium=unlimited, matches `entitlements.ts` exactly,
+  confirmed via direct function call) + `enforce_employer_invite_quota()`
+  counting this-Baku-month's invites per company. This is a defense-in-depth
+  backstop, not the primary UX gate — the app UI
+  (`app/talent/[id].tsx`, `app/(employer)/talent.tsx`) already pre-checks
+  and blocks the button before a legitimate user could ever reach it.
+  **Verification scope note:** did not push synthetic invite rows into a
+  real employer's live inbox to exercise the actual reject path (no
+  company was near its monthly limit — max seen was 1/5) — verified via
+  (a) the helper functions' outputs directly, (b) exact structural parity
+  with the already-production-proven sibling trigger. `supabase:verify`/
+  `supabase:smoke` clean; no client code changed so `tsc`/`jest` are
+  unaffected by this migration.
 - ✅ **Fixed, live-verified** — saved/applied-to vacancies no longer vanish
   once they leave `active`. Extended `vacancies_select` (migration
   `202608070009`) via a new SECURITY DEFINER `candidate_has_vacancy_access()`
