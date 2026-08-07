@@ -162,10 +162,10 @@ cp .env.example .env
 
 2. Set your Supabase project URL and anon key in `.env`
 
-3. Run the SQL schema in your Supabase project:
-   - Go to Supabase Dashboard → SQL Editor
-   - Paste contents of `backend/supabase/schema.sql`
-   - Execute
+3. Apply the database schema to your Supabase project:
+   - `supabase/migrations/` is the authoritative, up-to-date migration
+     history (matches `supabase/config.toml`'s linked project)
+   - `npx supabase db push` (or run each file in order via the SQL Editor)
 
 ### Running
 
@@ -232,7 +232,7 @@ All components support: variants, dark/light themes, disabled/loading states, co
 
 ## Data Models
 
-See `src/types/models.ts` for full TypeScript types and `backend/supabase/schema.sql` for the database schema.
+See `src/types/models.ts` for full TypeScript types and `supabase/migrations/` for the database schema.
 
 **Core entities:** User, CandidateProfile, Company, EmployerProfile, Vacancy, Application, SavedJob, Notification, AIResumeSession, ModerationFlag
 

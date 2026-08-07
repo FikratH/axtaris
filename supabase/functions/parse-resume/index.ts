@@ -65,11 +65,9 @@ Deno.serve(async (req) => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
 
-    // Shared per-user daily quota (same gate as ai-assist).
-    const dailyLimit = Number(Deno.env.get('AI_DAILY_LIMIT') || '30');
-    const { data: allowed, error: quotaError } = await supabase.rpc('consume_ai_quota', {
-      daily_limit: dailyLimit,
-    });
+    // Shared per-user daily quota (same gate as ai-assist). The limit is
+    // resolved server-side inside the RPC — see ai-assist/index.ts.
+    const { data: allowed, error: quotaError } = await supabase.rpc('consume_ai_quota');
     if (quotaError) return json({ error: quotaError.message }, 500);
     if (allowed === false) return json({ error: 'Daily AI limit reached' }, 429);
 
@@ -77,10 +75,22 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: 'OPENAI_API_KEY is not configured' }, 503);
 
     const body = await req.json().catch(() => ({}));
-    const bucket: string = (body.bucket ?? 'cv-uploads').toString();
-    const path: string = (body.path ?? '').toString();
+    // SECURITY: bucket and path used to be fully caller-controlled, then
+    // downloaded with the service-role client (which bypasses storage RLS)
+    // — any authenticated user could read any file in any bucket, including
+    // another candidate's private CV. Only ever parse the caller's own CV:
+    // hardcode the bucket and require the path to be scoped to their own
+    // user id, matching the storage layout the upload flow already writes
+    // to (candidates/<user id>/...).
+    const bucket = 'cv-uploads';
+    const requestedPath: string = (body.path ?? '').toString();
     const fileName: string = (body.fileName ?? '').toString();
-    if (!path) return json({ error: 'path is required' }, 400);
+    if (!requestedPath) return json({ error: 'path is required' }, 400);
+    const ownedPrefix = `candidates/${userData.user.id}/`;
+    if (!requestedPath.startsWith(ownedPrefix)) {
+      return json({ error: 'Forbidden' }, 403);
+    }
+    const path = requestedPath;
 
     const lower = `${fileName || ''} ${path}`.toLowerCase();
     const isPdf = lower.includes('.pdf');

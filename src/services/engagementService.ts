@@ -312,6 +312,28 @@ function mapNotification(row: NotificationRow): Notification {
 }
 
 class EngagementService {
+  /**
+   * Contact info (email/phone) is not part of the regular profiles select —
+   * it's relationship-gated server-side via get_profile_contact (self,
+   * admin, or the employer of an applicant). profileId is the target
+   * profiles.id (== candidate's user id), not the candidate_profiles id.
+   */
+  async fetchProfileContact(profileId: string): Promise<{ email?: string; phone?: string }> {
+    if (!profileId) return {};
+
+    if (shouldUseMockBackend()) {
+      return { email: mockEmployerUser.email, phone: mockEmployerUser.phone };
+    }
+
+    const { data, error } = await getSupabase()
+      .rpc('get_profile_contact', { target_id: profileId })
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    const contact = data as unknown as { email: string | null; phone: string | null } | null;
+    return { email: contact?.email || undefined, phone: contact?.phone || undefined };
+  }
+
   async fetchEmployerApplications(userId: string): Promise<Application[]> {
     if (!userId) return [];
 
@@ -393,10 +415,8 @@ class EngagementService {
           ),
           profiles (
             id,
-            email,
             role,
             full_name,
-            phone,
             avatar_url,
             email_verified,
             created_at,
@@ -516,10 +536,8 @@ class EngagementService {
           ),
           profiles (
             id,
-            email,
             role,
             full_name,
-            phone,
             avatar_url,
             email_verified,
             created_at,
@@ -647,10 +665,8 @@ class EngagementService {
           ),
           profiles (
             id,
-            email,
             role,
             full_name,
-            phone,
             avatar_url,
             email_verified,
             created_at,

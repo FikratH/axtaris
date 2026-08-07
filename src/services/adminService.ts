@@ -236,18 +236,12 @@ class AdminService {
       }));
     }
 
-    let query = getSupabase()
-      .from('profiles')
-      .select('id,email,role,full_name,avatar_url,is_active,created_at')
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (search?.trim()) {
-      const term = `%${search.trim()}%`;
-      query = query.or(`full_name.ilike.${term},email.ilike.${term}`);
-    }
-
-    const { data, error } = await query;
+    // email is relationship-gated at the DB level (see get_profile_contact);
+    // the bulk admin list/search goes through a dedicated admin-only RPC
+    // that checks is_admin() itself rather than relying on column grants.
+    const { data, error } = await getSupabase().rpc('admin_list_profiles', {
+      search_term: search?.trim() || null,
+    });
     if (error) throw new Error(error.message);
     return ((data || []) as ProfileRow[]).map(mapProfile);
   }

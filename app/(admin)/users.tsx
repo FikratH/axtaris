@@ -41,7 +41,7 @@ export default function AdminUsersScreen() {
         <Avatar uri={item.avatarUrl} name={item.fullName} size={44} />
         <View style={{ flex: 1, marginLeft: s.md }}>
           <Text style={[{ color: colors.textPrimary }, t.labelMedium]} numberOfLines={1}>{item.fullName}</Text>
-          <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>{item.email}</Text>
+          <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>{item.email || tr('common.notAvailable')}</Text>
         </View>
         <View style={styles.badges}>
           <Badge label={item.role} variant="info" />

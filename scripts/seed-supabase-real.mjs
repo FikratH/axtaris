@@ -3,7 +3,6 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-const DEFAULT_PASSWORD = 'AxtarisSeed2026!';
 const PLACEHOLDER_URL = 'https://your-project.supabase.co';
 const PLACEHOLDER_ANON = 'your-anon-key';
 
@@ -683,10 +682,20 @@ const employerNotifications = [
 loadEnvFile('.env.local');
 loadEnvFile('.env');
 
+if (process.env.EXPO_PUBLIC_APP_ENV === 'production') {
+  throw new Error(
+    'Refusing to run seed-supabase-real.mjs with EXPO_PUBLIC_APP_ENV=production — ' +
+      'this script upserts auth users with the service-role key and resets their password.'
+  );
+}
+
 const supabaseUrl = assertEnv('EXPO_PUBLIC_SUPABASE_URL', PLACEHOLDER_URL);
 assertEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY', PLACEHOLDER_ANON);
 const secretKey = assertEnv('SUPABASE_SERVICE_ROLE_KEY');
-const seedPassword = process.env.SUPABASE_SEED_PASSWORD?.trim() || DEFAULT_PASSWORD;
+// No hardcoded default: a fixed, git-tracked seed password was live-confirmed
+// as the actual password for real accounts (incl. the admin seed user) on
+// the production project. Require the operator to choose one explicitly.
+const seedPassword = assertEnv('SUPABASE_SEED_PASSWORD');
 const admin = createClient(supabaseUrl, secretKey, {
   auth: { persistSession: false, autoRefreshToken: false },
 });

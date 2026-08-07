@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import {
   useEmployerApplications,
+  useProfileContact,
   useUpdateApplicationReview,
   useUpdateApplicationStatus,
 } from '@/hooks/useEngagementQueries';
@@ -82,6 +83,9 @@ export default function EmployerApplicantDetailScreen() {
   );
   const candidate = application?.candidate;
   const candidateUser = candidate?.user;
+  // email/phone are relationship-gated server-side (see get_profile_contact)
+  // and no longer come back on the application/profile embed itself.
+  const { data: candidateContact } = useProfileContact(candidateUser?.id);
   // Prefer the candidate's CURRENT profile CV (live, resolvable) over the
   // apply-time snapshot, which can be stale/empty or a non-storage URL.
   const cvUrl = candidate?.cvUrl || application?.cvUrl;
@@ -220,11 +224,11 @@ export default function EmployerApplicantDetailScreen() {
               </Text>
             </View>
           ) : null}
-          {candidateUser?.email ? (
+          {candidateContact?.email ? (
             <View style={styles.metaItem}>
               <Mail size={14} color={colors.textTertiary} strokeWidth={1.8} />
               <Text style={[{ color: colors.textSecondary, marginLeft: 6 }, t.caption]}>
-                {candidateUser.email}
+                {candidateContact.email}
               </Text>
             </View>
           ) : null}

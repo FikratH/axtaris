@@ -21,6 +21,8 @@ const corsHeaders = {
 };
 
 const MAX_OUTPUT_TOKENS = 800;
+const MAX_PROMPT_CHARS = 6000;
+const MAX_SYSTEM_CHARS = 2000;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -41,10 +43,10 @@ Deno.serve(async (req) => {
     if (!userData?.user) return json({ error: 'Unauthorized' }, 401);
 
     // Per-user daily quota to prevent using this as a free general-purpose LLM.
-    const dailyLimit = Number(Deno.env.get('AI_DAILY_LIMIT') || '30');
-    const { data: allowed, error: quotaError } = await supabase.rpc('consume_ai_quota', {
-      daily_limit: dailyLimit,
-    });
+    // The limit is resolved server-side inside the RPC — it no longer accepts
+    // a caller-supplied ceiling (a direct .rpc() call used to be able to pass
+    // an inflated daily_limit).
+    const { data: allowed, error: quotaError } = await supabase.rpc('consume_ai_quota');
     if (quotaError) return json({ error: quotaError.message }, 500);
     if (allowed === false) return json({ error: 'Daily AI limit reached' }, 429);
 
@@ -52,8 +54,10 @@ Deno.serve(async (req) => {
     if (!apiKey) return json({ error: 'OPENAI_API_KEY is not configured' }, 503);
 
     const body = await req.json().catch(() => ({}));
-    const prompt: string = (body.prompt ?? '').toString();
-    const system: string | undefined = body.system ? body.system.toString() : undefined;
+    const prompt: string = (body.prompt ?? '').toString().slice(0, MAX_PROMPT_CHARS);
+    const system: string | undefined = body.system
+      ? body.system.toString().slice(0, MAX_SYSTEM_CHARS)
+      : undefined;
     const maxTokens = Math.min(Number(body.maxTokens) || 400, MAX_OUTPUT_TOKENS);
     if (!prompt.trim()) return json({ error: 'prompt is required' }, 400);
 

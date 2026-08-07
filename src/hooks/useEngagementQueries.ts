@@ -6,6 +6,7 @@ import { engagementService } from '@/services/engagementService';
 export const engagementQueryKeys = {
   employerApplications: (userId: string) => ['applications', 'employer', userId] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
+  profileContact: (profileId: string) => ['profile-contact', profileId] as const,
 };
 
 export function useEmployerApplications(userId?: string) {
@@ -13,6 +14,16 @@ export function useEmployerApplications(userId?: string) {
     enabled: !!userId,
     queryKey: engagementQueryKeys.employerApplications(userId || 'unknown'),
     queryFn: () => engagementService.fetchEmployerApplications(userId || ''),
+  });
+}
+
+/** Relationship-gated contact lookup (see EngagementService.fetchProfileContact). */
+export function useProfileContact(profileId?: string) {
+  return useQuery({
+    enabled: !!profileId,
+    queryKey: engagementQueryKeys.profileContact(profileId || 'unknown'),
+    queryFn: () => engagementService.fetchProfileContact(profileId || ''),
+    staleTime: 5 * 60 * 1000,
   });
 }
 
