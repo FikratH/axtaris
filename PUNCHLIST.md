@@ -291,8 +291,8 @@ included-benefits + coming-soon note render correctly in az). Also applied:
 back if iPad screenshots get produced), `expo-secure-store` faceIDPermission
 disabled, Android `monochromeImage` wired to the existing asset, and the
 unsubstantiated "join thousands" social-proof copy softened in all 3
-locales. §3.2 (real privacy/terms copy) and §3.5/§3.6 remain 🧑 owner
-items — see §8.
+locales. §3.2 (real privacy/terms copy) and §3.5 remain 🧑 owner items —
+see §8.
 **Pricing correction note:** project memory resolves the 29/99-vs-19/49
 mismatch the audit flagged — 19/49 is the deliberate, later value (shipped
 2026-07-23, "owner wants supply growth"); the locale files had the stale
@@ -362,12 +362,47 @@ REST API from this audit). **App reviewers routinely test password reset** —
 if unlisted, this is a Guideline 2.1 rejection. 🧑 Owner or a session with
 dashboard/Management-API access must verify.
 
-### 3.6 🤖 Verify chat has report + block, not just a moderation table
-`moderation_flags` exists in schema; both stores require report/block
-affordances for UGC + 1:1 messaging apps (Apple 1.2). The client-side
-coverage wasn't traced in this audit — confirm `app/chat/[id].tsx` and
-candidate/company profile screens actually expose report and block before
-answering the content-rating questionnaire.
+### 3.6 ✅ Fixed, live-verified — chat now has real report + block
+Confirmed the original finding: `moderation_flags` had a working
+user-insert RLS policy already (`202607160001_admin_and_push.sql`) but
+**no client affordance called it**, and blocking had no backing at all —
+`app/chat/[id].tsx` exposed neither. Both required for Apple 1.2 (UGC +
+1:1 messaging).
+
+**Report**: no schema change needed. Added `moderationService.reportUser()`
++ a reason-picker (`Alert` with reason buttons — spam/harassment/
+inappropriate/other, matching the existing cross-platform `Alert` pattern
+used everywhere else in this codebase rather than `Alert.prompt`, which is
+iOS-only) wired into the chat details panel.
+
+**Block**: new `blocked_users` table (migration
+`202608070013_blocked_users_and_report_block.sql`) — one row per
+`(blocker_id, blocked_id)`, RLS-scoped so a user can only see/manage their
+own blocklist (standard privacy norm: never reveals whether someone else
+blocked *you*). Enforcement lives at the `messages_insert` policy via a
+new `not_blocked_in_conversation()` SECURITY DEFINER function (same
+reasoning as `is_company_owner()` in `202608070011` for why it has to be a
+function, not a raw subquery, given the policy is `{public}`-scoped) —
+additive-only, a no-op until a row actually exists in `blocked_users`, so
+zero regression risk to existing conversations. Chat UI: block/unblock
+button in the details panel, and the input bar is replaced by a
+"you've blocked this user" banner + unblock button while blocked.
+
+**Live-verified end-to-end against production** (real seed accounts,
+cleaned up all test rows after): sent a real message (201) → blocked the
+counterparty → attempted another message, got a genuine RLS rejection
+(`403`, `new row violates row-level security policy for table "messages"`)
+→ confirmed **reporting still works while blocked** (independent
+mechanism, 201) → unblocked → confirmed messaging resumed (201) →
+confirmed the unblock actually persisted (blocklist read back empty).
+`tsc`/`jest` clean, new `moderationService.test.ts` (6 tests) covers the
+mock-backend path (empty-reason rejection, block/unblock round-trip,
+directionality, self-block no-op, idempotent re-block).
+
+**Not attempted**: a profile-screen (non-chat) report/block entry point —
+the original finding only named chat specifically, and 1:1 messaging is
+where Apple 1.2 review actually probes; profile-level reporting is a
+reasonable future addition but wasn't part of this finding's scope.
 
 ---
 

@@ -15,13 +15,14 @@ import {
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Send, ImagePlus, X, Briefcase } from 'lucide-react-native';
+import { ChevronLeft, Send, ImagePlus, X, Briefcase, Flag, Ban } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { Alert } from '@/utils/dialog';
 import { useAuthStore } from '@/store/authStore';
 import { useConversation, useMessages, useSendImageMessage, useSendMessage } from '@/hooks/useChat';
 import { useImagePicker } from '@/hooks/useImagePicker';
+import { useIsUserBlocked, useReportUser, useToggleBlockUser } from '@/hooks/useModeration';
 import { fileStorageService } from '@/services/fileStorageService';
 import { ChatMessage } from '@/types/models';
 import { Avatar } from '@/components/ui/Avatar';
@@ -82,13 +83,66 @@ export default function ChatThreadScreen() {
     ? params.subject
     : tr('chat.title');
   const counterparty = conversation ? getConversationCounterparty(conversation, user?.role, tr) : null;
+  const counterpartyId =
+    conversation && conversation.kind !== 'support'
+      ? conversation.participantA === user?.id
+        ? conversation.participantB
+        : conversation.participantA
+      : undefined;
+
+  const isBlockedQuery = useIsUserBlocked(user?.id, counterpartyId);
+  const isBlocked = !!isBlockedQuery.data;
+  const reportUser = useReportUser(user?.id);
+  const toggleBlock = useToggleBlockUser(user?.id);
 
   const handleSend = useCallback(() => {
     const text = draft.trim();
-    if (!text || sendMessage.isPending) return;
+    if (!text || sendMessage.isPending || isBlocked) return;
     setDraft('');
     sendMessage.mutate(text, { onError: () => setDraft(text) });
-  }, [draft, sendMessage]);
+  }, [draft, sendMessage, isBlocked]);
+
+  const handleReport = useCallback(() => {
+    if (!counterpartyId || !counterparty) return;
+    const submit = (reasonKey: string) => {
+      reportUser.mutate(
+        { targetUserId: counterpartyId, reason: tr(reasonKey) },
+        {
+          onSuccess: () => Alert.alert(tr('common.done'), tr('chat.reportSubmitted')),
+          onError: (error) => Alert.alert(tr('common.error'), toUserMessage(error, tr)),
+        }
+      );
+    };
+    Alert.alert(tr('chat.reportTitle', { name: counterparty.name }), tr('chat.reportMessage'), [
+      { text: tr('chat.reportReasonSpam'), onPress: () => submit('chat.reportReasonSpam') },
+      { text: tr('chat.reportReasonHarassment'), onPress: () => submit('chat.reportReasonHarassment') },
+      { text: tr('chat.reportReasonInappropriate'), onPress: () => submit('chat.reportReasonInappropriate') },
+      { text: tr('chat.reportReasonOther'), onPress: () => submit('chat.reportReasonOther') },
+      { text: tr('common.cancel'), style: 'cancel' },
+    ]);
+  }, [counterpartyId, counterparty, reportUser, tr]);
+
+  const handleToggleBlock = useCallback(() => {
+    if (!counterpartyId || !counterparty) return;
+    const nextBlock = !isBlocked;
+    Alert.alert(
+      tr(nextBlock ? 'chat.blockConfirmTitle' : 'chat.unblockConfirmTitle', { name: counterparty.name }),
+      tr(nextBlock ? 'chat.blockConfirmMessage' : 'chat.unblockConfirmMessage'),
+      [
+        { text: tr('common.cancel'), style: 'cancel' },
+        {
+          text: tr(nextBlock ? 'chat.block' : 'chat.unblock'),
+          style: nextBlock ? 'destructive' : 'default',
+          onPress: () => {
+            toggleBlock.mutate(
+              { blockedId: counterpartyId, block: nextBlock },
+              { onError: (error) => Alert.alert(tr('common.error'), toUserMessage(error, tr)) }
+            );
+          },
+        },
+      ]
+    );
+  }, [counterpartyId, counterparty, isBlocked, toggleBlock, tr]);
 
   const handleAttach = useCallback(async () => {
     if (!user?.id || !conversationId || uploading) return;
@@ -188,32 +242,39 @@ export default function ChatThreadScreen() {
         />
       )}
 
-      <View
-        style={[
-          styles.inputBar,
-          { borderTopColor: colors.divider, backgroundColor: colors.surface, paddingBottom: insets.bottom + 8 },
-        ]}
-      >
-        <TouchableOpacity onPress={handleAttach} disabled={uploading} style={styles.attachBtn} hitSlop={8}>
-          {uploading ? <ActivityIndicator size="small" color={colors.primary} /> : <ImagePlus size={22} color={colors.primary} strokeWidth={1.8} />}
-        </TouchableOpacity>
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder={tr('chat.messagePlaceholder')}
-          placeholderTextColor={colors.textTertiary}
-          style={[styles.input, { backgroundColor: colors.surfaceSecondary, color: colors.textPrimary, borderRadius: r.lg }]}
-          multiline
-          onSubmitEditing={handleSend}
-        />
-        <TouchableOpacity
-          onPress={handleSend}
-          disabled={!draft.trim() || sendMessage.isPending}
-          style={[styles.sendBtn, { backgroundColor: draft.trim() ? colors.primary : colors.surfaceSecondary }]}
+      {isBlocked ? (
+        <View style={[styles.blockedBanner, { backgroundColor: colors.surfaceSecondary, borderTopColor: colors.divider, paddingBottom: insets.bottom + 12 }]}>
+          <Text style={[{ color: colors.textSecondary, flex: 1 }, t.bodySmall]}>{tr('chat.blockedBanner')}</Text>
+          <Button title={tr('chat.unblock')} variant="outline" size="sm" onPress={handleToggleBlock} />
+        </View>
+      ) : (
+        <View
+          style={[
+            styles.inputBar,
+            { borderTopColor: colors.divider, backgroundColor: colors.surface, paddingBottom: insets.bottom + 8 },
+          ]}
         >
-          <Send size={18} color={draft.trim() ? '#FFFFFF' : colors.textTertiary} strokeWidth={2} />
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={handleAttach} disabled={uploading} style={styles.attachBtn} hitSlop={8}>
+            {uploading ? <ActivityIndicator size="small" color={colors.primary} /> : <ImagePlus size={22} color={colors.primary} strokeWidth={1.8} />}
+          </TouchableOpacity>
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            placeholder={tr('chat.messagePlaceholder')}
+            placeholderTextColor={colors.textTertiary}
+            style={[styles.input, { backgroundColor: colors.surfaceSecondary, color: colors.textPrimary, borderRadius: r.lg }]}
+            multiline
+            onSubmitEditing={handleSend}
+          />
+          <TouchableOpacity
+            onPress={handleSend}
+            disabled={!draft.trim() || sendMessage.isPending}
+            style={[styles.sendBtn, { backgroundColor: draft.trim() ? colors.primary : colors.surfaceSecondary }]}
+          >
+            <Send size={18} color={draft.trim() ? '#FFFFFF' : colors.textTertiary} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Fullscreen image popup */}
       <Modal visible={!!fullscreenUrl} transparent animationType="fade" onRequestClose={() => setFullscreenUrl(null)}>
@@ -262,6 +323,20 @@ export default function ChatThreadScreen() {
                     style={{ marginTop: 16 }}
                   />
                 ) : null}
+                {counterpartyId ? (
+                  <View style={[styles.panelRow, { borderTopColor: colors.divider, flexDirection: 'column', alignItems: 'stretch', gap: 8 }]}>
+                    <TouchableOpacity onPress={handleReport} style={styles.panelActionRow} hitSlop={4}>
+                      <Flag size={18} color={colors.textSecondary} strokeWidth={1.8} />
+                      <Text style={[{ color: colors.textPrimary, marginLeft: 12 }, t.bodyMedium]}>{tr('chat.report')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleToggleBlock} style={styles.panelActionRow} hitSlop={4}>
+                      <Ban size={18} color={colors.error} strokeWidth={1.8} />
+                      <Text style={[{ color: colors.error, marginLeft: 12 }, t.bodyMedium]}>
+                        {tr(isBlocked ? 'chat.unblock' : 'chat.block')}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
               </>
             ) : (
               <Text style={[{ color: colors.textSecondary, textAlign: 'center', marginTop: 20 }, t.bodyMedium]}>{tr('chat.title')}</Text>
@@ -296,6 +371,15 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   attachBtn: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
+  blockedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  panelActionRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6 },
   input: { flex: 1, maxHeight: 120, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15 },
   sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   fullscreenBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', alignItems: 'center', justifyContent: 'center' },
