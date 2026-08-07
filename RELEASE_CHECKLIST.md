@@ -44,28 +44,29 @@ each one, in order.
 
 ---
 
-## 1. 🧑 Do this first — deploy the two Edge Functions with security fixes
+## 1. ✅ Done — deploy the two Edge Functions with security fixes
 
-This environment had no `SUPABASE_ACCESS_TOKEN` / CLI auth, so these
-**could not be deployed** during this pass even though the code is fixed
-and committed. Until deployed, the live `parse-resume` function still has
-the CV-leak IDOR (any authenticated user can read any other user's CV).
-**This is the single most urgent action — do it before anything else below.**
+Owner deployed both from their own machine (plain `supabase login`/`link`
+hit an unrelated CLI bug parsing this project's API-keys response —
+`--project-ref` on `functions deploy`/`secrets set` bypasses it, no
+`link` needed):
 
 ```bash
-supabase login   # if not already linked
-supabase functions deploy parse-resume
-supabase functions deploy ai-assist
+npx supabase functions deploy parse-resume --project-ref cwmjyonylopsqrtujuvo
+npx supabase functions deploy ai-assist --project-ref cwmjyonylopsqrtujuvo
 ```
 
-Verify after deploying:
-```bash
-# Should now 403, not return a parsed document, for a path you don't own:
-curl -X POST "https://cwmjyonylopsqrtujuvo.supabase.co/functions/v1/parse-resume" \
-  -H "Authorization: Bearer <a real user JWT>" -H "apikey: <anon key>" \
-  -H "Content-Type: application/json" \
-  -d '{"bucket":"cv-uploads","path":"candidates/<some-other-user-id>/cv/x.pdf"}'
-```
+**Live-verified**: an authenticated seed account requesting a CV path
+outside its own `candidates/<uid>/` prefix now gets `403 Forbidden`
+(previously returned the parsed document). The IDOR is closed in
+production, not just in the repo.
+
+Also fixed in the same pass: the configured `OPENAI_API_KEY` was invalid
+("Incorrect API key provided"). Owner set a working one
+(`npx supabase secrets set OPENAI_API_KEY=... --project-ref
+cwmjyonylopsqrtujuvo`) — live-verified with a real `ai-assist` call that
+got a genuine OpenAI completion back. AI features (bio suggestions, job
+descriptions, CV parsing) no longer silently fall back to templates.
 
 ---
 
@@ -111,7 +112,6 @@ curl -X POST "https://cwmjyonylopsqrtujuvo.supabase.co/functions/v1/parse-resume
 | Google Play Console developer account | play.google.com/console | Required for any Android submission |
 | Play service-account JSON key | Play Console → API access | For `eas submit` automation (optional — can also upload manually) |
 | Sentry DSN | sentry.io (new project) | Crash reporting isn't wired up yet — out of scope of this pass, separate task |
-| A valid `OPENAI_API_KEY` | Supabase → Edge Function secrets | **The currently-configured key is invalid** — live-tested during this pass, OpenAI returned "Incorrect API key provided." AI features (bio suggestions, job descriptions, CV parsing) silently fall back to templates until this is fixed. |
 | Confirm `PUSH_SECRET` ≡ Vault `push_secret` | Supabase dashboard | Both are set but their *values* couldn't be compared (opaque digests) — cheapest fix is to regenerate both from one new value rather than trying to verify the old ones match |
 | A real device push test | — | Push is fully wired (trigger, Edge Function, secret) but has never delivered an actual notification — only 1 test profile in the DB has ever registered a token |
 | Supabase Auth → URL Configuration | Supabase dashboard | Confirm `axtaris://auth/reset-password` is in the redirect allow-list — App Review routinely tests password reset, and this couldn't be verified via the REST API in this pass |

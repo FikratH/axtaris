@@ -25,7 +25,7 @@ documented in full in each migration's header comment, summarized here:
 | Finding | Status | Notes |
 |---|---|---|
 | F2 (admin escalation) | ✅ **Fixed, live** | Verified via `pg_get_functiondef`; live signup test was blocked by Supabase's email rate limit, not re-attempted |
-| F3 (parse-resume IDOR) | 🧑 **Code fixed, NOT deployed** | Edge Function code is fixed in the repo, but this environment has no `SUPABASE_ACCESS_TOKEN` / CLI auth, so `supabase functions deploy` could not be run. **The live function is still vulnerable.** Owner must run `supabase functions deploy parse-resume` — this is the single most urgent remaining action. |
+| F3 (parse-resume IDOR) | ✅ **Fixed, deployed, live-verified** | Owner deployed both `parse-resume` and `ai-assist` via `npx supabase functions deploy <name> --project-ref cwmjyonylopsqrtujuvo` (no `link` needed — that command has an unrelated CLI bug parsing the project's API-keys response; `--project-ref` on `functions deploy`/`secrets set` bypasses it). Live-tested with a real signed-in seed account (`ali@example.com`): a path outside the caller's own `candidates/<uid>/` prefix now returns `403 Forbidden` (previously would have returned the parsed document). |
 | F4 (applications WITH CHECK) | ✅ **Fixed, live** | First attempt caused `infinite recursion detected in policy` (self-referential subquery) — fixed via a SECURITY DEFINER helper (`202608070004`), same pattern as the pre-existing `202608020002` fix. Live-tested: forged `candidate_id` → 403; legitimate status update → 200. |
 | F1 (profiles email/phone/token) | ✅ **Fixed, live** | Live-tested: direct `email,phone` select as an authenticated employer → permission denied; `get_profile_contact` RPC correctly scoped to self/admin/employer-relationship; `admin_list_profiles` RPC correct for admin vs non-admin. |
 | F5 (companies.owner_id) | ⚠️ **Prerequisite shipped, revoke still open (P1)** | The column-level revoke broke `vacancies_select`'s own policy (it reads `companies.owner_id` in a correlated subquery with no `TO` clause, so anon must be able to evaluate it) — broke anon job browsing entirely. Reverted (`202608070003`). This pass: shipped the safe prerequisite (`202608070011`) — `vacancies_select`/`vacancies_update` now call a new `is_company_owner()` SECURITY DEFINER function instead of a raw subquery, verified behavior-neutral (anon browsing still works, gates clean). The column revoke itself is **still not done** — the client's shared `companySelect` still requests `owner_id` in every guest-reachable fetch (confirmed AxtarIS has a real anon-role "guest browsing" mode), so revoking now would just move the same regression from the RLS layer to the query's select list. Full plan documented in §1.5. |
@@ -38,15 +38,21 @@ documented in full in each migration's header comment, summarized here:
 | backend/supabase/ doc trap | ✅ **Fixed** | Directory deleted, README pointers corrected. |
 
 **New finding from live verification, not in the original audit:** the
-configured `OPENAI_API_KEY` returns `"Incorrect API key provided"` from
-OpenAI directly — it's set, but invalid/expired. 🧑 Owner must supply a
-working key.
+configured `OPENAI_API_KEY` returned `"Incorrect API key provided"` from
+OpenAI directly — it was set, but invalid/expired. ✅ **Resolved** — owner
+supplied a working key (`supabase secrets set OPENAI_API_KEY=... --project-ref
+cwmjyonylopsqrtujuvo`); live-verified with a real `ai-assist` call
+(authenticated seed account, real OpenAI round-trip, got a real completion
+back).
 
-**Also discovered:** `ai-assist`/`parse-resume` in this environment cannot be
-redeployed (no CLI auth token). Any further Edge Function code changes in
-this pass are **committed to the repo but not live** until
-`supabase functions deploy <name>` is run by someone with access — flagging
-this constraint for the rest of this pass and for the final release checklist.
+**Also discovered, now resolved:** `ai-assist`/`parse-resume` initially
+could not be redeployed from the audit's own environment (no CLI auth
+token). ✅ Owner deployed both from their own machine
+(`npx supabase functions deploy <name> --project-ref cwmjyonylopsqrtujuvo`
+— note plain `supabase login`/`link` hit an unrelated CLI schema-parsing
+bug on this project; `--project-ref` on `functions deploy`/`secrets set`
+sidesteps it, no `link` needed). Both are now live and verified (F3 row
+above, and the OpenAI key note here).
 
 Gates re-run clean after every migration in this wave: `npx tsc --noEmit`
 (0 errors), `npx jest` (182/185, 3 pre-existing intentional skips),
