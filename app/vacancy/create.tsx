@@ -243,10 +243,10 @@ export default function CreateVacancyScreen() {
 
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <View style={{ flex: 1 }}>
-              <Input label={`${tr('candidate.salary')} (min)`} value={salaryMin} onChangeText={setSalaryMin} placeholder="1000" keyboardType="numeric" />
+              <Input label={tr('candidate.salaryMin')} value={salaryMin} onChangeText={setSalaryMin} placeholder="1000" keyboardType="numeric" />
             </View>
             <View style={{ flex: 1 }}>
-              <Input label={`${tr('candidate.salary')} (max)`} value={salaryMax} onChangeText={setSalaryMax} placeholder="3000" keyboardType="numeric" />
+              <Input label={tr('candidate.salaryMax')} value={salaryMax} onChangeText={setSalaryMax} placeholder="3000" keyboardType="numeric" />
             </View>
           </View>
 

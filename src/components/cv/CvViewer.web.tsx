@@ -1,4 +1,5 @@
 import React from 'react';
+import i18n from '@/i18n';
 
 interface Props {
   url: string;
@@ -18,7 +19,7 @@ export function CvViewer({ url, kind }: Props) {
 
   return React.createElement('iframe', {
     src,
-    title: 'CV preview',
+    title: i18n.t('cv.preview'),
     style: { width: '100%', height: '100%', border: '0', backgroundColor: '#ffffff' },
   });
 }

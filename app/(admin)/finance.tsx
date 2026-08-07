@@ -108,7 +108,7 @@ export default function AdminFinanceScreen() {
               { paddingHorizontal: s.lg, paddingVertical: s.md, borderBottomWidth: i < engagement.length - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: colors.divider },
             ]}
           >
-            <Text style={[{ color: colors.textPrimary, flex: 1 }, t.bodyMedium]}>{tr(`admin.evt.${e.event}`)}</Text>
+            <Text style={[{ color: colors.textPrimary, flex: 1 }, t.bodyMedium]}>{tr(`admin.evt.${e.event}`, { defaultValue: e.event })}</Text>
             <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{e.count.toLocaleString()}</Text>
           </View>
         ))}

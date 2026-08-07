@@ -13,6 +13,7 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { AdminUserSummary, UserRole } from '@/types/models';
+import { getRoleLabel } from '@/utils/labels';
 import { Search as SearchIcon } from 'lucide-react-native';
 import { toUserMessage } from '@/utils/errorMessage';
 
@@ -45,7 +46,7 @@ export default function AdminUsersScreen() {
           <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]} numberOfLines={1}>{item.email || tr('common.notAvailable')}</Text>
         </View>
         <View style={styles.badges}>
-          <Badge label={item.role} variant="info" />
+          <Badge label={getRoleLabel(tr, item.role)} variant="info" />
           <Badge
             label={item.isActive ? tr('admin.active') : tr('admin.inactive')}
             variant={item.isActive ? 'success' : 'error'}

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { DialogButton, DialogRequest, registerDialogHost } from '@/utils/dialog';
+import i18n from '@/i18n';
 
 /**
  * Renders the web/native modal for `@/utils/dialog`'s `Alert.alert`. Mount once
@@ -71,7 +72,7 @@ export function DialogHost() {
                       t.labelMedium,
                     ]}
                   >
-                    {b.text ?? 'OK'}
+                    {b.text ?? i18n.t('common.ok')}
                   </Text>
                 </Pressable>
               );

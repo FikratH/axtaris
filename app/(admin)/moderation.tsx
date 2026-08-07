@@ -14,7 +14,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
-import { getVacancyStatusPresentation } from '@/utils/labels';
+import { getModerationEntityTypeLabel, getVacancyStatusPresentation } from '@/utils/labels';
 import { toUserMessage } from '@/utils/errorMessage';
 
 export default function AdminModerationScreen() {
@@ -109,7 +109,7 @@ export default function AdminModerationScreen() {
           ? emptyText(tr('admin.noFlags'))
           : flags.map((f) => (
               <Card key={f.id} padding="md" style={{ marginBottom: 10 }}>
-                <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>{f.entityType}</Text>
+                <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>{getModerationEntityTypeLabel(tr, f.entityType)}</Text>
                 <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.bodySmall]}>{f.reason}</Text>
                 <View style={[styles.actions, { marginTop: s.md }]}>
                   <View style={{ flex: 1 }}>

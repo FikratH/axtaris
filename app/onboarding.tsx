@@ -519,7 +519,7 @@ export default function OnboardingScreen() {
         return renderFeatureSlide(Briefcase, 'onboarding.slide3Title', 'onboarding.slide3Desc', [
           {
             icon: <MapPin size={13} color={colors.accent} strokeWidth={2.2} />,
-            label: 'Bakı',
+            label: tr('onboarding.slide3CityBadge'),
             color: colors.accent,
             bg: colors.accentLight,
             position: { top: 8, right: 14 },

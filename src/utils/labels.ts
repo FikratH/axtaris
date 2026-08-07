@@ -3,6 +3,8 @@ import type {
   ApplicationStatus,
   ExperienceLevel,
   LanguageSkill,
+  ModerationFlag,
+  UserRole,
   VacancyStatus,
   VerificationStatus,
   WorkType,
@@ -32,6 +34,28 @@ export function getExperienceLevelLabel(tr: TFunction, level: ExperienceLevel): 
 // ── Language proficiency ─────────────────────────────────────
 export function getLanguageLevelLabel(tr: TFunction, level: LanguageSkill['level']): string {
   return tr(`profileCrud.language.levels.${level}`);
+}
+
+// ── User role (admin screens) ─────────────────────────────────
+const roleKeys: Record<UserRole, string> = {
+  candidate: 'admin.roleLabels.candidate',
+  employer: 'admin.roleLabels.employer',
+  admin: 'admin.roleLabels.admin',
+};
+
+export function getRoleLabel(tr: TFunction, role: UserRole): string {
+  return tr(roleKeys[role] ?? 'common.notAvailable');
+}
+
+// ── Moderation entity type (admin moderation queue) ─────────────
+const moderationEntityTypeKeys: Record<ModerationFlag['entityType'], string> = {
+  vacancy: 'admin.moderationEntity.vacancy',
+  company: 'admin.moderationEntity.company',
+  user: 'admin.moderationEntity.user',
+};
+
+export function getModerationEntityTypeLabel(tr: TFunction, entityType: ModerationFlag['entityType']): string {
+  return tr(moderationEntityTypeKeys[entityType] ?? 'common.notAvailable');
 }
 
 // ── Application status → label + semantic color ──────────────

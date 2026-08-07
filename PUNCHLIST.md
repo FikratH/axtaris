@@ -426,10 +426,20 @@ answering the content-rating questionnaire.
   already used correctly on the vacancy-create screen.
 - ✅ **Fixed** — `app/(admin)/finance.tsx` KPI tile now has the same
   `numberOfLines={2} adjustsFontSizeToFit` guard its dashboard sibling has.
-- P2 misc (salary min/max suffix hardcoded English, onboarding "Bakı" label,
-  checkout demo-fill "Test User", card placeholder "YOUR NAME", raw DB enums
-  rendered as labels in admin, `admin.evt.*` dynamic key with no fallback) —
-  file:line list in the i18n transcript.
+- ✅ **Fixed** — all P2 misc items. Salary min/max labels now
+  `candidate.salaryMin`/`salaryMax` (was `` `${tr('candidate.salary')} (min)`
+  ``). Onboarding's decorative "Bakı" badge now `onboarding.slide3CityBadge`
+  (Baku/Bakı/Баку per locale). `CvViewer.web.tsx`'s iframe title now reuses
+  `cv.preview`. `DialogHost`'s button-text fallback now `i18n.t('common.ok')`.
+  Admin's raw `role`/`entityType` DB enums now go through new
+  `getRoleLabel`/`getModerationEntityTypeLabel` helpers in `labels.ts`
+  (`admin.roleLabels.*` / `admin.moderationEntity.*` — named to avoid
+  colliding with the pre-existing `admin.role` column-header string, which
+  tsc's duplicate-object-key check caught immediately). `admin.evt.*`'s
+  dynamic key now has a `defaultValue` fallback to the raw event name
+  instead of rendering the literal untranslated key string. Checkout's
+  demo-fill "Test User" and the card placeholder "YOUR NAME" no longer
+  exist at all — moot, removed by the §3.1 checkout rewrite.
 
 ### Performance (perf-analyzer)
 - 🤖 **Lucide barrel ships all 1704 icons for ~70 used** (~120KB gzip, ~11%
