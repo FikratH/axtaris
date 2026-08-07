@@ -444,6 +444,23 @@ function getMockSavedJobIds(): string[] {
 }
 
 class CandidateVacancyService {
+  /**
+   * Narrow candidate_profiles read for callers (applyToVacancy) that only
+   * need the profile id + cv url, not the full profile with all four
+   * nested sub-entity collections.
+   */
+  private async fetchCandidateIdAndCv(userId: string): Promise<{ id: string; cvUrl?: string } | null> {
+    const { data, error } = await getSupabase()
+      .from('candidate_profiles')
+      .select('id, cv_url')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    return { id: data.id, cvUrl: data.cv_url || undefined };
+  }
+
   async fetchCandidateProfile(userId: string): Promise<CandidateProfile | null> {
     if (!userId) return null;
 
@@ -559,18 +576,16 @@ class CandidateVacancyService {
 
     if (error) throw new Error(error.message);
 
-    await syncWorkExperiences(
-      currentProfile.id,
-      currentProfile.workExperience,
-      nextProfile.workExperience
-    );
-    await syncEducation(currentProfile.id, currentProfile.education, nextProfile.education);
-    await syncLanguageSkills(currentProfile.id, currentProfile.languages, nextProfile.languages);
-    await syncCertifications(
-      currentProfile.id,
-      currentProfile.certifications,
-      nextProfile.certifications
-    );
+    // Four independent tables, each reconciled through its own RPC call
+    // (advisory-locked per candidate+table — see reconcile_candidate_child_rows)
+    // — no ordering dependency between them, so run them concurrently
+    // instead of four sequential round trips.
+    await Promise.all([
+      syncWorkExperiences(currentProfile.id, currentProfile.workExperience, nextProfile.workExperience),
+      syncEducation(currentProfile.id, currentProfile.education, nextProfile.education),
+      syncLanguageSkills(currentProfile.id, currentProfile.languages, nextProfile.languages),
+      syncCertifications(currentProfile.id, currentProfile.certifications, nextProfile.certifications),
+    ]);
 
     return this.fetchCandidateProfile(userId).then((profile) => {
       if (!profile) {
@@ -692,7 +707,14 @@ class CandidateVacancyService {
     const screeningAnswers = answers && answers.length > 0 ? answers : [];
     const trimmedCoverLetter = coverLetter?.trim() || undefined;
 
-    const subscriptionSummary = await subscriptionService.fetchCandidateSubscriptionSummary(userId);
+    // These two are independent — the quota check only needs the summary,
+    // and (on the real backend) the candidate id/cv only need the profile
+    // row, not each other. Was two sequential round trips; the mock path
+    // doesn't need the second fetch at all, kept sequential there.
+    const [subscriptionSummary, candidateIdAndCv] = await Promise.all([
+      subscriptionService.fetchCandidateSubscriptionSummary(userId),
+      shouldUseMockBackend() ? Promise.resolve(null) : this.fetchCandidateIdAndCv(userId),
+    ]);
 
     if (!subscriptionSummary) {
       throw new Error(i18n.t('errors.subscriptionNotFound'));
@@ -702,7 +724,7 @@ class CandidateVacancyService {
       subscriptionSummary.dailyApplicationLimit !== null &&
       (subscriptionSummary.applicationsRemainingToday ?? 0) <= 0
     ) {
-      throw new Error('Daily application limit reached for current subscription plan');
+      throw new Error(i18n.t('errors.dailyLimitReached'));
     }
 
     if (shouldUseMockBackend()) {
@@ -741,7 +763,7 @@ class CandidateVacancyService {
       return application;
     }
 
-    const profile = await this.fetchCandidateProfile(userId);
+    const profile = candidateIdAndCv;
 
     if (!profile) {
       throw new Error(i18n.t('errors.candidateProfileNotFound'));

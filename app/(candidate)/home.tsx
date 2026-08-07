@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -51,9 +51,16 @@ export default function CandidateHomeScreen() {
   const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
   const toggleSave = useToggleSavedJob(user?.id);
   const { requireAuth } = useGuestGate();
-  const saveJob = (id: string) => {
-    if (requireAuth()) toggleSave.mutate(id);
-  };
+  const saveJob = useCallback(
+    (id: string) => {
+      if (requireAuth()) toggleSave.mutate(id);
+    },
+    [requireAuth, toggleSave]
+  );
+  const handleVacancyPress = useCallback(
+    (id: string) => router.push({ pathname: '/vacancy/[id]', params: { id } }),
+    [router]
+  );
   const {
     data: vacancies = [],
     isLoading: vacanciesLoading,
@@ -66,6 +73,21 @@ export default function CandidateHomeScreen() {
   const recommended = useMemo(
     () => rankVacanciesByMatch(profile, vacancies).slice(0, 4),
     [vacancies, profile]
+  );
+  const renderRecommendedItem = useCallback(
+    ({ item }: { item: (typeof recommended)[number] }) => (
+      <View style={{ width: width * 0.78 }}>
+        <VacancyCard
+          vacancy={item}
+          onPress={handleVacancyPress}
+          onSave={saveJob}
+          saved={savedJobIds.includes(item.id)}
+          matchScore={item.match.score}
+          compact
+        />
+      </View>
+    ),
+    [handleVacancyPress, saveJob, savedJobIds]
   );
 
   const firstName = user?.fullName?.split(' ')[0] || tr('common.defaultUserName');
@@ -207,18 +229,7 @@ export default function CandidateHomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 20 }}
             ItemSeparatorComponent={() => <View style={{ width: 12 }} />}
-            renderItem={({ item }) => (
-              <View style={{ width: width * 0.78 }}>
-                <VacancyCard
-                  vacancy={item}
-                  onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-                  onSave={() => saveJob(item.id)}
-                  saved={savedJobIds.includes(item.id)}
-                  matchScore={item.match.score}
-                  compact
-                />
-              </View>
-            )}
+            renderItem={renderRecommendedItem}
             keyExtractor={(item) => item.id}
           />
         )}
@@ -278,8 +289,8 @@ export default function CandidateHomeScreen() {
               <StaggeredItem key={vacancy.id} index={index} staggerDelay={60}>
                 <VacancyCard
                   vacancy={vacancy}
-                  onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: vacancy.id } })}
-                  onSave={() => saveJob(vacancy.id)}
+                  onPress={handleVacancyPress}
+                  onSave={saveJob}
                   saved={savedJobIds.includes(vacancy.id)}
                 />
               </StaggeredItem>

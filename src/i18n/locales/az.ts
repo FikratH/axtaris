@@ -732,6 +732,7 @@ export default {
     emptyMessage: 'Mesaj boş ola bilməz',
     missingImage: 'Şəkil əskikdir',
     searchNameRequired: 'Axtarış adı tələb olunur',
+    dailyLimitReached: 'Cari planınız üçün gündəlik müraciət limitinə çatmısınız',
   },
   subscription: {
     title: 'Abunəlik',

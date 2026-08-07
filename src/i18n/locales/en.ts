@@ -732,6 +732,7 @@ export default {
     emptyMessage: 'Message cannot be empty',
     missingImage: 'Image is missing',
     searchNameRequired: 'Search name is required',
+    dailyLimitReached: 'Daily application limit reached for your current plan',
   },
   subscription: {
     title: 'Subscription',

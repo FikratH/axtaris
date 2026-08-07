@@ -37,6 +37,23 @@ export default function SavedScreen() {
   // filtered by the live id set so an un-save is reflected instantly.
   const savedJobs = savedVacancies.filter((v) => savedJobIds.includes(v.id));
 
+  const handlePress = React.useCallback(
+    (id: string) => router.push({ pathname: '/vacancy/[id]', params: { id } }),
+    [router]
+  );
+  const handleSave = React.useCallback((id: string) => toggleSave.mutate(id), [toggleSave]);
+  const renderItem = React.useCallback(
+    ({ item }: { item: (typeof savedJobs)[number] }) => (
+      <VacancyCard
+        vacancy={item}
+        onPress={handlePress}
+        onSave={handleSave}
+        saved={savedJobIds.includes(item.id)}
+      />
+    ),
+    [handlePress, handleSave, savedJobIds]
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary, paddingTop: insets.top + 12 }]}>
       <View style={[styles.header, { paddingHorizontal: s.xl }]}>
@@ -51,14 +68,7 @@ export default function SavedScreen() {
       <FlatList
         data={savedJobs}
         contentContainerStyle={{ paddingHorizontal: s.xl, paddingTop: s.lg, paddingBottom: 24 }}
-        renderItem={({ item }) => (
-          <VacancyCard
-            vacancy={item}
-            onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-            onSave={() => toggleSave.mutate(item.id)}
-            saved={savedJobIds.includes(item.id)}
-          />
-        )}
+        renderItem={renderItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={

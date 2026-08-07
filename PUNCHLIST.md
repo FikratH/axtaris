@@ -457,22 +457,43 @@ answering the content-rating questionnaire.
   accepting Metro's experimental tree-shaking (a global build-behavior
   change, same caveat the original audit gave it). Not attempted again
   this pass — left open, P2.
-- 🤖 The app's only `React.memo` (`VacancyCard`) is defeated at every call
-  site because callers pass freshly-allocated inline arrow props — fix
-  together with the 7 unmemoized `renderItem`s below, they're the same fix
-  or neither does anything.
-- 🤖 7 list screens still have unmemoized `renderItem` (file:line list in
-  transcript) — the FlatList conversion landed, the memoization pass didn't
-  follow on these four the punchlist marked "virtualized."
+- ✅ **Fixed** — `VacancyCard`'s `onPress`/`onSave` props changed shape from
+  bound zero-arg callbacks (`() => void`, forcing a fresh closure per row
+  per render) to id-taking callbacks (`(id: string) => void`), matching the
+  audit's exact suggested fix. Each of the 4 call sites (`saved.tsx`,
+  `search.tsx`, `home.tsx` ×2 — the "recommended" FlatList and the "recent
+  jobs" list) now hoists ONE stable `useCallback` per screen instead of a
+  closure per row, and wraps its own `renderItem` in `useCallback` too, so
+  `React.memo` on `VacancyCard` can actually skip re-rendering rows whose
+  data hasn't changed. Smoke-tested in a real browser: card-press
+  navigation and the save/bookmark toggle both still work correctly after
+  the refactor (toggled a real saved-job row on and back off against
+  production). The `home.tsx` "Top Companies" FlatList's unmemoized
+  `renderItem` was left as-is — it doesn't use `VacancyCard`, so it's a
+  separate, lower-priority version of the same class of issue, not part of
+  the "fix together or neither works" pair the audit specifically called
+  out.
 - 🤖 `expo-image` is **already linked natively** (v55.0.6, resolved in
   `ios/Podfile.lock`, transitively via expo-router) — the "needs a native
-  rebuild" blocker in the old punchlist doesn't apply. Promote to a direct
-  dependency, swap `Avatar.tsx` and `chat/[id].tsx` (3 files total),
-  `onError`→initials-fallback needs a manual check under the new prop
-  signature.
-- 🤖 `applyToVacancy` (6 sequential round-trips) and `updateCandidateProfile`
-  (11 sequential round-trips) — collapse independent legs with `Promise.all`
-  and narrow the over-fetched profile `select`.
+  rebuild" blocker in the old punchlist doesn't apply. Still open — not
+  attempted this pass. Promote to a direct dependency, swap `Avatar.tsx`
+  and `chat/[id].tsx` (3 files total), `onError`→initials-fallback needs a
+  manual check under the new prop signature.
+- ✅ **Fixed, live-verified** — `applyToVacancy`'s subscription-summary
+  fetch and the candidate profile lookup are now `Promise.all`'d instead of
+  sequential (the profile lookup is also now a narrow `id, cv_url` select
+  via a new `fetchCandidateIdAndCv`, not the full 5-collection profile —
+  the daily-limit check moved to after both resolve, a small trade-off:
+  the profile fetch is no longer skipped in the rare already-at-limit
+  case, in exchange for one fewer round trip on every successful apply).
+  `updateCandidateProfile`'s 4 independent `sync*` calls (work experience/
+  education/languages/certifications, each its own advisory-locked RPC
+  call per table — see the reconcile-RPC fix in §2.1, different lock keys
+  so no contention from parallelizing) are now `Promise.all`'d instead of
+  4 sequential awaits. Also caught and fixed an existing hardcoded English
+  string surfaced while touching this code
+  (`errors.dailyLimitReached`, was "Daily application limit reached for
+  current subscription plan").
 - 🤖 Two launch-path logo PNGs are 10-30× their rendered size (1.35MB,
   593KB, decoded on the splash route) — resize to ~3× render size.
 - P2 remainder (admin moderation ScrollView of ~150 cards, `ListHeaderComponent`

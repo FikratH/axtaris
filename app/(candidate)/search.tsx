@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -121,6 +121,30 @@ export default function SearchScreen() {
     }
     return rankVacanciesByMatch(profile, results);
   }, [query, selectedWorkTypes, selectedCity, allVacancies, profile]);
+
+  const handlePress = useCallback(
+    (id: string) => router.push({ pathname: '/vacancy/[id]', params: { id } }),
+    [router]
+  );
+  const handleSave = useCallback(
+    (id: string) => {
+      if (requireAuth()) toggleSave.mutate(id);
+    },
+    [requireAuth, toggleSave]
+  );
+  const renderItem = useCallback(
+    ({ item }: { item: (typeof filteredVacancies)[number] }) => (
+      <VacancyCard
+        vacancy={item}
+        onPress={handlePress}
+        onSave={handleSave}
+        saved={savedJobIds.includes(item.id)}
+        matchScore={item.match.score}
+        applied={appliedVacancyIds.has(item.id)}
+      />
+    ),
+    [handlePress, handleSave, savedJobIds, appliedVacancyIds]
+  );
 
   const toggleWorkType = (wt: WorkType) => {
     setSelectedWorkTypes((prev) =>
@@ -255,16 +279,7 @@ export default function SearchScreen() {
       <FlatList
         data={isLoading ? [] : filteredVacancies}
         contentContainerStyle={{ paddingHorizontal: s.xl, paddingTop: s.lg, paddingBottom: 24 }}
-        renderItem={({ item }) => (
-          <VacancyCard
-            vacancy={item}
-            onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.id } })}
-            onSave={() => { if (requireAuth()) toggleSave.mutate(item.id); }}
-            saved={savedJobIds.includes(item.id)}
-            matchScore={item.match.score}
-            applied={appliedVacancyIds.has(item.id)}
-          />
-        )}
+        renderItem={renderItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={

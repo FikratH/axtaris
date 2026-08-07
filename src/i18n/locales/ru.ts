@@ -732,6 +732,7 @@ export default {
     emptyMessage: 'Сообщение не может быть пустым',
     missingImage: 'Отсутствует изображение',
     searchNameRequired: 'Требуется название поиска',
+    dailyLimitReached: 'Достигнут дневной лимит откликов для вашего текущего плана',
   },
   subscription: {
     title: 'Подписка',

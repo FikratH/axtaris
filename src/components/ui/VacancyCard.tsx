@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
@@ -12,8 +12,13 @@ import { Bookmark, BookmarkCheck, MapPin, Clock, Users, Star } from 'lucide-reac
 
 interface VacancyCardProps {
   vacancy: Vacancy;
-  onPress: () => void;
-  onSave?: () => void;
+  // Take the vacancy id rather than being a bound zero-arg callback, so a
+  // caller can hoist ONE stable useCallback per screen instead of a fresh
+  // closure per row per render — otherwise React.memo below never helps,
+  // since a new function prop identity forces a re-render every time
+  // regardless of whether this card's own data changed.
+  onPress: (id: string) => void;
+  onSave?: (id: string) => void;
   saved?: boolean;
   compact?: boolean;
   matchScore?: number;
@@ -75,6 +80,10 @@ function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchS
   const { colors, radius: r, spacing: s, typography: t, elevation: e, isDark } = useTheme();
   const { t: tr } = useTranslation();
 
+  const vacancyId = vacancy.id;
+  const handlePress = useCallback(() => onPress(vacancyId), [onPress, vacancyId]);
+  const handleSave = useCallback(() => onSave?.(vacancyId), [onSave, vacancyId]);
+
   const salary =
     vacancy.showSalary && vacancy.salaryMin
       ? `${vacancy.salaryMin}${vacancy.salaryMax ? ` - ${vacancy.salaryMax}` : '+'} ${vacancy.salaryCurrency || 'AZN'}`
@@ -88,7 +97,7 @@ function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchS
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      onPress={onPress}
+      onPress={handlePress}
       style={[
         styles.container,
         {
@@ -117,7 +126,7 @@ function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchS
           </View>
         )}
         {onSave && (
-          <AnimatedSaveButton saved={saved} onPress={onSave} colors={colors} />
+          <AnimatedSaveButton saved={saved} onPress={handleSave} colors={colors} />
         )}
       </View>
 
