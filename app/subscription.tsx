@@ -48,7 +48,12 @@ export default function SubscriptionScreen() {
   );
   const { data: plans = [], isLoading: plansLoading } = useSubscriptionPlans(audience);
   const { data: features = [] } = useSubscriptionFeatureComparison(audience);
-  const { data: employerPlan } = useEmployerPlan(!isCandidateAudience ? user?.id : undefined);
+  const {
+    data: employerPlan,
+    isLoading: employerPlanLoading,
+    isError: employerPlanError,
+    refetch: refetchEmployerPlan,
+  } = useEmployerPlan(!isCandidateAudience ? user?.id : undefined);
   const currentPlan = isCandidateAudience ? summary?.subscription.plan : employerPlan ?? 'free';
   const comparisonPlanCodes: SubscriptionPlanCode[] = ['free', 'pro', 'premium'];
 
@@ -58,9 +63,9 @@ export default function SubscriptionScreen() {
     router.push(`/checkout?plan=${planCode}&audience=${audience}` as never);
   };
 
-  if ((isCandidateAudience && summaryLoading) || plansLoading) {
+  if ((isCandidateAudience && summaryLoading) || (!isCandidateAudience && employerPlanLoading) || plansLoading) {
     return (
-      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[{ color: colors.textSecondary, marginTop: 12 }, t.bodyMedium]}>{tr('common.loading')}</Text>
       </View>
@@ -69,8 +74,21 @@ export default function SubscriptionScreen() {
 
   if (isCandidateAudience && (summaryError || !summary)) {
     return (
-      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}> 
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
         <EmptyState title={tr('common.error')} subtitle={tr('common.retry')} actionTitle={tr('common.retry')} onAction={() => refetch()} />
+      </View>
+    );
+  }
+
+  if (!isCandidateAudience && employerPlanError) {
+    return (
+      <View style={[styles.stateContainer, { backgroundColor: colors.backgroundSecondary }]}>
+        <EmptyState
+          title={tr('common.error')}
+          subtitle={tr('common.retry')}
+          actionTitle={tr('common.retry')}
+          onAction={() => refetchEmployerPlan()}
+        />
       </View>
     );
   }

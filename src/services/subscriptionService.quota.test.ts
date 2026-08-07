@@ -27,26 +27,35 @@ type PlanCode = 'free' | 'pro' | 'premium';
 
 interface FakeConfig {
   plan: PlanCode | null;
-  /** `applied_at` timestamps the applications table returns, newest first. */
+  /** `applied_at` timestamps the applications table "contains", newest first. */
   appliedAt: string[];
-  /** Row cap the service asks for; recorded so the paging window is assertable. */
-  onLimit?: (n: number) => void;
+  /** The `.gte('applied_at', ...)` threshold the service asks for; assertable. */
+  onGte?: (threshold: string) => void;
 }
 
 /**
  * Covers the three chains fetchCandidateSubscriptionSummary issues:
  *   candidate_subscriptions: select().eq().eq().order().limit().maybeSingle()
  *   candidate_profiles:      select().eq().maybeSingle()
- *   applications:            select().eq().order().limit()   [awaited directly]
+ *   applications:            select('id',{count:'exact',head:true}).eq().gte()  [awaited directly]
+ *
+ * The applications count is computed here by filtering `appliedAt` against the
+ * `.gte()` threshold the service passes — this fake doesn't know Baku day
+ * bucketing, it just mirrors whatever instant the service computed, so these
+ * tests are really asserting the service's own bucketing is correct.
  */
 function createFakeSupabase(config: FakeConfig) {
   const from = (table: string) => {
+    let gteThreshold: string | null = null;
+
     const builder: Record<string, unknown> = {
       select: () => builder,
       eq: () => builder,
       order: () => builder,
-      limit: (n: number) => {
-        config.onLimit?.(n);
+      limit: () => builder,
+      gte: (_col: string, value: string) => {
+        gteThreshold = value;
+        config.onGte?.(value);
         return builder;
       },
       maybeSingle: () => {
@@ -73,12 +82,13 @@ function createFakeSupabase(config: FakeConfig) {
         }
         return Promise.resolve({ data: { id: 'cand-1' }, error: null });
       },
-      // The applications query is awaited without a terminal method.
-      then: (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) =>
-        Promise.resolve({
-          data: config.appliedAt.map((applied_at) => ({ applied_at })),
-          error: null,
-        }).then(onF, onR),
+      // The applications count query is awaited without a terminal method.
+      then: (onF: (v: unknown) => unknown, onR?: (e: unknown) => unknown) => {
+        const count = gteThreshold
+          ? config.appliedAt.filter((ts) => ts >= (gteThreshold as string)).length
+          : config.appliedAt.length;
+        return Promise.resolve({ count, data: null, error: null }).then(onF, onR);
+      },
     };
     return builder;
   };
@@ -229,21 +239,34 @@ describe('fetchCandidateSubscriptionSummary — Asia/Baku day bucketing', () => 
   });
 });
 
-describe('fetchCandidateSubscriptionSummary — usage paging window', () => {
-  it('fetches enough recent rows to cover the largest capped plan', async () => {
-    // Usage is computed by pulling the N most recent applications and filtering
-    // them to today in JS, so N must exceed the biggest enforced daily limit (pro,
-    // 10) or a capped user's count would silently saturate and under-report.
-    const limits: number[] = [];
+describe('fetchCandidateSubscriptionSummary — usage counting has no row cap', () => {
+  it('counts more than 20 same-day applications correctly (no silent under-report)', async () => {
+    // Was previously a capped `.limit(20)` row fetch filtered to today in JS —
+    // a candidate with more than 20 applications today would silently
+    // under-count (and, since this number gates further applies, under-enforce).
+    // Now an exact server-side count with a date-range filter, so there is no
+    // window size to exceed.
+    const manyToday = Array.from({ length: 25 }, () => bakuTime(10));
+    mockGetSupabase.mockReturnValue(createFakeSupabase({ plan: 'pro', appliedAt: manyToday }));
+    jest.useFakeTimers().setSystemTime(new Date(bakuTime(12)));
+
+    const summary = await subscriptionService.fetchCandidateSubscriptionSummary('user-1');
+
+    expect(summary?.applicationsUsedToday).toBe(25);
+    expect(summary?.applicationsRemainingToday).toBe(0);
+  });
+
+  it('passes a start-of-Baku-day gte threshold rather than a row limit', async () => {
+    const thresholds: string[] = [];
     mockGetSupabase.mockReturnValue(
-      createFakeSupabase({ plan: 'pro', appliedAt: [], onLimit: (n) => limits.push(n) })
+      createFakeSupabase({ plan: 'pro', appliedAt: [], onGte: (t) => thresholds.push(t) })
     );
     jest.useFakeTimers().setSystemTime(new Date(bakuTime(12)));
 
     await subscriptionService.fetchCandidateSubscriptionSummary('user-1');
 
-    const usageWindow = Math.max(...limits);
-    expect(usageWindow).toBeGreaterThan(10);
+    expect(thresholds).toHaveLength(1);
+    expect(thresholds[0]).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
   });
 });
 

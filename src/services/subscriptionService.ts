@@ -205,6 +205,12 @@ function getDayKey(isoDate: string): string {
   return new Date(isoDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Baku' });
 }
 
+/** Start of "today" in Asia/Baku (fixed UTC+4, no DST), as a UTC instant. */
+function getStartOfTodayInBakuIso(): string {
+  const todayKey = getDayKey(new Date().toISOString());
+  return new Date(`${todayKey}T00:00:00+04:00`).toISOString();
+}
+
 function getApplicationsUsedToday(candidateUserId: string): number {
   const todayKey = getDayKey(new Date().toISOString());
 
@@ -304,17 +310,18 @@ class SubscriptionService {
     let applicationsUsedToday = 0;
 
     if (profileData?.id) {
-      const todayKey = getDayKey(new Date().toISOString());
-
-      const { data: usageRows, error: usageError } = await getSupabase()
+      // An exact count with a date-range filter, not a capped row fetch +
+      // client-side filter — the old `.limit(20)` silently under-counted
+      // (and under-enforced) once a candidate's applications-today exceeded
+      // 20, since only the most recent 20 rows were ever inspected.
+      const { count, error: usageError } = await getSupabase()
         .from('applications')
-        .select('applied_at')
+        .select('id', { count: 'exact', head: true })
         .eq('candidate_id', profileData.id)
-        .order('applied_at', { ascending: false })
-        .limit(20);
+        .gte('applied_at', getStartOfTodayInBakuIso());
 
       if (usageError) throw new Error(usageError.message);
-      applicationsUsedToday = (usageRows || []).filter((row) => getDayKey(row.applied_at) === todayKey).length;
+      applicationsUsedToday = count || 0;
     }
 
     const plan = getPlanDefinition(subscription.plan);
@@ -434,9 +441,19 @@ class SubscriptionService {
 
       if (error) throw error;
       return (data?.plan as SubscriptionPlanCode) || 'free';
-    } catch {
-      // employer_subscriptions migration may not be applied yet — treat as free.
-      return 'free';
+    } catch (error) {
+      // Only swallow "table doesn't exist yet" (undefined_table / PostgREST
+      // schema-cache miss) — the employer_subscriptions migration predates
+      // this code path and is confirmed applied in production, but this
+      // stays as a graceful degrade for any environment where it isn't. A
+      // real fetch/network/RLS error must propagate: silently returning
+      // 'free' here is exactly what let a paying employer's real plan
+      // silently disappear behind a transient failure.
+      const code = (error as { code?: string })?.code;
+      if (code === '42P01' || code === 'PGRST205') {
+        return 'free';
+      }
+      throw error instanceof Error ? error : new Error(String(error));
     }
   }
 

@@ -341,7 +341,24 @@ class EngagementService {
       return getMockEmployerApplications(userId);
     }
 
-    const { data, error } = await getSupabase()
+    const supabase = getSupabase();
+
+    // Push the employer-ownership predicate into the query itself instead of
+    // relying solely on RLS + a client-side .filter() after fetching every
+    // application on the platform. RLS already scopes this correctly today,
+    // but this endpoint's payload should be O(this employer's applications),
+    // not O(all applications) — and a real defense-in-depth layer here, not
+    // just efficiency, given how many RLS-policy bugs this exact codebase has
+    // turned out to have.
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('owner_id', userId)
+      .maybeSingle();
+    if (companyError) throw new Error(companyError.message);
+    if (!company?.id) return [];
+
+    const { data, error } = await supabase
       .from('applications')
       .select(`
         id,
@@ -357,7 +374,7 @@ class EngagementService {
         applied_at,
         reviewed_at,
         updated_at,
-        vacancies (
+        vacancies!inner (
           ${vacancySelect}
         ),
         candidate_profiles (
@@ -424,14 +441,13 @@ class EngagementService {
           )
         )
       `)
+      .eq('vacancies.company_id', company.id)
       .order('visibility_score', { ascending: false })
       .order('applied_at', { ascending: false });
 
     if (error) throw new Error(error.message);
 
-    return ((data || []) as unknown as SupabaseApplicationRow[])
-      .map(mapApplication)
-      .filter((application) => application.vacancy?.company?.ownerId === userId);
+    return (data || []).map((row) => mapApplication(row as unknown as SupabaseApplicationRow));
   }
 
   async updateApplicationStatus(

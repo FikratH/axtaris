@@ -18,7 +18,7 @@ export default function MessagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((st) => st.user);
-  const { data: conversations = [], isLoading } = useConversations(user?.id);
+  const { data: conversations = [], isLoading, isError, refetch } = useConversations(user?.id);
 
   const openThread = React.useCallback((c: Conversation) => {
     router.push({ pathname: '/chat/[id]', params: { id: c.id, subject: getConversationTitle(c, user?.role, tr) } } as never);
@@ -68,6 +68,15 @@ export default function MessagesScreen() {
       {isLoading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : isError ? (
+        <View style={styles.center}>
+          <EmptyState
+            title={tr('common.error')}
+            subtitle={tr('common.retry')}
+            actionTitle={tr('common.retry')}
+            onAction={() => refetch()}
+          />
         </View>
       ) : (
         <FlatList

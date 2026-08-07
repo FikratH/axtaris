@@ -355,20 +355,31 @@ answering the content-rating questionnaire.
   doesn't read `plans[].monthlyPriceAzn` or render a price/pay amount at
   all anymore, and `subscriptionService` always persists `price_amount: 0`
   now regardless of plan.
-- 🤖 Blank paywall / wrong plan on query failure — `app/subscription.tsx`
-  never reads `isError`; employers have no error branch at all and fall back
-  to `currentPlan='free'`, so a paying Premium employer is told to buy the
-  plan they already own.
-- 🤖 Failed inbox silently renders as "no messages", no retry —
-  `app/messages.tsx:21`, `app/chat/[id].tsx:66`.
-- 🤖 Daily application-limit check counts only the most recent 20 rows in JS
-  (`subscriptionService.ts:309-317`) — a candidate past 20 applications is
-  under-counted, silently bypassing the cap. Use a `count: 'exact', head:
-  true` query with a date filter instead.
-- 🤖 `fetchEmployerApplications` has no `.eq()`/`.limit()` — pulls every
-  application platform-wide and scopes to the employer **in JavaScript**;
-  correctness currently rests entirely on RLS (which §1.4/§1.1 are fixing).
-  Push the predicate into the query and paginate.
+- ✅ **Fixed** — blank paywall / wrong plan on query failure.
+  `fetchEmployerSubscriptionPlan` used to swallow *every* error (not just
+  "table doesn't exist yet") and silently return `'free'`; now only that one
+  specific case falls back, everything else propagates so `app/subscription.tsx`'s
+  new employer-side `isError` branch (it had none before) can show a real
+  retry state instead of quietly telling a paying employer they're on Free.
+- ✅ **Fixed** — failed inbox no longer silently renders as "no messages".
+  `app/messages.tsx` and `app/chat/[id].tsx` both now read `isError` from
+  their query hooks and show a retry state instead of falling through to
+  the empty-list/empty-thread copy.
+- ✅ **Fixed, test-verified** — daily application-limit undercounting.
+  Replaced the capped `.limit(20)` row-fetch-then-JS-filter with an exact
+  `count:'exact',head:true` query against a computed start-of-Baku-day
+  threshold — structurally can't under-count regardless of volume.
+  `subscriptionService.quota.test.ts` extended with a 25-applications-in-a-day
+  case (previously would have under-reported to 20) and a threshold-shape
+  assertion; both pass.
+- ✅ **Fixed, live-verified** — `fetchEmployerApplications` now filters via
+  `vacancies!inner(...)` + `.eq('vacancies.company_id', ...)` pushed into the
+  query itself, rather than fetching every application on the platform and
+  filtering in JS. RLS already scoped this correctly (verified), so this is
+  defense-in-depth + real efficiency, not a security fix per se — but given
+  how many RLS bugs turned up elsewhere in this same pass, not relying on
+  RLS alone here felt worth the extra query. Live-tested: the filtered
+  query returns only the calling employer's own applications.
 - P2 bugs (certification expiry not validated, duplicate support-conversation
   double-tap, 5-minute realtime message gap with no push safety net, 3 auth
   screens with no keyboard-avoidance and no scroll escape, silent optimistic-

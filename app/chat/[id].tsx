@@ -26,6 +26,7 @@ import { fileStorageService } from '@/services/fileStorageService';
 import { ChatMessage } from '@/types/models';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { getConversationCounterparty, getConversationTitle } from '@/utils/chatPresentation';
 
 function ChatImageBubble({ imageUrl, onOpen }: { imageUrl: string; onOpen: (url: string) => void }) {
@@ -63,7 +64,7 @@ export default function ChatThreadScreen() {
   const user = useAuthStore((st) => st.user);
 
   const { data: conversation } = useConversation(conversationId);
-  const { data: messages = [], isLoading } = useMessages(conversationId);
+  const { data: messages = [], isLoading, isError, refetch } = useMessages(conversationId);
   const sendMessage = useSendMessage(conversationId, user?.id);
   const sendImage = useSendImageMessage(conversationId, user?.id);
   const imagePicker = useImagePicker({ quality: 0.8 });
@@ -159,6 +160,15 @@ export default function ChatThreadScreen() {
 
       {isLoading ? (
         <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>
+      ) : isError ? (
+        <View style={styles.center}>
+          <EmptyState
+            title={tr('common.error')}
+            subtitle={tr('common.retry')}
+            actionTitle={tr('common.retry')}
+            onAction={() => refetch()}
+          />
+        </View>
       ) : (
         <FlatList
           ref={listRef}
