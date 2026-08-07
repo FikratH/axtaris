@@ -39,13 +39,17 @@ each one, in order.
   (companies.owner_id is no longer readable by the anon role at all,
   live-verified both via direct REST and a full real-browser guest-mode
   walkthrough). Full detail in `PUNCHLIST.md`.
-- **Android production build**: ✅ finished successfully, re-run to pick
-  up every fix through this pass (profile `production`, distribution
-  `store`, commit `a9bb94d`, finished 8/7/2026 7:16 PM). AAB:
-  https://expo.dev/artifacts/eas/UIOPY5pMl3xFlG0shYTOYAI30sWpCqXh6OcxJj48Mz4.aab
-  — **stale as of the F5/report-block/push-notification commits above**;
-  run `eas build --profile production --platform android` once more right
-  before actually submitting (§7).
+- **Android production build**: ✅ finished successfully — this is the
+  current, final build for this pass, includes F5, report/block, the
+  push-notification safety net, and everything else above (profile
+  `production`, distribution `store`, commit `df1df62`, finished
+  8/7/2026 10:44 PM). AAB:
+  https://expo.dev/artifacts/eas/sPn6QSRrOsH8UL9eDU_e-BbTOHXCljEw_jZHucZlVo4.aab
+  — this is the build to submit once §1-§5 below are done. (Two earlier
+  builds, from commits `dd84488` and `a9bb94d`, also exist and are now
+  stale — use this one.) If any further commits land after this pass,
+  re-run `eas build --profile production --platform android` once more
+  right before actually submitting (§7).
 - **iOS build**: blocked, see §5.
 
 ---
