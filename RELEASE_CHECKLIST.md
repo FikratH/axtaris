@@ -34,12 +34,12 @@ each one, in order.
   why the actual column revoke stays open), and a server-side backstop for
   the employer invite-quota entitlement (previously client-enforced only).
   Full detail in `PUNCHLIST.md`.
-- **Android production build**: ✅ finished successfully (profile
-  `production`, distribution `store`, commit `dd84488`). AAB:
-  https://expo.dev/artifacts/eas/YDXYMW1GNF_MS3q8GsSLI8e1xmWEYcITGjg1j_7KjHk.aab
-  — note several commits have landed since this build; re-run
-  `eas build --profile production --platform android` before actually
-  submitting to pick up everything in this checklist.
+- **Android production build**: ✅ finished successfully — re-run at the
+  end of this pass to pick up every fix (profile `production`,
+  distribution `store`, commit `a9bb94d`, finished 8/7/2026 7:16 PM). AAB:
+  https://expo.dev/artifacts/eas/UIOPY5pMl3xFlG0shYTOYAI30sWpCqXh6OcxJj48Mz4.aab
+  — this is the build to submit once §1-§5 below are done (an earlier
+  build from commit `dd84488` also exists but is stale; use this one).
 - **iOS build**: blocked, see §5.
 
 ---
