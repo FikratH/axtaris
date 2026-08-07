@@ -19,12 +19,27 @@ each one, in order.
 - **Store compliance**: the fake card-checkout screen is replaced with an
   honest free-during-beta activation flow. No screen collects card details
   anywhere in the app.
-- **Build**: `npx tsc --noEmit`, `npx jest` (183/185, 2 intentional skips),
-  `npx expo export --platform web`, `npm run supabase:verify`, and
-  `npm run supabase:smoke` all pass as of the last commit on `master`.
-- **Android production build**: triggered from this pass — check
-  `eas build:list --platform android --limit 1` or
-  https://expo.dev/accounts/fikratrh/projects/axtaris/builds for the result.
+- **Build**: `npx tsc --noEmit`, `npx jest` (186/186, all passing — the
+  certification-expiry-validation test that used to be an intentional skip
+  now runs and passes too), `npx expo export --platform web`,
+  `npm run supabase:verify`, and `npm run supabase:smoke` all pass as of
+  the last commit on `master`.
+- **Since this file was first generated**: a full P2 cleanup batch shipped
+  (certification expiry validation, support-conversation dedup + DB unique
+  index, 3 auth screens' keyboard-avoidance, silent bookmark-rollback
+  feedback, unchecked conversation-preview updates), `expo-image` adoption
+  for cached avatars/chat images, the oversized logo PNGs were resized
+  (~95% smaller), a safe RLS-refactor prerequisite for the still-open F5
+  finding (companies.owner_id anon exposure — see `PUNCHLIST.md` §1.5 for
+  why the actual column revoke stays open), and a server-side backstop for
+  the employer invite-quota entitlement (previously client-enforced only).
+  Full detail in `PUNCHLIST.md`.
+- **Android production build**: ✅ finished successfully (profile
+  `production`, distribution `store`, commit `dd84488`). AAB:
+  https://expo.dev/artifacts/eas/YDXYMW1GNF_MS3q8GsSLI8e1xmWEYcITGjg1j_7KjHk.aab
+  — note several commits have landed since this build; re-run
+  `eas build --profile production --platform android` before actually
+  submitting to pick up everything in this checklist.
 - **iOS build**: blocked, see §5.
 
 ---
@@ -198,7 +213,10 @@ Then, in App Store Connect / Play Console:
   gateway integration) — a deliberate, documented decision to ship free
   during beta instead (`PUNCHLIST.md` §3.1). Revisit when ready to charge.
 - Crash reporting (Sentry) — not wired up; separate task.
-- The remaining P1/P2 items in `PUNCHLIST.md` §4 (i18n error-message
-  routing for the other ~35 sites, list-memoization sweep, lucide bundle
-  trim, invite quota enforcement, a few isError-guard bugs) — none are
-  store-submission blockers; fix opportunistically post-launch.
+- The remaining open items in `PUNCHLIST.md` (F5's companies.owner_id anon
+  column exposure — a prerequisite RLS refactor shipped this pass, the
+  actual revoke needs a client select-constant split first, see §1.5 for
+  the exact plan; the lucide bundle trim, blocked on an upstream package
+  export-map fix; the chat push-notification safety net, needs a
+  notifications-row-on-message-send feature) — none are store-submission
+  blockers; fix opportunistically post-launch.
