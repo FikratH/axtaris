@@ -28,7 +28,7 @@ documented in full in each migration's header comment, summarized here:
 | F3 (parse-resume IDOR) | 🧑 **Code fixed, NOT deployed** | Edge Function code is fixed in the repo, but this environment has no `SUPABASE_ACCESS_TOKEN` / CLI auth, so `supabase functions deploy` could not be run. **The live function is still vulnerable.** Owner must run `supabase functions deploy parse-resume` — this is the single most urgent remaining action. |
 | F4 (applications WITH CHECK) | ✅ **Fixed, live** | First attempt caused `infinite recursion detected in policy` (self-referential subquery) — fixed via a SECURITY DEFINER helper (`202608070004`), same pattern as the pre-existing `202608020002` fix. Live-tested: forged `candidate_id` → 403; legitimate status update → 200. |
 | F1 (profiles email/phone/token) | ✅ **Fixed, live** | Live-tested: direct `email,phone` select as an authenticated employer → permission denied; `get_profile_contact` RPC correctly scoped to self/admin/employer-relationship; `admin_list_profiles` RPC correct for admin vs non-admin. |
-| F5 (companies.owner_id) | ⏪ **Reverted, still open (P1)** | The column-level revoke broke `vacancies_select`'s own policy (it reads `companies.owner_id` in a correlated subquery with no `TO` clause, so anon must be able to evaluate it) — broke anon job browsing entirely. Reverted (`202608070003`). Needs a different implementation (route the ownership check through a SECURITY DEFINER function instead of a raw column read) — not re-attempted this pass. |
+| F5 (companies.owner_id) | ⚠️ **Prerequisite shipped, revoke still open (P1)** | The column-level revoke broke `vacancies_select`'s own policy (it reads `companies.owner_id` in a correlated subquery with no `TO` clause, so anon must be able to evaluate it) — broke anon job browsing entirely. Reverted (`202608070003`). This pass: shipped the safe prerequisite (`202608070011`) — `vacancies_select`/`vacancies_update` now call a new `is_company_owner()` SECURITY DEFINER function instead of a raw subquery, verified behavior-neutral (anon browsing still works, gates clean). The column revoke itself is **still not done** — the client's shared `companySelect` still requests `owner_id` in every guest-reachable fetch (confirmed AxtarIS has a real anon-role "guest browsing" mode), so revoking now would just move the same regression from the RLS layer to the query's select list. Full plan documented in §1.5. |
 | F6 (RPC anon-EXECUTE) | ⚠️ **Partially fixed, live** | `owns_candidate_profile`/`candidate_discoverable`/`employer_sees_candidate` correctly revoked from anon (safe — confirmed not referenced by any `{public}`-scoped policy). `is_admin()` had to be **re-granted to anon** (`202608070002`) — it's referenced inside 9 `{public}`-scoped admin-bypass policies across profiles/companies/vacancies/applications/moderation_flags/conversations/analytics_events, and Postgres must be able to evaluate a policy's expression for a role even on OR-branches that end up false for that role. Revoking it broke anon reads platform-wide. `is_admin()` itself is safe to leave anon-executable (reads `auth.uid()`, which is null for anon, and returns false — no data exposure). |
 | F7 (resolve_candidate_subscription_plan) | ✅ **Fixed, live** | Confirmed not referenced by any RLS policy (only called from within another SECURITY DEFINER trigger function, which doesn't need its own EXECUTE grant on functions it calls internally) — revoke was safe, no regression. |
 | F8 (consume_ai_quota parameter) | ✅ **Fixed, live, backward-compatible** | Same deploy constraint as F3: the *currently deployed* ai-assist/parse-resume functions still call the old `{daily_limit: N}` form. Rather than break them, the DB function was restored to the original signature with `daily_limit` now an ignored, unused parameter (`202608070005`) — closes the actual vulnerability (limit can't be forged) with zero deploy needed. Confirmed live: OpenAI call now reaches the point of hitting the OpenAI API itself. |
@@ -134,6 +134,53 @@ is live-readable with no login. Missed by the PII lockdown pass (which only
 touched `profiles`/`candidate_profiles`).
 **Fix:** column-level revoke on `owner_id` for anon (keep it for
 `authenticated`/owner), or split into a public view.
+
+**Investigated again this pass, deliberately still not attempted — here's
+the full picture and the exact plan for whoever picks this up:**
+- The blocking prerequisite (already understood from the F5 revert): a raw
+  `REVOKE SELECT (owner_id) ... FROM anon` breaks `vacancies_select`
+  outright, because that `{public}`-scoped policy reads
+  `companies.owner_id` in a correlated subquery — Postgres requires
+  column privilege to even *parse* that subquery for a role the policy
+  applies to, independent of which branch of the `OR` actually matters at
+  runtime. **Fix for that part specifically:** add a `SECURITY DEFINER`
+  `is_company_owner(p_company_id uuid) RETURNS boolean` (same pattern as
+  `is_admin()`/`candidate_has_vacancy_access`), and rewrite
+  `vacancies_select`'s and `vacancies_update`'s ownership branch to call
+  it instead of the raw subquery — this alone is a safe, no-behavior-change
+  refactor and could ship on its own with no regression risk.
+- The part that's genuinely riskier and is why this wasn't attempted live
+  this pass: `owner_id` isn't just an RLS-internal implementation detail —
+  **the client's shared `companySelect` constant** (`vacancyService.ts:87-103`)
+  **literally requests it in every vacancy/company fetch**, including ones
+  reachable by a fully unauthenticated guest. Checked `app/_layout.tsx:193-211`:
+  AxtarIS has a real "guest browsing" mode (`guestRole` state) that lets an
+  unauthenticated visitor (genuine Supabase `anon` role, not just
+  logged-out-in-the-UI) browse `/vacancy/*`, `/company/*`, and the
+  candidate/employer home feeds before ever signing in. Revoking anon's
+  column privilege without also stripping `owner_id` from every
+  guest-reachable query would hard-break guest browsing with a raw
+  `permission denied for column owner_id` — a 4th live regression of
+  exactly the same class as the 3 already hit and fixed this session.
+  Traced the one real client dependency on `Company.ownerId`
+  (`app/(candidate)/applications.tsx:63`, used to start an
+  employer-chat) — it's on an authenticated-only, per-user-keyed screen,
+  never reachable by a guest session, so it's safe to keep sourcing
+  `owner_id` from an authenticated-only fetch path. The `ownerId`
+  comparisons in `engagementService.ts:470,595` are mock-backend-only
+  authorization stand-ins (inside `if (shouldUseMockBackend())` blocks) —
+  RLS is the real authorization there, not a blocker either way.
+- **Concrete plan for a dedicated pass:** (1) ship the `is_company_owner()`
+  policy refactor alone first, verify no regression (it's behavior-neutral).
+  (2) Split `companySelect`/`vacancySelect` into a guest-safe variant
+  (no `owner_id`) used by every guest-reachable function in
+  `vacancyService.ts` (search/browse/detail/top-companies), vs. the
+  existing full variant kept for the authenticated-only employer/applicant
+  fetch paths in `engagementService.ts`/`candidateVacancyService.ts`/
+  `adminService.ts`. (3) Only then revoke anon's column grant and
+  explicitly `GRANT SELECT (owner_id) ... TO authenticated`. (4) Live-test
+  both guest browsing (logged out, `guestRole` set) and the
+  message-employer flow from `applications.tsx` before calling it done.
 
 ### 1.6 P2 — Rest of the security findings (bundle into the same migration wave)
 - 🤖 **F6** — `owns_candidate_profile`, `candidate_discoverable`,
