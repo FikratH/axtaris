@@ -360,13 +360,11 @@ answering the content-rating questionnaire.
   transcript; low urgency, batch into a cleanup pass.
 
 ### i18n (i18n-auditor)
-- 🤖 **AI-assist English fallback text** written directly into vacancy
-  description/requirements/responsibilities, cover letters, and experience
-  bullets whenever `ai-assist` fails/is unconfigured/rate-limited — silently,
-  no error shown, in `src/services/aiService.ts` (12 hardcoded strings at
-  the lines listed in the audit). Convert to `i18n.t()` — `analyzeProfile`/
-  `generateBio` already do this correctly in the same file, use them as the
-  pattern.
+- ✅ **Fixed** — AI-assist English fallback text (vacancy
+  description/requirements/responsibilities, cover letters, experience
+  bullets, applicant fit-reason chips) is now routed through `i18n.t()`
+  under a new `ai.fallback.*` namespace, translated in all 3 locales,
+  `parity.test.ts` green. `src/services/aiService.ts`.
 - 🤖 **39 sites across 23 files show raw `error.message` verbatim** (English)
   as the dialog body, bypassing the existing `toUserMessage()` helper —
   including all 5 auth screens (sign-in, sign-up, verify-otp,
@@ -389,10 +387,20 @@ answering the content-rating questionnaire.
 
 ### Performance (perf-analyzer)
 - 🤖 **Lucide barrel ships all 1704 icons for ~70 used** (~120KB gzip, ~11%
-  of the bundle) — verified the dead icon code is actually in the shipped
-  bundle. Mechanical fix: switch the 64 files' named imports to deep ESM
-  imports (`lucide-react-native/dist/esm/icons/<name>`). Biggest single win,
-  zero behavioral risk.
+  of the bundle) — confirmed real. **Correction to the audit's suggested
+  fix:** deep ESM imports (`lucide-react-native/dist/esm/icons/<name>`) are
+  **not** "zero risk" — tested live and it breaks Jest module resolution
+  outright (`Cannot find module`) across every file touched, because
+  `lucide-react-native`'s `package.json` `"exports"` map only declares `"."`
+  and `"./icons"` as public subpaths; `dist/esm/icons/<name>` isn't in it,
+  so Jest's exports-aware resolver rejects it even though the file exists
+  on disk (Metro's behavior here wasn't separately verified before this was
+  reverted). A real fix needs either an `"./icons/*"` wildcard export from
+  a future lucide-react-native release, a jest `moduleNameMapper` +
+  confirmed-safe Metro config together (its own validation pass), or
+  accepting Metro's experimental tree-shaking (a global build-behavior
+  change, same caveat the original audit gave it). Not attempted again
+  this pass — left open, P2.
 - 🤖 The app's only `React.memo` (`VacancyCard`) is defeated at every call
   site because callers pass freshly-allocated inline arrow props — fix
   together with the 7 unmemoized `renderItem`s below, they're the same fix

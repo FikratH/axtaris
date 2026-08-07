@@ -162,7 +162,7 @@ class AIService {
       .map((line) => {
         const cleaned = line.replace(/^[-•*]\s*/, '').trim();
         if (!cleaned.match(/^(Led|Developed|Implemented|Managed|Created|Designed|Built|Improved|Increased|Reduced)/i)) {
-          return `• Spearheaded ${cleaned.charAt(0).toLowerCase()}${cleaned.slice(1)}`;
+          return `• ${i18n.t('ai.fallback.experienceBulletPrefix')} ${cleaned.charAt(0).toLowerCase()}${cleaned.slice(1)}`;
         }
         return `• ${cleaned}`;
       });
@@ -280,18 +280,22 @@ class AIService {
     }
 
     await this.simulateDelay();
-    const skills = input.skills && input.skills.length ? input.skills : ['relevant tools'];
+    const skills = input.skills && input.skills.length ? input.skills : [i18n.t('ai.fallback.relevantTools')];
+    const skillsList3 = skills.slice(0, 3).join(', ');
+    const skillsList4 = skills.slice(0, 4).join(', ');
     return {
-      description: `We are looking for a ${input.title} to join our team${input.city ? ` in ${input.city}` : ''}. You will work with ${skills.slice(0, 3).join(', ')} and contribute to impactful projects.`,
+      description: input.city
+        ? i18n.t('ai.fallback.jobDescriptionWithCity', { title: input.title, city: input.city, skills: skillsList3 })
+        : i18n.t('ai.fallback.jobDescription', { title: input.title, skills: skillsList3 }),
       requirements: [
-        `Experience as a ${input.title} or in a similar role`,
-        `Proficiency in ${skills.slice(0, 4).join(', ')}`,
-        'Strong communication and teamwork skills',
+        i18n.t('ai.fallback.requirementExperience', { title: input.title }),
+        i18n.t('ai.fallback.requirementProficiency', { skills: skillsList4 }),
+        i18n.t('ai.fallback.requirementCommunication'),
       ],
       responsibilities: [
-        `Deliver high-quality work as a ${input.title}`,
-        'Collaborate with cross-functional teammates',
-        'Continuously improve processes and outcomes',
+        i18n.t('ai.fallback.responsibilityDeliver', { title: input.title }),
+        i18n.t('ai.fallback.responsibilityCollaborate'),
+        i18n.t('ai.fallback.responsibilityImprove'),
       ],
     };
   }
@@ -331,7 +335,15 @@ class AIService {
     if (ai) return ai;
 
     await this.simulateDelay();
-    return `Dear ${input.companyName || 'Hiring Team'},\n\nI am excited to apply for the ${input.vacancyTitle} role. As a ${input.candidateTitle || 'professional'} with experience in ${(input.skills || ['my field']).slice(0, 3).join(', ')}, I am confident I can contribute meaningfully to your team. I would welcome the opportunity to discuss how my background fits your needs.\n\nBest regards,\n${input.candidateName || ''}`.trim();
+    return i18n
+      .t('ai.fallback.coverLetter', {
+        company: input.companyName || i18n.t('ai.fallback.hiringTeam'),
+        vacancyTitle: input.vacancyTitle,
+        candidateTitle: input.candidateTitle || i18n.t('ai.fallback.genericProfessional'),
+        skills: (input.skills || [i18n.t('ai.fallback.myField')]).slice(0, 3).join(', '),
+        candidateName: input.candidateName || '',
+      })
+      .trim();
   }
 
   /**
@@ -350,8 +362,11 @@ class AIService {
         id: a.id,
         score,
         reason: overlap.length
-          ? `${overlap.length} matching skill${overlap.length > 1 ? 's' : ''}: ${overlap.slice(0, 3).join(', ')}`
-          : 'No direct skill overlap',
+          ? i18n.t(overlap.length > 1 ? 'ai.fallback.matchingSkillsMany' : 'ai.fallback.matchingSkillsOne', {
+              count: overlap.length,
+              skills: overlap.slice(0, 3).join(', '),
+            })
+          : i18n.t('ai.fallback.noSkillOverlap'),
       };
     });
     return ranked.sort((x, y) => y.score - x.score);

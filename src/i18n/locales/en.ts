@@ -662,6 +662,28 @@ export default {
       profileDescription:
         'Your profile is {{completeness}}% complete. A complete profile helps you get more job offers.',
     },
+    fallback: {
+      jobDescriptionWithCity:
+        'We are looking for a {{title}} to join our team in {{city}}. You will work with {{skills}} and contribute to impactful projects.',
+      jobDescription:
+        'We are looking for a {{title}} to join our team. You will work with {{skills}} and contribute to impactful projects.',
+      requirementExperience: 'Experience as a {{title}} or in a similar role',
+      requirementProficiency: 'Proficiency in {{skills}}',
+      requirementCommunication: 'Strong communication and teamwork skills',
+      responsibilityDeliver: 'Deliver high-quality work as a {{title}}',
+      responsibilityCollaborate: 'Collaborate with cross-functional teammates',
+      responsibilityImprove: 'Continuously improve processes and outcomes',
+      relevantTools: 'relevant tools',
+      coverLetter:
+        'Dear {{company}},\n\nI am excited to apply for the {{vacancyTitle}} role. As a {{candidateTitle}} with experience in {{skills}}, I am confident I can contribute meaningfully to your team. I would welcome the opportunity to discuss how my background fits your needs.\n\nBest regards,\n{{candidateName}}',
+      hiringTeam: 'Hiring Team',
+      genericProfessional: 'professional',
+      myField: 'my field',
+      experienceBulletPrefix: 'Spearheaded',
+      matchingSkillsOne: '{{count}} matching skill: {{skills}}',
+      matchingSkillsMany: '{{count}} matching skills: {{skills}}',
+      noSkillOverlap: 'No direct skill overlap',
+    },
   },
   validation: {
     required: 'This field is required',

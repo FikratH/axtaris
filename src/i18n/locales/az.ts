@@ -662,6 +662,28 @@ export default {
       profileDescription:
         'Profiliniz {{completeness}}% tamamlanıb. Tam profil daha çox iş təklifi almağınıza kömək edir.',
     },
+    fallback: {
+      jobDescriptionWithCity:
+        'Komandamıza qoşulacaq {{city}} şəhərində {{title}} axtarırıq. {{skills}} üzərində işləyəcək və təsirli layihələrə töhfə verəcəksiniz.',
+      jobDescription:
+        'Komandamıza qoşulacaq {{title}} axtarırıq. {{skills}} üzərində işləyəcək və təsirli layihələrə töhfə verəcəksiniz.',
+      requirementExperience: '{{title}} kimi və ya oxşar vəzifədə təcrübə',
+      requirementProficiency: '{{skills}} üzrə bacarıq',
+      requirementCommunication: 'Güclü ünsiyyət və komanda işi bacarıqları',
+      responsibilityDeliver: '{{title}} kimi yüksək keyfiyyətli iş görmək',
+      responsibilityCollaborate: 'Funksional komandalarla əməkdaşlıq etmək',
+      responsibilityImprove: 'Prosesləri və nəticələri davamlı təkmilləşdirmək',
+      relevantTools: 'müvafiq alətlər',
+      coverLetter:
+        'Hörmətli {{company}},\n\n{{vacancyTitle}} vəzifəsinə müraciət etməkdən məmnunam. {{skills}} sahəsində təcrübəyə malik {{candidateTitle}} kimi komandanıza dəyərli töhfə verə biləcəyimə əminəm. Təcrübəmin sizin ehtiyaclarınıza necə uyğun olduğunu müzakirə etmək fürsətini məmnuniyyətlə gözləyirəm.\n\nHörmətlə,\n{{candidateName}}',
+      hiringTeam: 'İşə Qəbul Komandası',
+      genericProfessional: 'mütəxəssis',
+      myField: 'mənim sahəm',
+      experienceBulletPrefix: 'Rəhbərlik etdim',
+      matchingSkillsOne: '{{count}} uyğun bacarıq: {{skills}}',
+      matchingSkillsMany: '{{count}} uyğun bacarıq: {{skills}}',
+      noSkillOverlap: 'Birbaşa bacarıq üst-üstə düşməsi yoxdur',
+    },
   },
   validation: {
     required: 'Bu sahə məcburidir',

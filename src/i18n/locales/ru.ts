@@ -662,6 +662,28 @@ export default {
       profileDescription:
         'Ваш профиль заполнен на {{completeness}}%. Полный профиль помогает получать больше предложений о работе.',
     },
+    fallback: {
+      jobDescriptionWithCity:
+        'Мы ищем {{title}} в нашу команду в городе {{city}}. Вы будете работать с {{skills}} и участвовать в значимых проектах.',
+      jobDescription:
+        'Мы ищем {{title}} в нашу команду. Вы будете работать с {{skills}} и участвовать в значимых проектах.',
+      requirementExperience: 'Опыт работы {{title}} или на аналогичной должности',
+      requirementProficiency: 'Владение {{skills}}',
+      requirementCommunication: 'Хорошие коммуникативные навыки и умение работать в команде',
+      responsibilityDeliver: 'Выполнять качественную работу в роли {{title}}',
+      responsibilityCollaborate: 'Сотрудничать с кросс-функциональными командами',
+      responsibilityImprove: 'Постоянно улучшать процессы и результаты',
+      relevantTools: 'соответствующие инструменты',
+      coverLetter:
+        'Уважаемая {{company}},\n\nЯ с радостью подаю заявку на позицию {{vacancyTitle}}. Как {{candidateTitle}} с опытом в области {{skills}}, я уверен(а), что смогу внести значимый вклад в вашу команду. Буду рад(а) обсудить, как мой опыт соответствует вашим потребностям.\n\nС уважением,\n{{candidateName}}',
+      hiringTeam: 'Команда по подбору персонала',
+      genericProfessional: 'специалист',
+      myField: 'моя область',
+      experienceBulletPrefix: 'Возглавил(а)',
+      matchingSkillsOne: '{{count}} совпадающий навык: {{skills}}',
+      matchingSkillsMany: '{{count}} совпадающих навыков: {{skills}}',
+      noSkillOverlap: 'Нет прямого совпадения навыков',
+    },
   },
   validation: {
     required: 'Обязательное поле',
