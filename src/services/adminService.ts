@@ -1,4 +1,5 @@
 import {
+  AdminDashboardStats,
   AdminUserSummary,
   Company,
   FinanceStats,
@@ -37,9 +38,11 @@ interface FlagRow {
   entity_id: string;
   reason: string;
   status: ModerationFlag['status'];
+  reported_by: string | null;
   reviewed_by: string | null;
   created_at: string;
   reviewed_at: string | null;
+  reporter: { full_name: string } | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -68,13 +71,146 @@ function mapFlag(row: FlagRow): ModerationFlag {
     entityId: row.entity_id,
     reason: row.reason,
     status: row.status,
+    reportedBy: row.reported_by || undefined,
+    reporterName: row.reporter?.full_name || undefined,
     reviewedBy: row.reviewed_by || undefined,
     createdAt: row.created_at,
     reviewedAt: row.reviewed_at || undefined,
   };
 }
 
+// Raw JSONB shape returned by the admin_dashboard_stats RPC (snake_case leaves).
+interface DashboardStatsRow {
+  users: { total: number; candidates: number; employers: number; admins: number; inactive: number; new_today: number; new_7d: number; new_30d: number; with_push_token: number };
+  candidates: { with_cv: number; avg_completeness: number };
+  companies: { total: number; verified: number; pending_verification: number };
+  vacancies: { total: number; active: number; draft: number; pending_moderation: number; paused: number; closed: number; featured: number; new_7d: number; total_views: number };
+  applications: { total: number; today: number; last_7d: number; pending: number; reviewed: number; shortlisted: number; accepted: number; rejected: number };
+  funnel_30d: { vacancy_views: number; application_submits: number; conversion_pct: number };
+  messaging: { messages_today: number; messages_7d: number; conversations_total: number; active_conversations_7d: number; support_conversations: number };
+  invites: { total: number; pending: number; accepted: number; declined: number };
+  talent: { profile_views_30d: number; saved_jobs: number; saved_searches: number };
+  notifications_7d: { type: string; count: number }[];
+  moderation: { open_flags: number; resolved_7d: number; blocked_pairs: number };
+  ai: { uses_today: number; uses_30d: number; users_30d: number };
+  revenue: { candidate_mrr: number; employer_mrr: number; paying_candidates: number; paying_employers: number };
+  daily_14d: { day: string; new_users: number; applications: number; messages: number }[];
+}
+
+function mapDashboardStats(r: DashboardStatsRow): AdminDashboardStats {
+  return {
+    users: {
+      total: r.users.total,
+      candidates: r.users.candidates,
+      employers: r.users.employers,
+      admins: r.users.admins,
+      inactive: r.users.inactive,
+      newToday: r.users.new_today,
+      new7d: r.users.new_7d,
+      new30d: r.users.new_30d,
+      withPushToken: r.users.with_push_token,
+    },
+    candidates: { withCv: r.candidates.with_cv, avgCompleteness: r.candidates.avg_completeness },
+    companies: {
+      total: r.companies.total,
+      verified: r.companies.verified,
+      pendingVerification: r.companies.pending_verification,
+    },
+    vacancies: {
+      total: r.vacancies.total,
+      active: r.vacancies.active,
+      draft: r.vacancies.draft,
+      pendingModeration: r.vacancies.pending_moderation,
+      paused: r.vacancies.paused,
+      closed: r.vacancies.closed,
+      featured: r.vacancies.featured,
+      new7d: r.vacancies.new_7d,
+      totalViews: r.vacancies.total_views,
+    },
+    applications: {
+      total: r.applications.total,
+      today: r.applications.today,
+      last7d: r.applications.last_7d,
+      pending: r.applications.pending,
+      reviewed: r.applications.reviewed,
+      shortlisted: r.applications.shortlisted,
+      accepted: r.applications.accepted,
+      rejected: r.applications.rejected,
+    },
+    funnel30d: {
+      vacancyViews: r.funnel_30d.vacancy_views,
+      applicationSubmits: r.funnel_30d.application_submits,
+      conversionPct: r.funnel_30d.conversion_pct,
+    },
+    messaging: {
+      messagesToday: r.messaging.messages_today,
+      messages7d: r.messaging.messages_7d,
+      conversationsTotal: r.messaging.conversations_total,
+      activeConversations7d: r.messaging.active_conversations_7d,
+      supportConversations: r.messaging.support_conversations,
+    },
+    invites: r.invites,
+    talent: {
+      profileViews30d: r.talent.profile_views_30d,
+      savedJobs: r.talent.saved_jobs,
+      savedSearches: r.talent.saved_searches,
+    },
+    notifications7d: r.notifications_7d,
+    moderation: {
+      openFlags: r.moderation.open_flags,
+      resolved7d: r.moderation.resolved_7d,
+      blockedPairs: r.moderation.blocked_pairs,
+    },
+    ai: { usesToday: r.ai.uses_today, uses30d: r.ai.uses_30d, users30d: r.ai.users_30d },
+    revenue: {
+      candidateMrr: r.revenue.candidate_mrr,
+      employerMrr: r.revenue.employer_mrr,
+      payingCandidates: r.revenue.paying_candidates,
+      payingEmployers: r.revenue.paying_employers,
+    },
+    daily14d: r.daily_14d.map((d) => ({
+      day: d.day,
+      newUsers: d.new_users,
+      applications: d.applications,
+      messages: d.messages,
+    })),
+  };
+}
+
 class AdminService {
+  async fetchDashboardStats(): Promise<AdminDashboardStats> {
+    if (shouldUseMockBackend()) {
+      return {
+        users: { total: 6, candidates: 4, employers: 1, admins: 1, inactive: 0, newToday: 1, new7d: 3, new30d: 6, withPushToken: 2 },
+        candidates: { withCv: 3, avgCompleteness: 72 },
+        companies: { total: mockCompanies.length, verified: 2, pendingVerification: 1 },
+        vacancies: { total: mockVacancies.length, active: 4, draft: 1, pendingModeration: 1, paused: 0, closed: 0, featured: 1, new7d: 2, totalViews: 640 },
+        applications: { total: mockApplications.length, today: 1, last7d: 4, pending: mockApplications.length - 3, reviewed: 1, shortlisted: 1, accepted: 1, rejected: 0 },
+        funnel30d: { vacancyViews: 128, applicationSubmits: 34, conversionPct: 26.6 },
+        messaging: { messagesToday: 4, messages7d: 57, conversationsTotal: 12, activeConversations7d: 6, supportConversations: 1 },
+        invites: { total: 9, pending: 3, accepted: 5, declined: 1 },
+        talent: { profileViews30d: 41, savedJobs: 17, savedSearches: 8 },
+        notifications7d: [
+          { type: 'new_application', count: 12 },
+          { type: 'new_message', count: 9 },
+        ],
+        moderation: { openFlags: 0, resolved7d: 2, blockedPairs: 1 },
+        ai: { usesToday: 3, uses30d: 44, users30d: 5 },
+        revenue: { candidateMrr: 35, employerMrr: 19, payingCandidates: 3, payingEmployers: 1 },
+        daily14d: Array.from({ length: 14 }, (_, i) => ({
+          day: `2026-08-${String(6 + i).padStart(2, '0')}`,
+          newUsers: (i * 3) % 4,
+          applications: (i * 5) % 6,
+          messages: (i * 7) % 9,
+        })),
+      };
+    }
+
+    const { data, error } = await getSupabase().rpc('admin_dashboard_stats');
+    if (error) throw new Error(error.message);
+    return mapDashboardStats(data as DashboardStatsRow);
+  }
+
   async fetchPlatformStats(): Promise<PlatformStats> {
     if (shouldUseMockBackend()) {
       return {
@@ -145,8 +281,9 @@ class AdminService {
   async fetchFinanceStats(): Promise<FinanceStats> {
     if (shouldUseMockBackend()) {
       const byPlan = [
-        { plan: 'pro' as SubscriptionPlanCode, subscribers: 3, mrr: 27 },
-        { plan: 'premium' as SubscriptionPlanCode, subscribers: 1, mrr: 19 },
+        { plan: 'pro' as SubscriptionPlanCode, audience: 'candidate' as const, subscribers: 3, mrr: 27 },
+        { plan: 'premium' as SubscriptionPlanCode, audience: 'candidate' as const, subscribers: 1, mrr: 19 },
+        { plan: 'pro' as SubscriptionPlanCode, audience: 'employer' as const, subscribers: 1, mrr: 19 },
       ];
       const mrr = byPlan.reduce((sum, p) => sum + p.mrr, 0);
       const paying = byPlan.reduce((sum, p) => sum + p.subscribers, 0);
@@ -161,28 +298,45 @@ class AdminService {
       };
     }
 
-    // Revenue is derived from active candidate subscriptions. For large volumes
-    // this should move to a SQL aggregate/RPC; the row cap keeps it bounded.
-    const { data, error } = await getSupabase()
-      .from('candidate_subscriptions')
-      .select('plan, price_amount, status')
-      .eq('status', 'active')
-      .limit(10000);
+    // Revenue = active candidate + employer subscriptions (both sides of the
+    // marketplace monetize). For large volumes this should move to a SQL
+    // aggregate/RPC; the row caps keep it bounded.
+    const supa = getSupabase();
+    const [candidate, employer] = await Promise.all(
+      (['candidate_subscriptions', 'employer_subscriptions'] as const).map(async (table) => {
+        const { data, error } = await supa
+          .from(table)
+          .select('plan, price_amount, status')
+          .eq('status', 'active')
+          .limit(10000);
+        if (error) throw new Error(error.message);
+        return (data || []) as { plan: SubscriptionPlanCode; price_amount: number | null }[];
+      })
+    );
 
-    if (error) throw new Error(error.message);
+    const audiences = [
+      { audience: 'candidate' as const, rows: candidate },
+      { audience: 'employer' as const, rows: employer },
+    ];
+    const activeSubscriptions = candidate.length + employer.length;
+    const byPlan: FinanceStats['byPlan'] = [];
+    let mrr = 0;
+    let payingSubscribers = 0;
 
-    const rows = (data || []) as { plan: SubscriptionPlanCode; price_amount: number | null }[];
-    const activeSubscriptions = rows.length;
-    const paidRows = rows.filter((r) => (r.price_amount || 0) > 0);
-    const mrr = paidRows.reduce((sum, r) => sum + (r.price_amount || 0), 0);
-    const payingSubscribers = paidRows.length;
-
-    const planMap = new Map<SubscriptionPlanCode, { subscribers: number; mrr: number }>();
-    for (const r of paidRows) {
-      const cur = planMap.get(r.plan) || { subscribers: 0, mrr: 0 };
-      cur.subscribers += 1;
-      cur.mrr += r.price_amount || 0;
-      planMap.set(r.plan, cur);
+    for (const { audience, rows } of audiences) {
+      const planMap = new Map<SubscriptionPlanCode, { subscribers: number; mrr: number }>();
+      for (const r of rows) {
+        if ((r.price_amount || 0) <= 0) continue;
+        const cur = planMap.get(r.plan) || { subscribers: 0, mrr: 0 };
+        cur.subscribers += 1;
+        cur.mrr += r.price_amount || 0;
+        planMap.set(r.plan, cur);
+      }
+      for (const [plan, v] of planMap) {
+        byPlan.push({ plan, audience, ...v });
+        mrr += v.mrr;
+        payingSubscribers += v.subscribers;
+      }
     }
 
     return {
@@ -192,7 +346,7 @@ class AdminService {
       arpu: payingSubscribers ? Math.round(mrr / payingSubscribers) : 0,
       payingSubscribers,
       activeSubscriptions,
-      byPlan: Array.from(planMap.entries()).map(([plan, v]) => ({ plan, ...v })),
+      byPlan,
     };
   }
 
@@ -310,18 +464,22 @@ class AdminService {
     if (shouldUseMockBackend()) return [];
     const { data, error } = await getSupabase()
       .from('moderation_flags')
-      .select('id,entity_type,entity_id,reason,status,reviewed_by,created_at,reviewed_at')
+      .select(
+        'id,entity_type,entity_id,reason,status,reported_by,reviewed_by,created_at,reviewed_at,reporter:profiles!moderation_flags_reported_by_fkey(full_name)'
+      )
       .order('created_at', { ascending: false })
       .limit(100);
     if (error) throw new Error(error.message);
-    return ((data || []) as FlagRow[]).map(mapFlag);
+    return (data || []).map((row) => mapFlag(row as unknown as FlagRow));
   }
 
   async resolveFlag(flagId: string, status: ModerationFlag['status']): Promise<void> {
     if (shouldUseMockBackend()) return;
-    const { error } = await getSupabase()
+    const supa = getSupabase();
+    const reviewerId = (await supa.auth.getUser()).data.user?.id ?? null;
+    const { error } = await supa
       .from('moderation_flags')
-      .update({ status, reviewed_at: new Date().toISOString() })
+      .update({ status, reviewed_at: new Date().toISOString(), reviewed_by: reviewerId })
       .eq('id', flagId);
     if (error) throw new Error(error.message);
   }

@@ -13,6 +13,7 @@ export interface TopCompany extends Company {
 
 export interface FinancePlanBreakdown {
   plan: SubscriptionPlanCode;
+  audience: SubscriptionAudience;
   subscribers: number;
   mrr: number;
 }
@@ -304,6 +305,8 @@ export interface ModerationFlag {
   entityId: string;
   reason: string;
   status: ModerationStatus;
+  reportedBy?: string;
+  reporterName?: string;
   reviewedBy?: string;
   createdAt: string;
   reviewedAt?: string;
@@ -322,6 +325,64 @@ export interface PlatformStats {
   pendingModerationVacancies: number;
   totalApplications: number;
   openFlags: number;
+}
+
+/** Everything the admin dashboard shows, returned by the admin_dashboard_stats RPC in one round trip. */
+export interface AdminDashboardStats {
+  users: {
+    total: number;
+    candidates: number;
+    employers: number;
+    admins: number;
+    inactive: number;
+    newToday: number;
+    new7d: number;
+    new30d: number;
+    withPushToken: number;
+  };
+  candidates: { withCv: number; avgCompleteness: number };
+  companies: { total: number; verified: number; pendingVerification: number };
+  vacancies: {
+    total: number;
+    active: number;
+    draft: number;
+    pendingModeration: number;
+    paused: number;
+    closed: number;
+    featured: number;
+    new7d: number;
+    totalViews: number;
+  };
+  applications: {
+    total: number;
+    today: number;
+    last7d: number;
+    pending: number;
+    reviewed: number;
+    shortlisted: number;
+    accepted: number;
+    rejected: number;
+  };
+  funnel30d: { vacancyViews: number; applicationSubmits: number; conversionPct: number };
+  messaging: {
+    messagesToday: number;
+    messages7d: number;
+    conversationsTotal: number;
+    activeConversations7d: number;
+    supportConversations: number;
+  };
+  invites: { total: number; pending: number; accepted: number; declined: number };
+  talent: { profileViews30d: number; savedJobs: number; savedSearches: number };
+  notifications7d: { type: string; count: number }[];
+  moderation: { openFlags: number; resolved7d: number; blockedPairs: number };
+  ai: { usesToday: number; uses30d: number; users30d: number };
+  revenue: {
+    candidateMrr: number;
+    employerMrr: number;
+    payingCandidates: number;
+    payingEmployers: number;
+  };
+  daily14d: { day: string; newUsers: number; applications: number; messages: number }[];
 }
 
 export interface AdminUserSummary {

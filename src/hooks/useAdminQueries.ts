@@ -5,6 +5,9 @@ import { adminService } from '@/services/adminService';
 export const adminQueryKeys = {
   root: ['admin'] as const,
   stats: ['admin', 'stats'] as const,
+  // Prefixed by `stats`, so every existing invalidateQueries({ queryKey: stats })
+  // in the mutations below also refreshes the dashboard.
+  dashboard: ['admin', 'stats', 'dashboard'] as const,
   finance: ['admin', 'finance'] as const,
   engagement: ['admin', 'engagement'] as const,
   users: (search: string) => ['admin', 'users', search] as const,
@@ -15,6 +18,13 @@ export const adminQueryKeys = {
 
 export function usePlatformStats() {
   return useQuery({ queryKey: adminQueryKeys.stats, queryFn: () => adminService.fetchPlatformStats() });
+}
+
+export function useAdminDashboard() {
+  return useQuery({
+    queryKey: adminQueryKeys.dashboard,
+    queryFn: () => adminService.fetchDashboardStats(),
+  });
 }
 
 export function useAdminFinance() {

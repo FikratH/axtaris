@@ -4,6 +4,7 @@ import i18n from '@/i18n';
 import { User, UserRole } from '@/types/models';
 import { runtimeConfig } from '@/config/runtime';
 import { mockUser, mockEmployerUser } from './mockData';
+import { analyticsService } from './analyticsService';
 import { getSupabase } from './supabase';
 
 export const USE_MOCK_AUTH = runtimeConfig.useMockAuth;
@@ -120,8 +121,12 @@ class AuthService {
     if (error) throw new Error(error.message);
     if (!data.user || !data.session) throw new Error(i18n.t('errors.signInFailed'));
 
+    const user = toAppUser(data.user);
+    // DAU/retention signal for the admin panel; best-effort, never blocks sign-in.
+    analyticsService.track('signin', { role: user.role }, user.id);
+
     return {
-      user: toAppUser(data.user),
+      user,
       token: data.session.access_token,
       refreshToken: data.session.refresh_token,
     };

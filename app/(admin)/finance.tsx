@@ -74,14 +74,16 @@ export default function AdminFinanceScreen() {
         ) : (
           data.byPlan.map((p, i) => (
             <View
-              key={p.plan}
+              key={`${p.audience}-${p.plan}`}
               style={[
                 styles.planRow,
                 { paddingHorizontal: s.lg, paddingVertical: s.lg, borderBottomWidth: i < data.byPlan.length - 1 ? StyleSheet.hairlineWidth : 0, borderBottomColor: colors.divider },
               ]}
             >
               <View style={{ flex: 1 }}>
-                <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>{getSubscriptionPlanLabel(tr, p.plan)}</Text>
+                <Text style={[{ color: colors.textPrimary }, t.labelMedium]}>
+                  {getSubscriptionPlanLabel(tr, p.plan)} · {tr(`admin.roleLabels.${p.audience}`)}
+                </Text>
                 <Text style={[{ color: colors.textTertiary, marginTop: 2 }, t.caption]}>
                   {tr('admin.subscribersCount', { count: p.subscribers })}
                 </Text>

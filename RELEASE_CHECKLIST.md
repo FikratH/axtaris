@@ -124,6 +124,19 @@ descriptions, CV parsing) no longer silently fall back to templates.
 | Sentry DSN | sentry.io (new project) | Crash reporting isn't wired up yet — out of scope of this pass, separate task |
 | Confirm `PUSH_SECRET` ≡ Vault `push_secret` | Supabase dashboard | Both are set but their *values* couldn't be compared (opaque digests) — cheapest fix is to regenerate both from one new value rather than trying to verify the old ones match |
 | A real device push test | — | Push is fully wired (trigger, Edge Function, secret) but has never delivered an actual notification — only 1 test profile in the DB has ever registered a token |
+| **Push credentials — ROOT CAUSE of "push doesn't work" (2026-08-19 diagnosis)** | Firebase + EAS | Live test proved Expo returns `InvalidCredentials` — the Expo project has **no FCM (Android) and no APNs (iOS) credentials**. Everything else in the chain was live-verified working (token registration on iOS, message→notification trigger, pg_net→send-push, secrets). Fix below. |
+
+### 3.1 Android push fix (blocks push on the AAB — ~10 min owner work)
+
+1. Go to console.firebase.google.com → **Add project** (name e.g. `AxtarIS`; Analytics optional).
+2. In the project: **Add app → Android**, package name exactly `az.axtaris.app` → register → **download `google-services.json`** → put it at the repo root.
+3. **Project settings → Service accounts → Generate new private key** → save the JSON (this is the FCM V1 server credential — keep it out of git).
+4. Then (Claude or dev): add `"googleServicesFile": "./google-services.json"` to the `android` block of app.json; run `npx eas credentials -p android` → *Google Service Account Key (FCM V1)* → upload the key from step 3.
+5. Regenerate the shared secret from one value: `npx supabase secrets set PUSH_SECRET=<new>` **and** in the SQL editor `select vault.update_secret((select id from vault.secrets where name='push_secret'), '<same-new-value>');` (closes the ≡ row above).
+6. **Rebuild the AAB** (`npx eas build --profile production --platform android`) — `google-services.json` is baked in at build time; the old AAB can never receive pushes.
+7. Verify: install build → sign in → confirm `profiles.expo_push_token` gets an Android token → send a message → push arrives with the app backgrounded.
+
+iOS: APNs credentials via `npx eas credentials -p ios` — possible only after the Apple Developer Program row above is done.
 | Supabase Auth → URL Configuration | Supabase dashboard | Confirm `axtaris://auth/reset-password` is in the redirect allow-list — App Review routinely tests password reset, and this couldn't be verified via the REST API in this pass |
 | Rotate `hr@azercell.com` / `ali@example.com` passwords | Supabase Auth | The seed script's hardcoded default password (now removed from the script) was live-confirmed as these two accounts' actual current password |
 

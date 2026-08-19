@@ -111,6 +111,10 @@ export default function AdminModerationScreen() {
               <Card key={f.id} padding="md" style={{ marginBottom: 10 }}>
                 <Text style={[{ color: colors.textPrimary }, t.labelSmall]}>{getModerationEntityTypeLabel(tr, f.entityType)}</Text>
                 <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.bodySmall]}>{f.reason}</Text>
+                <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>
+                  {f.reporterName ? `${f.reporterName} · ` : ''}
+                  {new Date(f.createdAt).toLocaleDateString()}
+                </Text>
                 <View style={[styles.actions, { marginTop: s.md }]}>
                   <View style={{ flex: 1 }}>
                     <Button
