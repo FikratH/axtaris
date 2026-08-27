@@ -69,9 +69,10 @@ export function Hero({ dict }: { dict: Dictionary }) {
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:py-28">
         <div>
+          {/* No data-hero-line: the h1 is the LCP element and must paint
+              immediately — the rest of the intro choreographs around it */}
           <h1
             id="hero-title"
-            data-hero-line
             className="display text-[length:var(--text-hero)] text-brand-50"
           >
             {dict.hero.h1}

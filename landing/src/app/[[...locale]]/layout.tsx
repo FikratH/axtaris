@@ -8,6 +8,7 @@ import {
   localePath,
   type Locale,
 } from "@/content";
+import { getJsonLd } from "@/lib/schema";
 import "../globals.css";
 
 const alumni = Alumni_Sans({
@@ -73,11 +74,13 @@ export async function generateMetadata({
       title: dict.meta.title,
       description: dict.meta.description,
       url: localePath(locale),
+      images: [{ url: `/og/${locale}`, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: dict.meta.title,
       description: dict.meta.description,
+      images: [`/og/${locale}`],
     },
   };
 }
@@ -96,6 +99,11 @@ export default async function RootLayout({
   params: Promise<{ locale?: string[] }>;
 }) {
   const locale = resolveLocale((await params).locale);
+  const dict = getDictionary(locale);
+  const jsonLd = JSON.stringify(getJsonLd(locale, dict)).replace(
+    /</g,
+    "\\u003c",
+  );
 
   return (
     <html
@@ -107,6 +115,10 @@ export default async function RootLayout({
           hidden
           aria-hidden
           dangerouslySetInnerHTML={{ __html: `<!--${CONTRACT}-->` }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd }}
         />
         {children}
       </body>

@@ -41,9 +41,26 @@ export function EmployerChapter({ dict }: { dict: Dictionary }) {
       className="border-t border-carbon-600/40 bg-[color-mix(in_srgb,var(--carbon-700)_12%,var(--cover-950))]"
     >
       <div className="mx-auto grid max-w-6xl items-start gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14 lg:py-24">
+        <div className="lg:order-2 lg:sticky lg:top-24">
+          <h2
+            id="employer-title"
+            className="display text-[length:var(--text-chapter)] text-brand-50"
+          >
+            {dict.employer.h2}
+          </h2>
+          <p className="mt-4 max-w-[44ch] text-[1.0625rem] leading-relaxed text-carbon-100/90">
+            {dict.employer.intro}
+          </p>
+          <AnchorLink
+            href={`#${SECTION_IDS.join}`}
+            className="mt-8 inline-flex min-h-12 items-center rounded-[2px] border border-carbon-300/80 px-6 text-base font-medium text-carbon-100 no-underline transition-colors hover:bg-carbon-300/10"
+          >
+            {dict.employer.cta}
+          </AnchorLink>
+        </div>
         <div
           data-carbon-arrive
-          className="carbon order-2 p-6 sm:p-8 lg:order-1"
+          className="carbon p-6 sm:p-8 lg:order-1"
         >
           <DocHeader title={dict.nav.employers} tone="carbon" />
           <div className="flex flex-col">
@@ -100,23 +117,6 @@ export function EmployerChapter({ dict }: { dict: Dictionary }) {
           </div>
         </div>
 
-        <div className="order-1 lg:order-2 lg:sticky lg:top-24">
-          <h2
-            id="employer-title"
-            className="display text-[length:var(--text-chapter)] text-brand-50"
-          >
-            {dict.employer.h2}
-          </h2>
-          <p className="mt-4 max-w-[44ch] text-[1.0625rem] leading-relaxed text-carbon-100/90">
-            {dict.employer.intro}
-          </p>
-          <AnchorLink
-            href={`#${SECTION_IDS.join}`}
-            className="mt-8 inline-flex min-h-12 items-center rounded-[2px] border border-carbon-300/80 px-6 text-base font-medium text-carbon-100 no-underline transition-colors hover:bg-carbon-300/10"
-          >
-            {dict.employer.cta}
-          </AnchorLink>
-        </div>
       </div>
     </section>
   );

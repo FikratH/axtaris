@@ -4,7 +4,7 @@ export const az: Dictionary = {
   meta: {
     title: "AxtarIS — Uyğun iş. Uyğun insan.",
     description:
-      "Azərbaycan üçün premium məşğulluq platforması. Namizədlə vakansiyanı bir sənəddə görüşdürürük — profildən müsahibəyə qədər.",
+      "Azərbaycan üçün premium məşğulluq platforması: uyğun vakansiyalar, izahlı uyğunluq və namizəd axtarışı — Bakı və bütün ölkə üzrə, profildən müsahibəyə qədər.",
     ogTagline: "Azərbaycan üçün premium məşğulluq platforması",
   },
   a11y: {
@@ -168,6 +168,32 @@ export const az: Dictionary = {
       {
         title: "Yerli bazar, yerli dil",
         desc: "Vakansiyalar AZN ilə, ünsiyyət istədiyiniz dildə — tərcümə olunmuş yox, yerli yazılmış.",
+      },
+    ],
+  },
+  faq: {
+    h2: "Sual-cavab",
+    intro: "Ən çox soruşulanlar — qısa və dürüst cavablarla.",
+    items: [
+      {
+        q: "AxtarIS nədir?",
+        a: "AxtarIS — Azərbaycan üçün qurulmuş premium məşğulluq platformasıdır: iş axtaran namizədlərlə işəgötürənləri bir tətbiqdə görüşdürən ikitərəfli bazar. Namizəd profilini bir dəfə doldurur — vəzifə, şəhər, təcrübə, bacarıqlar, təhsil və CV bir sənəddə toplanır. Platforma bu sənədi vakansiyanın tələbləri ilə sətir-sətir tutuşdurur, uyğunluğun səbəbini izahla göstərir və müraciətin yolunu göndərildiyi andan cavaba qədər izləməyə imkan verir. İşəgötürənlər vakansiya dərc edir, müraciət axınını idarə edir, istedad axtarışı ilə uyğun namizədləri özləri tapıb dəvət göndərir və platformadan çıxmadan yazışırlar. Platforma üç dildə işləyir — Azərbaycan dili əsas olmaqla rus və ingilis dilləri tam bərabərdir; əmək haqqı məlumatları manatla göstərilir. Hazırda AxtarIS qapalı beta mərhələsindədir və tezliklə App Store və Google Play-də mobil tətbiq kimi təqdim olunacaq.",
+      },
+      {
+        q: "Nə vaxt istifadəyə açılacaq?",
+        a: "Hazırda qapalı beta gedir. App Store və Google Play-də dərc tezliklə baş tutacaq; beta-ya yazılanlar buraxılış günü ilk xəbər tutacaq — info@axtaris.app ünvanına yazmaq kifayətdir.",
+      },
+      {
+        q: "AxtarIS pulsuzdurmu?",
+        a: "Beta dövründə istifadə pulsuzdur. Buraxılışdan sonra həm namizədlər, həm də işəgötürənlər üçün pulsuz başlanğıc planı qalacaq; genişlənmiş imkanlar ödənişli planlarda təqdim olunacaq.",
+      },
+      {
+        q: "Hansı dillərdə istifadə etmək olar?",
+        a: "Üç dildə: Azərbaycan dili əsasdır, rus və ingilis dilləri tam bərabər səviyyədə dəstəklənir — tərcümə edilmiş yox, yerli yazılmış mətnlərlə.",
+      },
+      {
+        q: "Uyğunluq necə müəyyən olunur?",
+        a: "Profilinizdəki sahələr — vəzifə, şəhər, təcrübə, bacarıqlar — vakansiyanın tələbləri ilə sətir-sətir tutuşdurulur. Hansı sətirlərin üst-üstə düşdüyünü konkret görürsünüz: uyğunluq qara qutu deyil, izahla gəlir.",
       },
     ],
   },

@@ -6,6 +6,7 @@ import { CandidateChapter } from "@/components/sections/CandidateChapter";
 import { EmployerChapter } from "@/components/sections/EmployerChapter";
 import { AiChapter } from "@/components/sections/AiChapter";
 import { TrustChapter } from "@/components/sections/TrustChapter";
+import { FaqChapter } from "@/components/sections/FaqChapter";
 import { Closing } from "@/components/sections/Closing";
 import { Footer } from "@/components/sections/Footer";
 import { getDictionary, type Locale } from "@/content";
@@ -29,6 +30,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
         <EmployerChapter dict={dict} />
         <AiChapter dict={dict} />
         <TrustChapter dict={dict} />
+        <FaqChapter dict={dict} />
         <Closing dict={dict} />
       </main>
       <Footer dict={dict} locale={locale} />

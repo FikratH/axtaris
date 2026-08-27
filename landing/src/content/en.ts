@@ -4,7 +4,7 @@ export const en: Dictionary = {
   meta: {
     title: "AxtarIS — The right job. The right person.",
     description:
-      "The premium employment platform for Azerbaijan. We bring the candidate and the vacancy together on one document — from profile to interview.",
+      "The premium employment platform for Azerbaijan: job vacancies with explained matching for seekers and talent search for employers — from profile to interview.",
     ogTagline: "The premium employment platform for Azerbaijan",
   },
   a11y: {
@@ -168,6 +168,32 @@ export const en: Dictionary = {
       {
         title: "Local market, local language",
         desc: "Vacancies in AZN, communication in the language you choose — written locally, not translated.",
+      },
+    ],
+  },
+  faq: {
+    h2: "Questions, answered",
+    intro: "The most common questions — with short, honest answers.",
+    items: [
+      {
+        q: "What is AxtarIS?",
+        a: "AxtarIS is a premium employment platform built for Azerbaijan: a two-sided marketplace that brings job seekers and employers together in one app. A candidate fills in their profile once — position, city, experience, skills, education, and CV live in a single document. The platform lays that document over each vacancy's requirements line by line, shows why a match is a match, and tracks every application from the moment it is sent until the answer arrives. Employers publish vacancies, manage the applicant pipeline, find matching candidates themselves through talent search, send invitations, and message candidates without leaving the platform. AxtarIS works in three languages — Azerbaijani leads, with Russian and English as full equals — and salary information is shown in Azerbaijani manats. The platform is currently in closed beta and will soon be available as a mobile app on the App Store and Google Play.",
+      },
+      {
+        q: "When does it launch?",
+        a: "A closed beta is running now. App Store and Google Play releases are coming soon; beta subscribers hear about the launch first — just write to info@axtaris.app.",
+      },
+      {
+        q: "Is AxtarIS free?",
+        a: "During the beta, everything is free. After launch, a free starter plan remains for both candidates and employers; extended capabilities come in paid plans.",
+      },
+      {
+        q: "Which languages does it support?",
+        a: "Three: Azerbaijani leads, and Russian and English are supported as full equals — written locally, not translated.",
+      },
+      {
+        q: "How is a match determined?",
+        a: "The fields of your profile — position, city, experience, skills — are laid against the vacancy's requirements line by line. You see exactly which lines meet: matching is not a black box, it comes with an explanation.",
       },
     ],
   },

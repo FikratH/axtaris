@@ -84,6 +84,12 @@ html {
   scroll-padding-top: 5.5rem;
 }
 
+/* Russian headlines run ~30% longer; one type step keeps the hero at
+   three lines and the CTA row clear of the sheet */
+html[lang="ru"] {
+  --text-hero: clamp(2.5rem, 1.8rem + 3.8vw, 5.125rem);
+}
+
 body {
   background: var(--cover-950);
   color: var(--brand-50);
@@ -196,7 +202,7 @@ body {
 /* typed annotation in sentence case — for full sentences */
 .doc-note {
   font-family: var(--font-doc);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   letter-spacing: 0.02em;
   line-height: 1.7;
 }

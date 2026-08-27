@@ -1,14 +1,22 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { defaultLocale, getDictionary } from "@/content";
+import { getDictionary, isLocale, locales, type Locale } from "@/content";
 
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
-export const alt = "AxtarIS";
+export const dynamic = "force-static";
 
-export default async function OpengraphImage() {
-  const dict = getDictionary(defaultLocale);
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+/** Locale-aware social card — /og/az, /og/en, /og/ru (statically generated). */
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ locale: string }> },
+) {
+  const raw = (await params).locale;
+  const locale: Locale = isLocale(raw) ? raw : "az";
+  const dict = getDictionary(locale);
 
   const fontDir = join(process.cwd(), "src/assets/fonts");
   const [alumni, martian, wordmark] = await Promise.all([
@@ -71,14 +79,9 @@ export default async function OpengraphImage() {
         >
           {dict.hero.h1}
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 28,
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
           <div style={{ display: "flex" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element -- satori renders plain img only */}
             <img src={wordmarkSrc} alt="AxtarIS" width={200} height={50} />
           </div>
           <div
@@ -95,7 +98,8 @@ export default async function OpengraphImage() {
       </div>
     ),
     {
-      ...size,
+      width: 1200,
+      height: 630,
       fonts: [
         { name: "Alumni", data: alumni, style: "normal", weight: 700 },
         { name: "Martian", data: martian, style: "normal", weight: 400 },

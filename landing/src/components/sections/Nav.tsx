@@ -27,7 +27,7 @@ function LangSwitch({
     <nav aria-label={label}>
       <ul
         className={cn(
-          "flex items-center border",
+          "flex items-center gap-0.5 border",
           onSheet ? "border-sheet-line" : "border-brand-500/40",
         )}
       >
@@ -38,7 +38,7 @@ function LangSwitch({
               hrefLang={locale}
               aria-current={locale === current ? "true" : undefined}
               className={cn(
-                "doc-label-sm flex min-h-9 min-w-11 items-center justify-center px-2 transition-colors",
+                "doc-label-sm flex min-h-10 min-w-11 items-center justify-center px-2 transition-colors",
                 locale === current
                   ? "bg-carbon-600 font-bold text-cover-950"
                   : onSheet

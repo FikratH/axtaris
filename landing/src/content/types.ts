@@ -90,6 +90,11 @@ export interface Dictionary {
     langDemo: { locale: string; label: string; value: string }[];
     points: { title: string; desc: string }[];
   };
+  faq: {
+    h2: string;
+    intro: string;
+    items: { q: string; a: string }[];
+  };
   closing: {
     h2: string;
     intro: string;
