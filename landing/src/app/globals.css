@@ -1,0 +1,255 @@
+@import "tailwindcss";
+
+/* ————————————————————————————————————————————————————————————
+   THE CARBON FILE — design tokens
+   Deep-navy file covers · typed sheets · carbon-copy teal
+   Ramp values extend the app's incumbent palette (src/theme/colors.ts)
+   ———————————————————————————————————————————————————————————— */
+:root {
+  /* covers (page-scale navy fields) */
+  --cover-950: #060d1f;
+  --cover-900: #0a1628;
+  --cover-700: #14257d;
+  /* brand navy ramp */
+  --brand-600: #2d4797;
+  --brand-500: #3f60a8;
+  --brand-400: #5c78b5;
+  --brand-300: #7990c2;
+  --brand-200: #9fb0d4;
+  --brand-100: #c5d0e6;
+  --brand-50: #e8edf5;
+  /* carbon (teal duplicate + stamps) */
+  --carbon-800: #006978;
+  --carbon-700: #00838f;
+  --carbon-600: #0097a7;
+  --carbon-500: #00acc1;
+  --carbon-400: #26c6da;
+  --carbon-300: #4dd0e1;
+  --carbon-100: #b2ebf2;
+  /* sheets (typed documents) */
+  --sheet: #fafbfc;
+  --sheet-shade: #edf0f5;
+  --sheet-line: #d5dae3;
+  --ink: #0a1628;
+  --ink-soft: #515c6b;
+  --ink-faint: #8f99a8;
+
+  --focus-ring: var(--carbon-300);
+}
+
+@theme inline {
+  --color-cover-950: var(--cover-950);
+  --color-cover-900: var(--cover-900);
+  --color-cover-700: var(--cover-700);
+  --color-brand-600: var(--brand-600);
+  --color-brand-500: var(--brand-500);
+  --color-brand-400: var(--brand-400);
+  --color-brand-300: var(--brand-300);
+  --color-brand-200: var(--brand-200);
+  --color-brand-100: var(--brand-100);
+  --color-brand-50: var(--brand-50);
+  --color-carbon-800: var(--carbon-800);
+  --color-carbon-700: var(--carbon-700);
+  --color-carbon-600: var(--carbon-600);
+  --color-carbon-500: var(--carbon-500);
+  --color-carbon-400: var(--carbon-400);
+  --color-carbon-300: var(--carbon-300);
+  --color-carbon-100: var(--carbon-100);
+  --color-sheet: var(--sheet);
+  --color-sheet-shade: var(--sheet-shade);
+  --color-sheet-line: var(--sheet-line);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+
+  --font-display: var(--font-alumni), "Arial Narrow", sans-serif;
+  --font-text: var(--font-commissioner), system-ui, sans-serif;
+  --font-doc: var(--font-martian), "Courier New", monospace;
+
+  /* fluid type scale — display capped at 6rem */
+  --text-hero: clamp(2.875rem, 2rem + 4.4vw, 6rem);
+  --text-chapter: clamp(2.125rem, 1.6rem + 2.6vw, 3.75rem);
+  --text-head: clamp(1.375rem, 1.2rem + 0.9vw, 1.875rem);
+
+  --shadow-sheet:
+    0 1px 2px rgb(6 13 31 / 0.18), 0 12px 28px -10px rgb(6 13 31 / 0.45);
+  --shadow-sheet-lift:
+    0 2px 4px rgb(6 13 31 / 0.2), 0 22px 44px -14px rgb(6 13 31 / 0.55);
+}
+
+/* ————— base ————— */
+/* No CSS smooth scrolling: it fights Lenis and ScrollTrigger's refresh
+   scroll restoration. Lenis smooths on desktop; elsewhere jumps are native. */
+html {
+  scroll-padding-top: 5.5rem;
+}
+
+body {
+  background: var(--cover-950);
+  color: var(--brand-50);
+  font-family: var(--font-text);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  caret-color: var(--carbon-400);
+}
+
+::selection {
+  background: var(--carbon-600);
+  color: var(--cover-950);
+}
+
+/* themed scrollbar — the file drawer's rail */
+@supports (scrollbar-width: thin) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--brand-500) var(--cover-950);
+  }
+}
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--cover-950);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--brand-500);
+  border: 2px solid var(--cover-950);
+  border-radius: 5px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* on sheets the ring flips to brand navy for contrast */
+.paper :focus-visible,
+.paper-flat :focus-visible {
+  outline-color: var(--brand-600);
+}
+
+/* ————— document materials (print primitives, no soft skeuomorphism) ————— */
+
+/* a typed sheet */
+.paper {
+  background: var(--sheet);
+  color: var(--ink);
+  border: 1px solid var(--sheet-line);
+  border-radius: 2px;
+  box-shadow: var(--shadow-sheet);
+}
+
+.paper-flat {
+  background: var(--sheet);
+  color: var(--ink);
+  border: 1px solid var(--sheet-line);
+  border-radius: 2px;
+}
+
+/* the teal duplicate that travels to the other side */
+.carbon {
+  background: color-mix(in srgb, var(--carbon-600) 14%, var(--cover-950));
+  border: 1px solid color-mix(in srgb, var(--carbon-600) 45%, transparent);
+  border-radius: 2px;
+  color: var(--carbon-100);
+}
+
+/* ruled field line */
+.rule-b {
+  border-bottom: 1px solid var(--sheet-line);
+}
+
+/* dotted fill-in line */
+.fill-line {
+  border-bottom: 1px dotted var(--ink-faint);
+}
+
+/* perforated top edge — precise print primitive */
+.perf-x {
+  background-image: radial-gradient(
+    circle at 8px 0,
+    var(--cover-950) 3px,
+    transparent 3.5px
+  );
+  background-size: 16px 16px;
+  background-repeat: repeat-x;
+  background-position: top left;
+}
+
+/* typed metadata label */
+.doc-label {
+  font-family: var(--font-doc);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.doc-label-sm {
+  font-family: var(--font-doc);
+  font-size: 0.625rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* typed annotation in sentence case — for full sentences */
+.doc-note {
+  font-family: var(--font-doc);
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+
+/* tabular figures for any numeric column */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* display voice */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* the rubber stamp — crisp double ring on its own opaque chit,
+   one slight rotation; no blend mode, so it reads on any ground */
+.stamp {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--carbon-600);
+  background: var(--sheet);
+  border: 3px solid var(--carbon-600);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px var(--sheet), inset 0 0 0 3.5px var(--carbon-600);
+  padding: 0.3em 0.75em 0.25em;
+  transform: rotate(-5deg);
+}
+
+/* underline offset for prose links */
+a {
+  text-underline-offset: 3px;
+}
+
+/* mobile menu — the file pulled from the drawer */
+@keyframes sheet-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes sheet-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

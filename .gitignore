@@ -33,3 +33,8 @@ expo-env.d.ts
 .claude-flow/sessions/
 .agents/
 .swarm/
+
+# Impeccable transient artifacts (screenshots, decision pages)
+.impeccable/review/
+.impeccable/questions/
+.DS_Store

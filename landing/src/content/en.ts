@@ -1,0 +1,201 @@
+import type { Dictionary } from "./types";
+
+export const en: Dictionary = {
+  meta: {
+    title: "AxtarIS — The right job. The right person.",
+    description:
+      "The premium employment platform for Azerbaijan. We bring the candidate and the vacancy together on one document — from profile to interview.",
+    ogTagline: "The premium employment platform for Azerbaijan",
+  },
+  a11y: {
+    skipToContent: "Skip to main content",
+    mainNav: "Main navigation",
+    langSwitch: "Language",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+    heroPreviewAlt:
+      "A sample candidate sheet with its carbon copy travelling to the employer",
+    stampAlt: "MATCHED stamp",
+  },
+  nav: {
+    candidates: "Job seekers",
+    employers: "Employers",
+    how: "How it works",
+    join: "Join",
+  },
+  hero: {
+    fileKicker: "PERSONAL EMPLOYMENT FILE",
+    h1: "The right job. The right person. One step closer.",
+    sub: "The premium employment platform for Azerbaijan. Your profile is a document — we lay it over the right vacancy, and the rest is a conversation.",
+    ctaCandidate: "Start your job search",
+    ctaEmployer: "Post a vacancy",
+    betaNote: "Currently in closed beta — coming soon to the App Store and Google Play.",
+    sampleLabel: "SAMPLE",
+    sheetTitle: "CANDIDATE SHEET",
+    fields: [
+      { label: "Full name", value: "Aysel Mammadova" },
+      { label: "Position", value: "Sales Representative" },
+      { label: "City", value: "Baku" },
+      { label: "Skills", value: "Customer service · Sales · Excel" },
+    ],
+    matchLabel: "Match",
+    matchValue: "Sales Manager — 3 criteria matched",
+    carbonNote: "COPY · GOES TO THE EMPLOYER",
+  },
+  match: {
+    h2: "Two sides. One document.",
+    intro:
+      "On AxtarIS, finding a job is not a pile of paperwork — it is a meeting: we lay the candidate's sheet over the employer's form, and the matching lines reveal themselves.",
+    steps: [
+      {
+        title: "The candidate sheet",
+        desc: "Profile, skills, experience — filled in once, working on every application.",
+      },
+      {
+        title: "The vacancy form",
+        desc: "Requirements line by line: position, city, schedule, salary range.",
+      },
+      {
+        title: "Match and conversation",
+        desc: "The matching lines meet, the stamp lands — and the conversation starts right there.",
+      },
+    ],
+    candidateSheetTitle: "CANDIDATE",
+    candidateFields: [
+      { label: "Position", value: "Sales Representative" },
+      { label: "City", value: "Baku" },
+      { label: "Experience", value: "3 years" },
+      { label: "Skill", value: "Customer service" },
+    ],
+    vacancySheetTitle: "VACANCY",
+    vacancyFields: [
+      { label: "Position", value: "Sales Manager" },
+      { label: "City", value: "Baku" },
+      { label: "Required", value: "2+ years experience" },
+      { label: "Required", value: "Customer service" },
+    ],
+    stamp: "MATCHED",
+    chatTitle: "CHAT",
+    chatEmployer: "Hello Aysel! Your profile fits our vacancy. Could you come in for an interview tomorrow?",
+    chatCandidate: "Hello! Yes, gladly.",
+    sampleLabel: "SAMPLE",
+  },
+  candidate: {
+    h2: "Your sheet speaks for you",
+    intro:
+      "For job seekers, AxtarIS does three things well: finds the right vacancy, explains why you fit, and never hides what happened to your application.",
+    features: [
+      {
+        title: "Precise search",
+        desc: "Filters by city, field, schedule and salary range. Save a search — and hear about it the moment a matching vacancy appears.",
+      },
+      {
+        title: "Match explanations",
+        desc: "“You're a fit” is not an empty phrase: you see line by line which of your skills meet which requirements.",
+      },
+      {
+        title: "Application tracking",
+        desc: "Every application has its own journey, and you see all of it — from the moment it is sent until the answer.",
+      },
+      {
+        title: "CV and profile",
+        desc: "Upload a CV or use your profile as a ready-made sheet. Skills, education, certificates — all in one place.",
+      },
+    ],
+    pipelineLabel: "THE APPLICATION'S JOURNEY",
+    pipeline: ["Sent", "In review", "Shortlisted", "Answer"],
+    cta: "Start your job search",
+  },
+  employer: {
+    h2: "The carbon copy is yours",
+    intro:
+      "Every candidate sheet has a carbon copy that travels to the employer. Publish the vacancy, manage the pipeline, move to the conversation — all in one place.",
+    features: [
+      {
+        title: "Vacancy publishing",
+        desc: "From draft to active, from active to closed — the vacancy's whole life is under your control.",
+      },
+      {
+        title: "Applicant pipeline",
+        desc: "Applications in an orderly queue: review, shortlist, decide.",
+      },
+      {
+        title: "Talent search",
+        desc: "The vacancy doesn't have to wait: find matching candidates yourself and send invitations.",
+      },
+      {
+        title: "Direct messaging",
+        desc: "Write to candidates without leaving the platform — the road to the interview gets shorter.",
+      },
+    ],
+    pipelineLabel: "THE HIRING PIPELINE",
+    pipeline: ["Review", "Shortlist", "Interview", "Hired"],
+    statsLabel: "ACTIVITY SIGNALS",
+    stats: [
+      { label: "Views", value: "128" },
+      { label: "Applicants", value: "34" },
+      { label: "Response rate", value: "82%" },
+    ],
+    statsNote: "Sample figures — the dashboard shows your vacancy's real numbers.",
+    cta: "Post a vacancy",
+  },
+  ai: {
+    h2: "It helps. It doesn't replace.",
+    intro:
+      "The AxtarIS assistant is an editor standing at your side with a pencil: concrete suggestions for your CV and profile, a cover-letter draft for your application. The last word is always yours.",
+    notes: [
+      "Show experience with numbers: not “increased sales”, but “increased sales by 20%”.",
+      "Move “customer service” up — it is the most requested skill in the vacancies you search for.",
+      "Your cover-letter draft is ready — read it in your own words before sending.",
+    ],
+    boundary: "The assistant suggests — you decide.",
+  },
+  trust: {
+    h2: "Three languages. One market.",
+    intro:
+      "AxtarIS is built for the Azerbaijani market: Azerbaijani leads, Russian and English are full equals. Salaries in manats, conversations in your language.",
+    langDemoLabel: "THE SAME LINE, THREE LANGUAGES",
+    langDemo: [
+      { locale: "AZ", label: "Vəzifə", value: "Satış meneceri" },
+      { locale: "RU", label: "Должность", value: "Менеджер по продажам" },
+      { locale: "EN", label: "Position", value: "Sales Manager" },
+    ],
+    points: [
+      {
+        title: "Your account is protected",
+        desc: "Report, block, moderation — built into the platform from day one.",
+      },
+      {
+        title: "Local market, local language",
+        desc: "Vacancies in AZN, communication in the language you choose — written locally, not translated.",
+      },
+    ],
+  },
+  closing: {
+    h2: "The signature is yours.",
+    intro:
+      "The document is ready — two signature lines are empty. Join the beta and be the first to know on launch day.",
+    candidateLabel: "CANDIDATE",
+    candidateLine: "I'm looking for a job",
+    candidateCta: "Join the beta",
+    employerLabel: "EMPLOYER",
+    employerLine: "I want to post a vacancy",
+    employerCta: "Write to us",
+    signatureLine: "signature",
+    directLabel: "Or email directly:",
+    copied: "Address copied",
+    stores: [
+      { name: "App Store", status: "Coming soon" },
+      { name: "Google Play", status: "Coming soon" },
+    ],
+    emailSubjectCandidate: "AxtarIS beta — candidate",
+    emailSubjectEmployer: "AxtarIS beta — employer",
+  },
+  footer: {
+    tagline: "The premium employment platform for Azerbaijan",
+    navLabel: "Sections",
+    contactLabel: "Contact",
+    langLabel: "Language",
+    copyright: "© 2026 AxtarIS. All rights reserved.",
+  },
+};
