@@ -86,6 +86,9 @@ export function Input({
             {
               color: colors.textPrimary,
               ...t.bodyMedium,
+              // iOS renders single-line TextInput text off-center when a fixed
+              // lineHeight is set — let the input derive it from fontSize.
+              lineHeight: undefined,
             },
             inputStyle,
           ]}

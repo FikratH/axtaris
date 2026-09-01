@@ -15,6 +15,10 @@ import Animated, {
   withSpring,
   withDelay,
   Easing,
+  FadeInLeft,
+  FadeInRight,
+  FadeOutLeft,
+  FadeOutRight,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
@@ -45,36 +49,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TOTAL_STEPS = 5;
 const SLIDE_DURATION = 320;
 
-// ── Animated wrapper — supports forward/backward direction ───
-function AnimatedSlide({
-  stepKey,
-  direction,
-  children,
-}: {
-  stepKey: number;
-  direction: 'forward' | 'backward';
-  children: React.ReactNode;
-}) {
-  const translateX = useSharedValue(direction === 'forward' ? SCREEN_WIDTH * 0.2 : -SCREEN_WIDTH * 0.2);
-  const opacity = useSharedValue(0);
-  const scale = useSharedValue(0.97);
-
-  useEffect(() => {
-    translateX.value = direction === 'forward' ? SCREEN_WIDTH * 0.2 : -SCREEN_WIDTH * 0.2;
-    opacity.value = 0;
-    scale.value = 0.97;
-    translateX.value = withTiming(0, { duration: SLIDE_DURATION, easing: Easing.out(Easing.cubic) });
-    opacity.value = withTiming(1, { duration: SLIDE_DURATION * 0.8 });
-    scale.value = withTiming(1, { duration: SLIDE_DURATION, easing: Easing.out(Easing.cubic) });
-  }, [stepKey]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }, { scale: scale.value }],
-    opacity: opacity.value,
-  }));
-
-  return <Animated.View style={[styles.slideAnimated, animatedStyle]}>{children}</Animated.View>;
-}
+// The per-slide animated wrapper was replaced by keyed entering/exiting
+// transitions on the content container — exit and entrance now overlap on the
+// UI thread instead of being sequenced with timeouts.
 
 // ── Animated progress segment (replaces plain dots) ──────────
 function ProgressSegment({ active, done, color }: { active: boolean; done: boolean; color: string }) {
@@ -271,27 +248,17 @@ export default function OnboardingScreen() {
   const [themeFlashCount, setThemeFlashCount] = useState(0);
   const appCompleteOnboarding = useAppStore((st) => st.completeOnboarding);
 
-  const exitX = useSharedValue(0);
-  const exitOpacity = useSharedValue(1);
-
+  // Keyed entering/exiting transitions (below) run the old slide's exit and
+  // the new slide's entrance simultaneously on the UI thread — no timeout
+  // choreography, and the new slide's mount cost is hidden under the exit
+  // instead of stalling between two animations.
   const animateTransition = useCallback(
     (nextStep: number, dir: 'forward' | 'backward') => {
       if (isAnimating) return;
       setIsAnimating(true);
-      const exitDir = dir === 'forward' ? -1 : 1;
-      exitX.value = withTiming(SCREEN_WIDTH * 0.12 * exitDir, {
-        duration: SLIDE_DURATION * 0.5,
-        easing: Easing.in(Easing.cubic),
-      });
-      exitOpacity.value = withTiming(0, { duration: SLIDE_DURATION * 0.5 });
-
-      setTimeout(() => {
-        setDirection(dir);
-        setStep(nextStep);
-        exitX.value = 0;
-        exitOpacity.value = 1;
-        setTimeout(() => setIsAnimating(false), SLIDE_DURATION);
-      }, SLIDE_DURATION * 0.4);
+      setDirection(dir);
+      setStep(nextStep);
+      setTimeout(() => setIsAnimating(false), SLIDE_DURATION * 0.75);
     },
     [isAnimating]
   );
@@ -327,11 +294,6 @@ export default function OnboardingScreen() {
     setMode(key);
     setThemeFlashCount((c) => c + 1);
   };
-
-  const exitStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: exitX.value }],
-    opacity: exitOpacity.value,
-  }));
 
   const isLastStep = step === TOTAL_STEPS - 1;
   const isFirstStep = step === 0;
@@ -560,17 +522,26 @@ export default function OnboardingScreen() {
       </View>
 
       {/* ── Content ── */}
-      <Animated.View style={[styles.contentArea, exitStyle]}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
+      <View style={styles.contentArea}>
+        <Animated.View
+          key={step}
+          style={StyleSheet.absoluteFill}
+          entering={(direction === 'forward' ? FadeInRight : FadeInLeft)
+            .duration(SLIDE_DURATION)
+            .easing(Easing.out(Easing.cubic))}
+          exiting={(direction === 'forward' ? FadeOutLeft : FadeOutRight)
+            .duration(SLIDE_DURATION * 0.55)
+            .easing(Easing.in(Easing.cubic))}
         >
-          <AnimatedSlide stepKey={step} direction={direction}>
-            {renderCurrentStep()}
-          </AnimatedSlide>
-        </ScrollView>
-      </Animated.View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.slideAnimated}>{renderCurrentStep()}</View>
+          </ScrollView>
+        </Animated.View>
+      </View>
 
       {/* ── Bottom ── */}
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + 24 }]}>

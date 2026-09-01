@@ -33,6 +33,7 @@ export default function VerifyOTPScreen() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const verificationEmail =
@@ -56,12 +57,14 @@ export default function VerifyOTPScreen() {
 
   const handleVerify = async (code: string) => {
     if (!otpSchema.safeParse({ code }).success) {
+      setErrorText(null);
       setError(true);
       return;
     }
 
     setLoading(true);
     setError(false);
+    setErrorText(null);
     try {
       const verified = await authService.verifyOTP(
         verificationEmail,
@@ -80,7 +83,9 @@ export default function VerifyOTPScreen() {
         setError(true);
       }
     } catch (err) {
-      Alert.alert(tr('common.error'), toUserMessage(err, tr));
+      // No modal here — the row shake + red cells + inline message carry the
+      // error without interrupting input.
+      setErrorText(toUserMessage(err, tr));
       setError(true);
     } finally {
       setLoading(false);
@@ -134,7 +139,7 @@ export default function VerifyOTPScreen() {
         <OTPInput onComplete={handleVerify} error={error} />
         {error && (
           <Text style={[{ color: colors.error, ...t.caption, textAlign: 'center', marginTop: s.md }]}>
-            {tr('auth.otpInvalid')}
+            {errorText ?? tr('auth.otpInvalid')}
           </Text>
         )}
       </View>

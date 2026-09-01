@@ -33,6 +33,23 @@ export function getSupabase(): SupabaseClient {
         persistSession: true,
         detectSessionInUrl: false,
       },
+      // Dev-only visibility: name the exact URL when a request dies at the
+      // network layer, so "Network request failed" is never anonymous.
+      ...(__DEV__
+        ? {
+            global: {
+              fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+                try {
+                  return await fetch(input, init);
+                } catch (e) {
+                  const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+                  console.warn(`[supabase] fetch failed for ${url}:`, e);
+                  throw e;
+                }
+              },
+            },
+          }
+        : {}),
     });
 
     // On native, RN suspends timers in the background, so the access-token
