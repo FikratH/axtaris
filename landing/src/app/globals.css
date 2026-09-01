@@ -259,3 +259,20 @@ a {
     opacity: 1;
   }
 }
+/* …and slid back in when the menu closes */
+@keyframes sheet-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+@keyframes sheet-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}

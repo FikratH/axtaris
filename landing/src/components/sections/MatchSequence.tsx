@@ -4,7 +4,7 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { MoveRight } from "lucide-react";
+import { MoveDown, MoveRight } from "lucide-react";
 import { useMotion } from "@/components/motion/MotionProvider";
 import { DocHeader, Stamp } from "@/components/doc/primitives";
 import { SECTION_IDS } from "@/lib/anchors";
@@ -103,29 +103,52 @@ export function MatchSequence({ dict }: { dict: Dictionary }) {
         }).to("[data-seq-chat]", { opacity: 1, y: 0, duration: 0.8 }, ">-0.1");
       });
 
-      // Smaller screens: one light arrival per element, no pin, no scrub.
+      // Smaller screens: the same narrative, told as one non-pinned scrubbed
+      // timeline — documents arrive, the rows match one by one, the stamp
+      // lands, the conversation rises.
       mm.add("(max-width: 1023px)", () => {
-        for (const sel of [
-          "[data-seq-candidate]",
-          "[data-seq-vacancy]",
-          "[data-seq-chat]",
-        ]) {
-          gsap.from(sel, {
-            x: -28,
-            y: 28,
-            opacity: 0,
-            duration: 0.8,
-            ease: "expo.out",
-            scrollTrigger: { trigger: sel, start: "top 88%" },
-          });
-        }
-        gsap.from("[data-seq-stamp]", {
-          scale: 1.8,
+        gsap.set("[data-seq-candidate], [data-seq-vacancy]", {
+          x: -28,
+          y: 28,
           opacity: 0,
+        });
+        gsap.set("[data-pair-bar], [data-seq-mark-m]", { opacity: 0 });
+        gsap.set("[data-seq-stamp]", { opacity: 0, scale: 1.8 });
+        gsap.set("[data-seq-chat]", { opacity: 0, y: 40 });
+
+        const tl = gsap.timeline({
+          defaults: { ease: "power2.out" },
+          scrollTrigger: {
+            trigger: "[data-seq-stage]",
+            start: "top 75%",
+            end: "bottom 80%",
+            scrub: 0.6,
+          },
+        });
+
+        tl.to("[data-seq-candidate]", {
+          x: 0,
+          y: 0,
+          opacity: 1,
+          duration: 0.8,
+        }).to(
+          "[data-seq-vacancy]",
+          { x: 0, y: 0, opacity: 1, duration: 0.8 },
+          "<0.15",
+        );
+        for (let pair = 1; pair <= 3; pair++) {
+          tl.to(`[data-pair-bar="${pair}"]`, { opacity: 1, duration: 0.3 }).to(
+            `[data-seq-mark-m="${pair}"]`,
+            { opacity: 1, duration: 0.25 },
+            "<0.05",
+          );
+        }
+        tl.to("[data-seq-stamp]", {
+          opacity: 1,
+          scale: 1,
           duration: 0.5,
           ease: "back.out(1.6)",
-          scrollTrigger: { trigger: "[data-seq-stamp]", start: "top 85%" },
-        });
+        }).to("[data-seq-chat]", { opacity: 1, y: 0, duration: 0.6 }, ">-0.1");
       });
 
       return () => mm.revert();
@@ -185,6 +208,23 @@ export function MatchSequence({ dict }: { dict: Dictionary }) {
                   tone="ink"
                   pair={i >= 1 ? i : undefined}
                 />
+              ))}
+            </div>
+
+            {/* stacked sheets: the same row-to-row mapping, pointing down
+                the pile instead of across the desk */}
+            <div
+              aria-hidden
+              className="-my-1 flex items-center justify-center gap-8 lg:hidden"
+            >
+              {[1, 2, 3].map((pair) => (
+                <span key={pair} data-seq-mark-m={pair}>
+                  <MoveDown
+                    aria-hidden
+                    strokeWidth={2.25}
+                    className="size-5 text-carbon-400"
+                  />
+                </span>
               ))}
             </div>
 

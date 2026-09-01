@@ -1,3 +1,4 @@
+import { CarbonArrival } from "@/components/motion/CarbonArrival";
 import { DocSheet } from "@/components/doc/primitives";
 import type { Dictionary } from "@/content";
 
@@ -22,25 +23,25 @@ export function FaqChapter({ dict }: { dict: Dictionary }) {
           </p>
         </div>
 
-        <DocSheet className="p-6 sm:p-8">
-          <dl className="flex flex-col">
-            {dict.faq.items.map((item, i) => (
-              <div
-                key={item.q}
-                className={
-                  i > 0 ? "rule-b pt-5 pb-5" : "rule-b pb-5"
-                }
-              >
-                <dt className="text-[1.125rem] leading-snug font-semibold text-ink">
-                  {item.q}
-                </dt>
-                <dd className="mt-2 max-w-[62ch] text-[0.9375rem] leading-relaxed text-ink-soft">
-                  {item.a}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </DocSheet>
+        <CarbonArrival>
+          <DocSheet className="p-6 sm:p-8">
+            <dl className="flex flex-col">
+              {dict.faq.items.map((item, i) => (
+                <div
+                  key={item.q}
+                  className={i > 0 ? "rule-b pt-5 pb-5" : "rule-b pb-5"}
+                >
+                  <dt className="text-[1.125rem] leading-snug font-semibold text-ink">
+                    {item.q}
+                  </dt>
+                  <dd className="mt-2 max-w-[62ch] text-[0.9375rem] leading-relaxed text-ink-soft">
+                    {item.a}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </DocSheet>
+        </CarbonArrival>
       </div>
     </section>
   );

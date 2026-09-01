@@ -100,16 +100,28 @@ export interface Dictionary {
     intro: string;
     candidateLabel: string;
     candidateLine: string;
-    candidateCta: string;
     employerLabel: string;
     employerLine: string;
-    employerCta: string;
     signatureLine: string;
     directLabel: string;
-    copied: string;
     stores: { name: string; status: string }[];
-    emailSubjectCandidate: string;
-    emailSubjectEmployer: string;
+    form: {
+      nameLabel: string;
+      namePlaceholder: string;
+      emailLabel: string;
+      emailPlaceholder: string;
+      roleLabel: string;
+      roleCandidate: string;
+      roleEmployer: string;
+      consentLabel: string;
+      submit: string;
+      submitting: string;
+      successStamp: string;
+      successNote: string;
+      errorRequired: string;
+      errorEmail: string;
+      errorGeneric: string;
+    };
   };
   footer: {
     tagline: string;

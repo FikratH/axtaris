@@ -53,6 +53,7 @@ export function EmployerChapter({ dict }: { dict: Dictionary }) {
           </p>
           <AnchorLink
             href={`#${SECTION_IDS.join}`}
+            data-waitlist-role="employer"
             className="mt-8 inline-flex min-h-12 items-center rounded-[2px] border border-carbon-300/80 px-6 text-base font-medium text-carbon-100 no-underline transition-colors hover:bg-carbon-300/10"
           >
             {dict.employer.cta}

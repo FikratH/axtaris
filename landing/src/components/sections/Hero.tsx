@@ -86,6 +86,7 @@ export function Hero({ dict }: { dict: Dictionary }) {
           <div data-hero-line className="mt-9 flex flex-wrap items-center gap-4">
             <AnchorLink
               href={`#${SECTION_IDS.join}`}
+              data-waitlist-role="candidate"
               className={stampCtaClass}
             >
               {dict.hero.ctaCandidate}
@@ -115,14 +116,18 @@ export function Hero({ dict }: { dict: Dictionary }) {
           role="img"
           aria-label={dict.a11y.heroPreviewAlt}
         >
+          {/* the wrapper owns the resting offset and rotation — GSAP writes
+              `translate: none` on its targets, so the animated element must
+              not carry CSS translate (same split as the match stamp) */}
           <div
-            data-hero-carbon
             aria-hidden
-            className="carbon absolute inset-0 translate-x-2 -translate-y-13 rotate-[1.5deg] p-3 sm:translate-x-6 sm:-translate-y-12 sm:p-3.5"
+            className="absolute inset-0 translate-x-2 -translate-y-10 rotate-[1.5deg] sm:translate-x-6 sm:-translate-y-12"
           >
-            <p className="doc-label-sm text-right leading-none text-carbon-300">
-              {dict.hero.carbonNote}
-            </p>
+            <div data-hero-carbon className="carbon absolute inset-0 p-3 sm:p-3.5">
+              <p className="doc-label-sm text-right leading-none text-carbon-300">
+                {dict.hero.carbonNote}
+              </p>
+            </div>
           </div>
           <DocSheet
             data-hero-sheet

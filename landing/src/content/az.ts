@@ -181,7 +181,7 @@ export const az: Dictionary = {
       },
       {
         q: "Nə vaxt istifadəyə açılacaq?",
-        a: "Hazırda qapalı beta gedir. App Store və Google Play-də dərc tezliklə baş tutacaq; beta-ya yazılanlar buraxılış günü ilk xəbər tutacaq — info@axtaris.app ünvanına yazmaq kifayətdir.",
+        a: "Hazırda qapalı beta gedir. App Store və Google Play-də dərc tezliklə baş tutacaq; buraxılış günü ilk xəbər tutmaq üçün bu səhifənin sonundakı formada beta-ya yazılmaq kifayətdir.",
       },
       {
         q: "AxtarIS pulsuzdurmu?",
@@ -203,19 +203,34 @@ export const az: Dictionary = {
       "Sənəd hazırdır — iki imza yeri boşdur. Beta mərhələsinə yazılın, buraxılış günü ilk siz bilin.",
     candidateLabel: "NAMİZƏD",
     candidateLine: "İş axtarıram",
-    candidateCta: "Beta-ya yazıl",
     employerLabel: "İŞƏGÖTÜRƏN",
     employerLine: "Vakansiya yerləşdirmək istəyirəm",
-    employerCta: "Bizə yazın",
     signatureLine: "imza yeri",
     directLabel: "Birbaşa e-poçt:",
-    copied: "Ünvan kopyalandı",
     stores: [
       { name: "App Store", status: "Tezliklə" },
       { name: "Google Play", status: "Tezliklə" },
     ],
-    emailSubjectCandidate: "AxtarIS beta — namizəd",
-    emailSubjectEmployer: "AxtarIS beta — işəgötürən",
+    form: {
+      nameLabel: "Ad, soyad",
+      namePlaceholder: "Adınız və soyadınız",
+      emailLabel: "E-poçt",
+      emailPlaceholder: "ad@epoct.az",
+      roleLabel: "Rol",
+      roleCandidate: "Namizəd",
+      roleEmployer: "İşəgötürən",
+      consentLabel:
+        "Beta buraxılışı barədə mənə e-poçtla məlumat göndərilməsinə razıyam.",
+      submit: "Beta-ya yazıl",
+      submitting: "Göndərilir…",
+      successStamp: "QEYDƏ ALINDI",
+      successNote:
+        "Yeriniz qeydə alındı — buraxılış günü ilk siz biləcəksiniz.",
+      errorRequired: "Bu sahə boş qala bilməz.",
+      errorEmail: "E-poçt ünvanını yoxlayın.",
+      errorGeneric:
+        "Göndərmək alınmadı. Yenidən cəhd edin və ya info@axtaris.app ünvanına yazın.",
+    },
   },
   footer: {
     tagline: "Azərbaycan üçün premium məşğulluq platforması",

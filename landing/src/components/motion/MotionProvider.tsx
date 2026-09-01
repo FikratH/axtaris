@@ -11,7 +11,7 @@ import {
 } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "lenis";
+import type Lenis from "lenis";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -60,20 +60,31 @@ export function MotionProvider({ children }: { children: React.ReactNode }) {
     ).matches;
     if (!finePointer) return;
 
-    const instance = new Lenis({
-      duration: 1.05,
-      smoothWheel: true,
-    });
-    lenisRef.current = instance;
+    // Lenis is loaded on demand inside the fine-pointer branch so touch
+    // devices — which keep native scrolling — never download it.
+    let cancelled = false;
+    let instance: Lenis | null = null;
+    let raf: ((time: number) => void) | null = null;
 
-    instance.on("scroll", ScrollTrigger.update);
-    const raf = (time: number) => instance.raf(time * 1000);
-    gsap.ticker.add(raf);
-    gsap.ticker.lagSmoothing(0);
+    void import("lenis").then(({ default: LenisCtor }) => {
+      if (cancelled) return;
+      instance = new LenisCtor({
+        duration: 1.05,
+        smoothWheel: true,
+      });
+      lenisRef.current = instance;
+
+      instance.on("scroll", ScrollTrigger.update);
+      raf = (time: number) => instance?.raf(time * 1000);
+      gsap.ticker.add(raf);
+      gsap.ticker.lagSmoothing(0);
+    });
 
     return () => {
-      gsap.ticker.remove(raf);
-      instance.destroy();
+      cancelled = true;
+      if (raf) gsap.ticker.remove(raf);
+      instance?.destroy();
+      instance = null;
       lenisRef.current = null;
     };
   }, [motionOK]);

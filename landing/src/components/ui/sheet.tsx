@@ -23,10 +23,10 @@ export function SheetContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-cover-950/70 backdrop-blur-[2px] data-[state=open]:animate-[sheet-fade_200ms_ease-out] motion-reduce:animate-none" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-cover-950/70 backdrop-blur-[2px] data-[state=open]:animate-[sheet-fade_200ms_ease-out] data-[state=closed]:animate-[sheet-fade-out_200ms_ease-in_forwards] motion-reduce:animate-none" />
       <DialogPrimitive.Content
         className={cn(
-          "paper fixed inset-y-0 right-0 z-50 flex w-[min(20rem,86vw)] flex-col gap-1 overflow-y-auto p-6 pt-16 data-[state=open]:animate-[sheet-in_260ms_cubic-bezier(0.22,1,0.36,1)] motion-reduce:animate-none",
+          "paper fixed inset-y-0 right-0 z-50 flex w-[min(20rem,86vw)] flex-col gap-1 overflow-y-auto p-6 pt-16 pb-[calc(1.5rem+env(safe-area-inset-bottom))] data-[state=open]:animate-[sheet-in_260ms_cubic-bezier(0.22,1,0.36,1)] data-[state=closed]:animate-[sheet-out_200ms_ease-in_forwards] motion-reduce:animate-none",
           className,
         )}
         {...props}

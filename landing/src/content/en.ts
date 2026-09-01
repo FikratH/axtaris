@@ -181,7 +181,7 @@ export const en: Dictionary = {
       },
       {
         q: "When does it launch?",
-        a: "A closed beta is running now. App Store and Google Play releases are coming soon; beta subscribers hear about the launch first — just write to info@axtaris.app.",
+        a: "A closed beta is running now. App Store and Google Play releases are coming soon; beta subscribers hear about the launch first — just join with the form at the end of this page.",
       },
       {
         q: "Is AxtarIS free?",
@@ -203,19 +203,33 @@ export const en: Dictionary = {
       "The document is ready — two signature lines are empty. Join the beta and be the first to know on launch day.",
     candidateLabel: "CANDIDATE",
     candidateLine: "I'm looking for a job",
-    candidateCta: "Join the beta",
     employerLabel: "EMPLOYER",
     employerLine: "I want to post a vacancy",
-    employerCta: "Write to us",
     signatureLine: "signature",
     directLabel: "Or email directly:",
-    copied: "Address copied",
     stores: [
       { name: "App Store", status: "Coming soon" },
       { name: "Google Play", status: "Coming soon" },
     ],
-    emailSubjectCandidate: "AxtarIS beta — candidate",
-    emailSubjectEmployer: "AxtarIS beta — employer",
+    form: {
+      nameLabel: "Full name",
+      namePlaceholder: "Your name",
+      emailLabel: "Email",
+      emailPlaceholder: "you@example.com",
+      roleLabel: "I am a",
+      roleCandidate: "Candidate",
+      roleEmployer: "Employer",
+      consentLabel: "I agree to be contacted by email about the beta launch.",
+      submit: "Join the beta",
+      submitting: "Sending…",
+      successStamp: "REGISTERED",
+      successNote:
+        "You're on the list — you'll be the first to know on launch day.",
+      errorRequired: "This field is required.",
+      errorEmail: "Check the email address.",
+      errorGeneric:
+        "Something went wrong. Try again, or write to info@axtaris.app.",
+    },
   },
   footer: {
     tagline: "The premium employment platform for Azerbaijan",

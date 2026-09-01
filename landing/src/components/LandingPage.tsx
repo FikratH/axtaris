@@ -31,7 +31,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
         <AiChapter dict={dict} />
         <TrustChapter dict={dict} />
         <FaqChapter dict={dict} />
-        <Closing dict={dict} />
+        <Closing dict={dict} locale={locale} />
       </main>
       <Footer dict={dict} locale={locale} />
     </MotionProvider>
