@@ -9,6 +9,7 @@ import { useAuthStore } from '@/store/authStore';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { Chip } from '@/components/ui/Chip';
 import { Card } from '@/components/ui/Card';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -127,8 +128,8 @@ export default function TalentScreen() {
     </View>
   );
 
-  const renderCandidate = ({ item: c }: { item: TalentCandidate }) => (
-    <View style={{ paddingHorizontal: s.xl }}>
+  const renderCandidate = ({ item: c, index }: { item: TalentCandidate; index: number }) => (
+    <AnimatedListItem index={index} style={{ paddingHorizontal: s.xl }}>
       <Card padding="lg" style={{ marginBottom: 12, borderWidth: c.isSpotlight ? 1.5 : 1, borderColor: c.isSpotlight ? colors.warning : colors.cardBorder }}>
         <TouchableOpacity
           activeOpacity={0.8}
@@ -191,7 +192,7 @@ export default function TalentScreen() {
           />
         </View>
       </Card>
-    </View>
+    </AnimatedListItem>
   );
 
   const listEmpty = isLoading ? (

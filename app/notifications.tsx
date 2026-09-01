@@ -20,6 +20,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from '@/hooks/useEngagementQueries';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { formatTime } from '@/utils/dates';
 import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, FileText, UserPlus, Briefcase, Star, BadgeCheck, ClipboardList, Bell as BellIcon } from 'lucide-react-native';
@@ -71,7 +72,7 @@ export default function NotificationsScreen() {
     ...section.data.map((item) => ({ kind: 'item' as const, notification: item })),
   ]);
 
-  const renderItem = useCallback(({ item }: { item: typeof allItems[0] }) => {
+  const renderItem = useCallback(({ item, index }: { item: typeof allItems[0]; index: number }) => {
     if (item.kind === 'header') {
       return (
         <Text style={[styles.sectionTitle, { color: colors.textSecondary, ...t.overline, paddingHorizontal: s.xl, marginTop: s.xl, marginBottom: s.sm }]}>
@@ -82,6 +83,7 @@ export default function NotificationsScreen() {
 
     const notif = item.notification;
     return (
+      <AnimatedListItem index={index}>
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => {
@@ -127,6 +129,7 @@ export default function NotificationsScreen() {
           <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
         )}
       </TouchableOpacity>
+      </AnimatedListItem>
     );
   }, [colors, t, s, r, markRead, router, user]);
 

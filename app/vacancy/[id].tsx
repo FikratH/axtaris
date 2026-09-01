@@ -39,6 +39,7 @@ import { useCandidateEntitlements } from '@/hooks/useEntitlements';
 import { toUserMessage } from '@/utils/errorMessage';
 import { ChevronLeft, Bookmark, BookmarkCheck, Flag, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Sparkles, Lock, Languages as LanguagesIcon } from 'lucide-react-native';
 import { useReportEntity } from '@/hooks/useModeration';
+import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay';
 
 export default function VacancyDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -66,6 +67,7 @@ export default function VacancyDetailScreen() {
   } = useVacancy(id);
 
   const [showApplyModal, setShowApplyModal] = useState(false);
+  const [showAppliedCelebration, setShowAppliedCelebration] = useState(false);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [coverLetter, setCoverLetter] = useState('');
   const [generatingCover, setGeneratingCover] = useState(false);
@@ -174,7 +176,7 @@ export default function VacancyDetailScreen() {
       await applyToVacancy.mutateAsync({ vacancyId: id, answers: screeningAnswers, coverLetter });
       setShowApplyModal(false);
       setCoverLetter('');
-      Alert.alert(tr('candidate.applied'));
+      setShowAppliedCelebration(true);
     } catch (error: any) {
       // Turn the daily-limit dead-end into an upsell moment instead of a raw error.
       if ((error?.message || '').includes('Daily application limit')) {
@@ -661,6 +663,19 @@ export default function VacancyDetailScreen() {
         benefits={upgradeCopy.benefits}
         plan="pro"
         audience="candidate"
+      />
+
+      <CelebrationOverlay
+        visible={showAppliedCelebration}
+        title={tr('candidate.appliedCelebrationTitle')}
+        message={tr('candidate.appliedCelebrationBody')}
+        primaryLabel={tr('common.done')}
+        onPrimary={() => setShowAppliedCelebration(false)}
+        secondaryLabel={tr('candidate.viewApplicationsCta')}
+        onSecondary={() => {
+          setShowAppliedCelebration(false);
+          router.push('/(candidate)/applications' as never);
+        }}
       />
     </View>
   );

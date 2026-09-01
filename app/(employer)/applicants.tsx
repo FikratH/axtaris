@@ -13,6 +13,7 @@ import {
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -140,13 +141,14 @@ export default function ApplicantsScreen() {
     } as never);
   }, [router, tr]);
 
-  const renderApplicant = React.useCallback(({ item }: { item: Application }) => {
+  const renderApplicant = React.useCallback(({ item, index }: { item: Application; index: number }) => {
     const candidate = item.candidate;
     const candidateSkills = candidate?.skills ?? [];
     const hasCv = !!(item.cvUrl || candidate?.cvUrl);
     const fit = rankMap?.[item.id];
 
     return (
+      <AnimatedListItem index={index}>
       <Card padding="md" style={{ marginBottom: 10 }}>
         <View style={styles.applicantRow}>
           <Avatar uri={candidate?.user?.avatarUrl} name={candidate?.user?.fullName || tr('common.notAvailable')} size={48} />
@@ -272,6 +274,7 @@ export default function ApplicantsScreen() {
           </View>
         ) : null}
       </Card>
+      </AnimatedListItem>
     );
   }, [colors, s, t, r, tr, rankMap, updateStatus, router, handleOpenCv, openingCvId]);
 

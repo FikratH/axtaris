@@ -1,5 +1,13 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Animated, {
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import { springs, useMotionEnabled } from '@/theme/motion';
+import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -27,6 +35,26 @@ export default function ProfileCompletionScreen() {
   const remaining = items.filter((item) => !item.done);
   const completed = items.filter((item) => item.done);
   const isComplete = remaining.length === 0 && !!profile;
+
+  const motionEnabled = useMotionEnabled();
+  const progress = useSharedValue(motionEnabled ? 0 : percentage);
+  const previousPercentage = useRef<number | null>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  useEffect(() => {
+    if (!profile) return;
+    progress.value = motionEnabled ? withSpring(percentage, springs.gentle) : percentage;
+    // Celebrate only the moment 100% is REACHED, not every visit at 100%.
+    if (previousPercentage.current !== null && previousPercentage.current < 100 && percentage === 100) {
+      setShowCelebration(true);
+    }
+    previousPercentage.current = percentage;
+  }, [percentage, profile, motionEnabled, progress]);
+
+  const fillStyle = useAnimatedStyle(() => ({ width: `${progress.value}%` }));
+  const percentTextProps = useAnimatedProps(
+    () => ({ text: `${Math.round(progress.value)}%` }) as { text: string }
+  );
 
   if (!user) {
     return (
@@ -125,7 +153,12 @@ export default function ProfileCompletionScreen() {
       <Card padding="lg" style={{ marginBottom: s.xl }}>
         <View style={styles.heroRow}>
           <View style={{ flex: 1 }}>
-            <Text style={[{ color: colors.primary }, t.displaySmall]}>{percentage}%</Text>
+            <AnimatedPercentText
+              style={[{ color: colors.primary, padding: 0 }, t.displaySmall]}
+              animatedProps={percentTextProps}
+              editable={false}
+              defaultValue={`${percentage}%`}
+            />
             <Text style={[{ color: colors.textSecondary, marginTop: 2 }, t.bodySmall]}>
               {tr('candidate.completion.progress', { done: doneCount, total })}
             </Text>
@@ -139,7 +172,13 @@ export default function ProfileCompletionScreen() {
           </View>
         </View>
         <View style={[styles.track, { backgroundColor: colors.surfaceSecondary, borderRadius: r.full }]}>
-          <View style={[styles.fill, { width: `${percentage}%`, backgroundColor: isComplete ? colors.success : colors.primary, borderRadius: r.full }]} />
+          <Animated.View
+            style={[
+              styles.fill,
+              { backgroundColor: isComplete ? colors.success : colors.primary, borderRadius: r.full },
+              fillStyle,
+            ]}
+          />
         </View>
         <Text style={[{ color: colors.textTertiary, marginTop: s.md }, t.caption]}>
           {isComplete ? tr('candidate.completion.completeBody') : tr('candidate.completion.subtitle')}
@@ -167,9 +206,23 @@ export default function ProfileCompletionScreen() {
           </View>
         </>
       ) : null}
+
+      <CelebrationOverlay
+        visible={showCelebration}
+        title={tr('candidate.completionCelebrationTitle')}
+        message={tr('candidate.completionCelebrationBody')}
+        primaryLabel={tr('common.done')}
+        onPrimary={() => setShowCelebration(false)}
+      />
     </ScrollView>
   );
 }
+
+// The animated-text trick: drive a non-editable TextInput's `text` from the UI
+// thread. Reanimated's types don't model the `text` animated prop, hence the cast.
+const AnimatedPercentText = Animated.createAnimatedComponent(TextInput) as unknown as React.ComponentType<
+  Record<string, unknown>
+>;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

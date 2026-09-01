@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { AnimatedPressable } from './AnimatedPressable';
 import Animated, { useSharedValue, useAnimatedStyle, withSequence, withSpring } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeContext';
@@ -95,10 +96,9 @@ function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchS
   );
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <AnimatedPressable
       onPress={handlePress}
-      style={[
+      style={StyleSheet.flatten([
         styles.container,
         {
           backgroundColor: colors.cardBackground,
@@ -107,7 +107,7 @@ function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchS
           padding: 14,
           ...(!isDark ? e.sm : {}),
         },
-      ]}
+      ])}
     >
       <View style={styles.header}>
         <Avatar uri={vacancy.company?.logoUrl} name={vacancy.company?.name} size={40} />
@@ -159,7 +159,7 @@ function VacancyCardComponent({ vacancy, onPress, onSave, saved, compact, matchS
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 }
 

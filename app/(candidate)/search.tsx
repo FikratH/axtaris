@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   Modal,
+  RefreshControl,
   ScrollView,
 } from 'react-native';
 import { Alert } from '@/utils/dialog';
@@ -31,6 +32,7 @@ import { Chip } from '@/components/ui/Chip';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { WorkType } from '@/types/models';
 import { getWorkTypeLabel } from '@/utils/labels';
 import { Search as SearchIcon, SlidersHorizontal, SearchX, BookmarkPlus, Bookmark } from 'lucide-react-native';
@@ -133,15 +135,17 @@ export default function SearchScreen() {
     [requireAuth, toggleSave]
   );
   const renderItem = useCallback(
-    ({ item }: { item: (typeof filteredVacancies)[number] }) => (
-      <VacancyCard
-        vacancy={item}
-        onPress={handlePress}
-        onSave={handleSave}
-        saved={savedJobIds.includes(item.id)}
-        matchScore={item.match.score}
-        applied={appliedVacancyIds.has(item.id)}
-      />
+    ({ item, index }: { item: (typeof filteredVacancies)[number]; index: number }) => (
+      <AnimatedListItem index={index}>
+        <VacancyCard
+          vacancy={item}
+          onPress={handlePress}
+          onSave={handleSave}
+          saved={savedJobIds.includes(item.id)}
+          matchScore={item.match.score}
+          applied={appliedVacancyIds.has(item.id)}
+        />
+      </AnimatedListItem>
     ),
     [handlePress, handleSave, savedJobIds, appliedVacancyIds]
   );
@@ -283,6 +287,9 @@ export default function SearchScreen() {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={colors.primary} />
+        }
         ListEmptyComponent={
           isLoading ? (
             <View>

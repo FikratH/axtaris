@@ -22,6 +22,7 @@ import { safeBack } from '@/utils/navigation';
 import { getWorkTypeLabel, getExperienceLevelLabel } from '@/utils/labels';
 import { useGuestGate } from '@/hooks/useGuestGate';
 import { SuggestionChips } from '@/components/ui/SuggestionChips';
+import { CelebrationOverlay } from '@/components/ui/CelebrationOverlay';
 import { getSuggestions } from '@/data/suggestions';
 import { createLocalItemId } from '@/utils/profileSections';
 import { ChevronLeft, X, Sparkles, Star } from 'lucide-react-native';
@@ -42,6 +43,7 @@ export default function CreateVacancyScreen() {
   const { data: company, isLoading: companyLoading, isError: companyError, refetch } = useEmployerCompany(user?.id);
   const createVacancy = useCreateVacancy(user?.id);
   const { requireAuth } = useGuestGate();
+  const [showPublishCelebration, setShowPublishCelebration] = useState(false);
   const { entitlements } = useEmployerEntitlements();
   const { data: employerVacancies = [] } = useEmployerVacancies(user?.id);
 
@@ -186,11 +188,13 @@ export default function CreateVacancyScreen() {
         isFeatured,
       });
 
-      Alert.alert(
-        status === 'draft' ? tr('employer.saveDraft') : tr('employer.publishVacancy'),
-        '',
-        [{ text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/vacancies') }]
-      );
+      if (status === 'draft') {
+        Alert.alert(tr('employer.saveDraft'), '', [
+          { text: tr('common.ok'), onPress: () => safeBack(router, '/(employer)/vacancies') },
+        ]);
+      } else {
+        setShowPublishCelebration(true);
+      }
     } catch (error: any) {
       Alert.alert(tr('common.error'), toUserMessage(error, tr));
     }
@@ -367,6 +371,17 @@ export default function CreateVacancyScreen() {
           />
         </View>
       </ScrollView>
+
+      <CelebrationOverlay
+        visible={showPublishCelebration}
+        title={tr('employer.publishCelebrationTitle')}
+        message={tr('employer.publishCelebrationBody')}
+        primaryLabel={tr('employer.viewVacanciesCta')}
+        onPrimary={() => {
+          setShowPublishCelebration(false);
+          safeBack(router, '/(employer)/vacancies');
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }

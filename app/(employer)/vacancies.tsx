@@ -12,6 +12,7 @@ import {
   useUpdateVacancyStatus,
 } from '@/hooks/useVacancyQueries';
 import { Card } from '@/components/ui/Card';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -90,12 +91,13 @@ export default function VacanciesScreen() {
     );
   }, [deleteVacancy, tr]);
 
-  const renderVacancy = React.useCallback(({ item }: { item: Vacancy }) => {
+  const renderVacancy = React.useCallback(({ item, index }: { item: Vacancy; index: number }) => {
     const isActive = item.status === 'active';
     const isPaused = item.status === 'paused';
     const isClosed = item.status === 'closed';
 
     return (
+      <AnimatedListItem index={index}>
       <Card padding="md" style={{ marginBottom: 12 }}>
         <View style={styles.vacancyHeader}>
           <View style={{ flex: 1 }}>
@@ -191,6 +193,7 @@ export default function VacanciesScreen() {
           />
         </View>
       </Card>
+      </AnimatedListItem>
     );
   }, [colors, t, tr, router, updateVacancyStatus, handleDelete]);
 

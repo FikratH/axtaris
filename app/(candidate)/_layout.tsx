@@ -1,20 +1,23 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { TabBarIcon, tabPressListeners } from '@/components/ui/TabBarIcon';
 import { Home, Search, Bookmark, FileText, User } from 'lucide-react-native';
 
 export default function CandidateLayout() {
-  const { colors, typography: t } = useTheme();
+  const { colors } = useTheme();
   const { t: tr } = useTranslation();
   const insets = useSafeAreaInsets();
 
   return (
     <Tabs
+      screenListeners={tabPressListeners}
       screenOptions={{
         headerShown: false,
+        animation: 'shift',
         tabBarStyle: {
           backgroundColor: colors.tabBarBackground,
           borderTopColor: colors.tabBarBorder,
@@ -45,35 +48,55 @@ export default function CandidateLayout() {
         name="home"
         options={{
           title: tr('candidate.home'),
-          tabBarIcon: ({ color, size }) => <Home size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Home size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: tr('candidate.search'),
-          tabBarIcon: ({ color, size }) => <Search size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Search size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="saved"
         options={{
           title: tr('candidate.saved'),
-          tabBarIcon: ({ color, size }) => <Bookmark size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Bookmark size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="applications"
         options={{
           title: tr('candidate.applications'),
-          tabBarIcon: ({ color, size }) => <FileText size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <FileText size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: tr('candidate.profile'),
-          tabBarIcon: ({ color, size }) => <User size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <User size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
     </Tabs>

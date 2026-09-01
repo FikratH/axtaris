@@ -7,6 +7,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { Card } from '@/components/ui/Card';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -57,7 +58,8 @@ export default function InvitesScreen() {
     </View>
   );
 
-  const renderInvite = ({ item: invite }: { item: (typeof invites)[number] }) => (
+  const renderInvite = ({ item: invite, index }: { item: (typeof invites)[number]; index: number }) => (
+    <AnimatedListItem index={index}>
     <Card padding="lg" style={{ marginBottom: 12 }}>
       <View style={styles.cardHeader}>
         <View style={[styles.companyIcon, { backgroundColor: colors.primaryLight, borderRadius: r.md }]}>
@@ -103,6 +105,7 @@ export default function InvitesScreen() {
         </View>
       ) : null}
     </Card>
+    </AnimatedListItem>
   );
 
   return (

@@ -331,6 +331,11 @@ export default {
     noApplicationsDesc: 'Vakansiyalara müraciət etməyə başlayın',
     applyNow: 'İndi müraciət et',
     applied: 'Müraciət edildi',
+    appliedCelebrationTitle: 'Müraciət göndərildi!',
+    appliedCelebrationBody: 'İşəgötürən onu dərhal görəcək. Statusu müraciətlərinizdə izləyin.',
+    viewApplicationsCta: 'Müraciətlərim',
+    completionCelebrationTitle: 'Profil 100% tamamlandı!',
+    completionCelebrationBody: 'İşəgötürənlər artıq tam profilinizi görür. İnamla müraciət etmək vaxtıdır.',
     saveJob: 'Yadda saxla',
     unsaveJob: 'Silindi',
     applicationStatus: 'Müraciət statusu',
@@ -533,6 +538,9 @@ export default {
     salaryRange: 'Maaş aralığı',
     experienceRequired: 'Tələb olunan təcrübə',
     publishVacancy: 'Vakansiyanı dərc et',
+    publishCelebrationTitle: 'Vakansiya yayımdadır!',
+    publishCelebrationBody: 'Namizədlər artıq onu tapıb müraciət edə bilər.',
+    viewVacanciesCta: 'Vakansiyalarım',
     saveDraft: 'Qaralama kimi saxla',
     viewApplicants: 'Namizədlərə bax',
     review: 'Baxış',
@@ -639,11 +647,7 @@ export default {
   legal: {
     termsTitle: 'İstifadə şərtləri',
     privacyTitle: 'Məxfilik siyasəti',
-    lastUpdated: 'Son yeniləmə: 2026',
-    termsBody:
-      'AxtarIS platformasından istifadə etməklə siz bu şərtləri qəbul edirsiniz. Platforma iş axtaranları və işəgötürənləri birləşdirmək üçün nəzərdə tutulub.\n\nİstifadəçilər dəqiq məlumat təqdim etməli və platformadan yalnız qanuni məqsədlərlə istifadə etməlidir. Qadağan olunmuş məzmun və ya sui-istifadə hesabın dayandırılmasına səbəb ola bilər.\n\nBu sənəd nümunə mətnidir və yekun hüquqi mətn dərc olunana qədər dəyişə bilər.',
-    privacyBody:
-      'AxtarIS gizliliyinizə hörmət edir. Yalnız xidməti təqdim etmək üçün lazım olan məlumatları — profil, CV və müraciət məlumatlarını — toplayırıq.\n\nMəlumatlarınız üçüncü tərəflərə satılmır. CV faylları təhlükəsiz saxlanılır və yalnız müraciət etdiyiniz işəgötürənlər üçün görünür.\n\nİstənilən vaxt hesabınızı və məlumatlarınızı silə bilərsiniz. Bu sənəd nümunə mətnidir.',
+    lastUpdated: 'Son yenilənmə: 1 sentyabr 2026',
   },
   ai: {
     generateWithAI: 'AI ilə yarat',

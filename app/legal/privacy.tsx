@@ -5,14 +5,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { safeBack } from '@/utils/navigation';
+import { legalContent } from '@/content/legalContent.generated';
 import { ChevronLeft } from 'lucide-react-native';
 
 export default function PrivacyScreen() {
   const { colors, spacing: s, typography: t, radius: r } = useTheme();
-  const { t: tr } = useTranslation();
+  const { t: tr, i18n } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const paragraphs = tr('legal.privacyBody').split('\n\n');
+  const language = (['az', 'en', 'ru'].includes(i18n.language) ? i18n.language : 'az') as
+    | 'az'
+    | 'en'
+    | 'ru';
+  const sections = legalContent[language].privacy;
 
   return (
     <ScrollView
@@ -29,10 +34,19 @@ export default function PrivacyScreen() {
 
       <Text style={[{ color: colors.textTertiary, marginBottom: s.lg }, t.caption]}>{tr('legal.lastUpdated')}</Text>
 
-      {paragraphs.map((paragraph, i) => (
-        <Text key={i} style={[{ color: colors.textSecondary, marginBottom: s.lg, lineHeight: 24 }, t.bodyMedium]}>
-          {paragraph}
-        </Text>
+      {sections.map((section, i) => (
+        <View key={i}>
+          {section.heading ? (
+            <Text style={[{ color: colors.textPrimary, marginBottom: s.sm, marginTop: i === 0 ? 0 : s.md }, t.labelMedium]}>
+              {section.heading}
+            </Text>
+          ) : null}
+          {section.paragraphs.map((paragraph, j) => (
+            <Text key={j} style={[{ color: colors.textSecondary, marginBottom: s.md, lineHeight: 22 }, t.bodySmall]}>
+              {paragraph}
+            </Text>
+          ))}
+        </View>
       ))}
     </ScrollView>
   );

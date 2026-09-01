@@ -4,6 +4,7 @@ import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { TabBarIcon, tabPressListeners } from '@/components/ui/TabBarIcon';
 import { LayoutDashboard, ShieldCheck, Users, Building2, Wallet } from 'lucide-react-native';
 
 export default function AdminLayout() {
@@ -13,8 +14,10 @@ export default function AdminLayout() {
 
   return (
     <Tabs
+      screenListeners={tabPressListeners}
       screenOptions={{
         headerShown: false,
+        animation: 'shift',
         tabBarStyle: {
           backgroundColor: colors.tabBarBackground,
           borderTopColor: colors.tabBarBorder,
@@ -41,35 +44,55 @@ export default function AdminLayout() {
         name="dashboard"
         options={{
           title: tr('admin.dashboard'),
-          tabBarIcon: ({ color }) => <LayoutDashboard size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <LayoutDashboard size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="moderation"
         options={{
           title: tr('admin.moderation'),
-          tabBarIcon: ({ color }) => <ShieldCheck size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <ShieldCheck size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="users"
         options={{
           title: tr('admin.users'),
-          tabBarIcon: ({ color }) => <Users size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Users size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="companies"
         options={{
           title: tr('admin.companies'),
-          tabBarIcon: ({ color }) => <Building2 size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Building2 size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="finance"
         options={{
           title: tr('admin.financeTab'),
-          tabBarIcon: ({ color }) => <Wallet size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Wallet size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
     </Tabs>

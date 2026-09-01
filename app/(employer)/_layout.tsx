@@ -4,6 +4,7 @@ import { StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { TabBarIcon, tabPressListeners } from '@/components/ui/TabBarIcon';
 import { LayoutDashboard, Briefcase, Users, Building2, Settings, UserSearch } from 'lucide-react-native';
 
 export default function EmployerLayout() {
@@ -13,8 +14,10 @@ export default function EmployerLayout() {
 
   return (
     <Tabs
+      screenListeners={tabPressListeners}
       screenOptions={{
         headerShown: false,
+        animation: 'shift',
         tabBarStyle: {
           backgroundColor: colors.tabBarBackground,
           borderTopColor: colors.tabBarBorder,
@@ -49,42 +52,66 @@ export default function EmployerLayout() {
         name="dashboard"
         options={{
           title: tr('employer.dashboard'),
-          tabBarIcon: ({ color }) => <LayoutDashboard size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <LayoutDashboard size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="vacancies"
         options={{
           title: tr('employer.vacancies'),
-          tabBarIcon: ({ color }) => <Briefcase size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Briefcase size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="talent"
         options={{
           title: tr('talent.tab'),
-          tabBarIcon: ({ color }) => <UserSearch size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <UserSearch size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="applicants"
         options={{
           title: tr('employer.applicants'),
-          tabBarIcon: ({ color }) => <Users size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Users size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="company"
         options={{
           title: tr('employer.company'),
-          tabBarIcon: ({ color }) => <Building2 size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Building2 size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: tr('employer.settings'),
-          tabBarIcon: ({ color }) => <Settings size={22} color={color} strokeWidth={1.8} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon focused={focused}>
+              <Settings size={22} color={color} strokeWidth={focused ? 2.1 : 1.8} />
+            </TabBarIcon>
+          ),
         }}
       />
     </Tabs>

@@ -1,0 +1,247 @@
+<title>AxtarIS Launch Handbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #F7F8FB;
+    --card: #FFFFFF;
+    --ink: #131C2E;
+    --ink-soft: #46536E;
+    --ink-faint: #8B96AC;
+    --brand: #2D4797;
+    --brand-soft: #E8EDF5;
+    --teal: #0097A7;
+    --good: #1E7F5C;
+    --line: #D9DFEA;
+    --warn-bg: #FBF3E4;
+    --warn-ink: #7A5A18;
+    --you-bg: #EDF6F7;
+    --you-ink: #0B6570;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0E1524; --card: #16203A; --ink: #E9EDF6; --ink-soft: #AFBACE;
+      --ink-faint: #6E7A93; --brand: #7D9AE0; --brand-soft: #1D2A4A;
+      --teal: #3FBDCB; --good: #4CC593; --line: #2A3554;
+      --warn-bg: #2E2712; --warn-ink: #E3C275; --you-bg: #10303A; --you-ink: #6FD3DF;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E1524; --card: #16203A; --ink: #E9EDF6; --ink-soft: #AFBACE;
+    --ink-faint: #6E7A93; --brand: #7D9AE0; --brand-soft: #1D2A4A;
+    --teal: #3FBDCB; --good: #4CC593; --line: #2A3554;
+    --warn-bg: #2E2712; --warn-ink: #E3C275; --you-bg: #10303A; --you-ink: #6FD3DF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 1rem; line-height: 1.6;
+  }
+  .page { max-width: 50rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  .doc-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    flex-wrap: wrap; border-bottom: 2px solid var(--ink);
+    padding-bottom: .9rem; margin-bottom: 1.6rem;
+  }
+  .wordmark { font-weight: 700; font-size: 1.05rem; }
+  .wordmark .is { color: var(--brand); }
+  .doc-meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: .72rem; color: var(--ink-faint);
+    text-transform: uppercase; letter-spacing: .09em;
+  }
+  h1 {
+    font-size: clamp(1.7rem, 4.5vw, 2.3rem); font-weight: 700;
+    letter-spacing: -.015em; line-height: 1.2; margin: 0 0 .5rem; text-wrap: balance;
+  }
+  .subtitle { color: var(--ink-soft); margin: 0 0 1.6rem; max-width: 62ch; }
+  nav.toc {
+    position: sticky; top: 0; z-index: 5;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(6px);
+    display: flex; gap: .4rem; flex-wrap: wrap;
+    padding: .6rem 0; margin: 0 0 2rem; border-bottom: 1px solid var(--line);
+  }
+  nav.toc a {
+    font-family: 'IBM Plex Mono', monospace; font-size: .74rem; letter-spacing: .04em;
+    color: var(--ink-soft); text-decoration: none;
+    border: 1px solid var(--line); border-radius: 999px; padding: .3rem .8rem;
+    background: var(--card);
+  }
+  nav.toc a:hover, nav.toc a:focus-visible { color: var(--brand); border-color: var(--brand); outline: none; }
+  h2 {
+    font-size: 1.45rem; font-weight: 700; letter-spacing: -.01em;
+    margin: 3rem 0 .35rem; padding-top: 1.6rem; border-top: 2px solid var(--ink);
+    scroll-margin-top: 4.5rem; text-wrap: balance;
+  }
+  .chapter-sub { color: var(--ink-soft); margin: 0 0 1.4rem; }
+  h3 {
+    font-size: 1.06rem; font-weight: 600; margin: 1.9rem 0 .6rem;
+    display: flex; align-items: baseline; gap: .6rem; text-wrap: balance;
+  }
+  h3 .n { font-family: 'IBM Plex Mono', monospace; font-size: .74rem; color: var(--teal); font-weight: 500; }
+  p { margin: 0 0 .85rem; max-width: 70ch; }
+  ul, ol { margin: 0 0 1rem; padding-left: 1.2rem; }
+  li { margin-bottom: .5rem; max-width: 68ch; }
+  code {
+    font-family: 'IBM Plex Mono', monospace; font-size: .86em;
+    background: var(--brand-soft); border-radius: 5px; padding: .08em .4em;
+  }
+  .tag {
+    display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: .66rem;
+    letter-spacing: .07em; border-radius: 5px; padding: .12em .5em;
+    vertical-align: .12em; margin-right: .35rem;
+  }
+  .tag.you { background: var(--you-bg); color: var(--you-ink); }
+  .tag.dev { background: var(--brand-soft); color: var(--brand); }
+  .table-wrap { overflow-x: auto; margin: 0 0 1rem; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: .92rem;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+  }
+  th {
+    text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: .68rem;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); font-weight: 500;
+    padding: .6rem .85rem; border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--card) 55%, var(--paper));
+  }
+  td { padding: .58rem .85rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .callout {
+    background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px;
+    padding: .8rem 1rem; font-size: .92rem; margin: 0 0 1rem; max-width: 70ch;
+  }
+  .callout.brand { background: var(--brand-soft); color: var(--ink); border-left: 3px solid var(--brand); border-radius: 0 10px 10px 0; }
+  .footer {
+    margin-top: 3.5rem; padding-top: 1.2rem; border-top: 2px solid var(--ink);
+    font-size: .88rem; color: var(--ink-soft); display: flex; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+  }
+</style>
+
+<div class="page">
+  <header class="doc-head">
+    <div class="wordmark">Axtar<span class="is">İS</span></div>
+    <div class="doc-meta">Launch handbook · 1 Sep 2026</div>
+  </header>
+
+  <h1>From this repo to the app stores</h1>
+  <p class="subtitle">The complete operator playbook: publishing steps in dependency order, the payment architecture decision, and the post-launch product roadmap. <span class="tag you">YOU</span> = needs the owner personally · <span class="tag dev">DEV</span> = runs from the repo.</p>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#publish">1 · Publishing steps</a>
+    <a href="#payments">2 · Payment architecture</a>
+    <a href="#roadmap">3 · Post-launch roadmap</a>
+  </nav>
+
+  <h2 id="publish">1 · Publishing steps</h2>
+  <p class="chapter-sub">Total cost to launch ≈ <strong>$130</strong> (+$99/yr Apple). The critical path is account verification — start Phase 0 and the store signups immediately.</p>
+
+  <h3><span class="n">PHASE 0</span> Company prerequisites — week 1, everything in parallel</h3>
+  <ol>
+    <li><span class="tag you">YOU</span><strong>Register the Azerbaijan MMC</strong> via e-taxes.gov.az (ASAN İmza ~18 AZN; e-registration free; ~3 business days; no minimum capital). The MMC unlocks <em>organization</em> accounts on both stores — avoiding Google's 12-tester rule and keeping your personal name off the listing.</li>
+    <li><span class="tag you">YOU</span>Right after registration, apply for the <strong>KOBIA startup certificate</strong> (smb.gov.az) — 3-year profit-tax exemption on innovation income; confirm scope with your accountant.</li>
+    <li><span class="tag you">YOU</span>Request a <strong>D-U-N-S number</strong> via Apple's free flow (developer.apple.com/enroll/duns-lookup) — allow up to 30 days, usually faster.</li>
+    <li><span class="tag you">YOU</span>Open a company bank account (ask for USD too — Google pays out in USD).</li>
+    <li><span class="tag dev">DEV</span>Fill the legal placeholders (docs/legal/README.md lists them: legal name, VÖEN, address, effective date), then <code>node scripts/generate-legal-content.mjs</code> and redeploy the landing site.</li>
+  </ol>
+  <div class="callout">Fallback if shipping before the MMC exists: Apple individual enrollment (personal name shows as seller) + Google personal account — but the personal Google account requires a closed test with 12 testers opted in for 14 continuous days before production.</div>
+
+  <h3><span class="n">PHASE 1</span> Store accounts — week 1–2</h3>
+  <ol>
+    <li><span class="tag you">YOU</span><strong>Google Play Console</strong> — organization account under the MMC, $25 one-time. Also set up the merchant/payments profile now (Azerbaijan supported; USD payouts).</li>
+    <li><span class="tag you">YOU</span><strong>Apple Developer Program</strong> — organization enrollment, $99/yr, needs the D-U-N-S. If org enrollment stalls from Azerbaijan, enroll as individual and migrate later.</li>
+    <li><span class="tag you">YOU</span><strong>Sentry</strong> (free tier): org <code>axtaris</code>, project <code>axtaris-app</code>. <span class="tag dev">DEV</span> Put the DSN in eas.json as <code>EXPO_PUBLIC_SENTRY_DSN</code> + set <code>SENTRY_AUTH_TOKEN</code> as an EAS secret. Crash reporting is already wired and inert until the DSN exists.</li>
+  </ol>
+
+  <h3><span class="n">PHASE 2</span> Push credentials — 30 minutes, blocks every store build</h3>
+  <div class="callout brand">The entire push pipeline (tokens → DB triggers → edge function → Expo) is built and deployed. Only credentials are missing — and <strong>Android builds now fail until google-services.json exists</strong> (deliberate forcing function).</div>
+  <ol>
+    <li><span class="tag you">YOU</span>console.firebase.google.com → Add project "AxtarIS".</li>
+    <li><span class="tag you">YOU</span>Add app → Android, package <strong>az.axtaris.app</strong> → download <code>google-services.json</code> → <span class="tag dev">DEV</span> place at repo root and commit (it holds no secrets).</li>
+    <li><span class="tag you">YOU</span>Firebase → Project settings → Service accounts → <strong>Generate new private key</strong>. Never commit this.</li>
+    <li><span class="tag dev">DEV</span><code>npx eas credentials -p android</code> → upload the key as the FCM V1 credential.</li>
+    <li><span class="tag dev">DEV</span>Re-sync the push secret to one value: <code>openssl rand -hex 32</code> → <code>npx supabase secrets set PUSH_SECRET=…</code> → same value into Vault (<code>vault.update_secret</code> in the SQL editor).</li>
+    <li><span class="tag dev">DEV</span>After the Apple account exists: <code>npx eas credentials -p ios</code> → EAS creates the APNs key.</li>
+    <li><strong>Verify on device:</strong> install fresh build → sign in → token appears in profiles → chat message from second account (backgrounded) → push arrives → tap opens the chat. Repeat foregrounded and from killed state.</li>
+  </ol>
+
+  <h3><span class="n">PHASE 3</span> Listing assets &amp; metadata — week 2</h3>
+  <ul>
+    <li><strong>Screenshots</strong>: Android 1080×1920; iOS 6.7" (1290×2796) + 6.5". Set: home/recommendations, vacancy detail with match explanation, profile builder, chat, employer dashboard. Play also needs a 1024×500 feature graphic + 512² icon.</li>
+    <li><strong>Copy</strong>: short (80) + full (4000) descriptions, Apple subtitle (30) + keywords (100). Azerbaijani first; use the app's own locale vocabulary.</li>
+    <li><strong>Forms</strong>: Play Data Safety + Apple App Privacy answers are pre-drafted in RELEASE_CHECKLIST.md §6 and match the code. Privacy policy URL: <code>axtaris.app/legal/privacy</code> · Account deletion URL: <code>axtaris.app/legal/delete-account</code> (both live).</li>
+    <li><span class="tag you">YOU</span><strong>Rotate the seed-account passwords first</strong> (hr@azercell.com / ali@example.com — a formerly-committed password is still live), then create clean candidate + employer demo accounts for review notes.</li>
+  </ul>
+
+  <h3><span class="n">PHASE 4</span> Builds &amp; submission — week 2–3</h3>
+  <ol>
+    <li><span class="tag dev">DEV</span>Gates: <code>tsc</code> + <code>jest</code> green, <code>npm run supabase:verify</code>, migrations fully applied.</li>
+    <li><span class="tag dev">DEV</span><code>npx eas build -p android --profile production</code> (autoIncrement is on; the old 8/7 AAB is obsolete — no FCM baked in).</li>
+    <li><span class="tag dev">DEV</span><code>npx eas build -p ios --profile production</code> — first run is interactive for credentials.</li>
+    <li><strong>Play path</strong>: Internal testing → Closed testing (a handful of real users, ~a week) → Production at 20% staged rollout.</li>
+    <li><strong>Apple</strong>: <code>npx eas submit -p ios</code> → TestFlight → App Review. Review notes: demo accounts + "all payments disabled — free during beta".</li>
+    <li><strong>Review-risk answers</strong> (already mitigated in code): no digital purchases sold; UGC has report + block on chat/vacancies/companies/profiles; account deletion in-app + web; don't ship iOS without the APNs key uploaded.</li>
+  </ol>
+
+  <h3><span class="n">PHASE 5</span> Post-approval</h3>
+  <ul>
+    <li>Staged rollout → 100% over ~3 days if crash-free rate holds (Sentry + Play vitals).</li>
+    <li>Flip the landing site's store links from "Tezliklə" to real URLs (landing/src/config/site.ts) and redeploy.</li>
+    <li>Register the personal-data information system on e-gov (required by the AZ personal-data law).</li>
+  </ul>
+
+  <h2 id="payments">2 · Payment architecture</h2>
+  <p class="chapter-sub">Full analysis with sources: <code>docs/payments/payment-system-analysis.md</code>. CEO summary (AZ) is its own page.</p>
+
+  <div class="callout brand"><strong>The decision:</strong> Employer B2B → Paddle web checkout on the landing site (merchant of record; accepts Azerbaijan sellers, even pre-incorporation). Candidate consumer → RevenueCat in-app purchases at 15% (Small Business Program) — mandatory anyway, since Azerbaijan's iOS storefront allows no external payment links. Phase 2: Payriff/epoint AZN checkout locally.</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Channel</th><th>Provider</th><th>Take rate</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Employer plans ($19/$49)</td><td>Paddle (web)</td><td class="num">5% + $0.50</td><td>MoR handles global VAT, invoices, chargebacks; Slack/Zoom pattern is store-compliant when the app shows no purchase UI</td></tr>
+        <tr><td>Candidate plans ($5/$15)</td><td>RevenueCat + IAP</td><td class="num">15%</td><td>Apple 3.1.1 mandates IAP for in-app-consumed subscriptions outside US/EU link-out regimes; Google similar until Sept 2027</td></tr>
+        <tr><td>AZ mass market (phase 2)</td><td>Payriff / epoint</td><td class="num">~2–3%</td><td>AZN cards, local trust, avoids the 18% bank-withholding trap on foreign B2C payments (from Sept 2026)</td></tr>
+        <tr><td>Rejected: Stripe direct</td><td>—</td><td class="num">—</td><td>No Azerbaijan support; requires a foreign entity + self-managed tax</td></tr>
+        <tr><td>Fallback: Polar.sh</td><td>MoR</td><td class="num">5% + $0.50</td><td>Pre-vetted backup if Paddle onboarding fails; AZ payouts confirmed</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ul>
+    <li><strong>Entitlement sync</strong>: Paddle webhook + RevenueCat webhook → two Supabase edge functions → one subscriptions row per (user, audience) → the existing <code>entitlements.ts</code> module stays the single source of truth. Idempotency on provider event id; grace status on billing issues; the DB applications-per-day constraint stays coordinated with plan changes.</li>
+    <li><strong>Compliance line in the app</strong>: login-gated unlocks always; no web-checkout links, prices, or steering anywhere in-app (outside the US storefront); candidate IAP is the only purchase UI.</li>
+    <li><strong>Timeline</strong>: ~4–6 weeks of integration once store accounts exist; Android web-link checkout re-opens Sept 30 2027 (Epic settlement) — revisit fees then.</li>
+  </ul>
+
+  <h2 id="roadmap">3 · Post-launch roadmap (next 3 months)</h2>
+  <p class="chapter-sub">From the competitive analysis vs boss.az / hh1.az / jobsearch.az and a full codebase walk. Details: <code>docs/product-suggestions.md</code>.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>#</th><th>Item</th><th>Why it's next</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>AZ payment gateway</td><td>Every other lever activates into a void until checkout is real</td></tr>
+        <tr><td class="num">2</td><td>FCM/APNs credentials</td><td>The entire engagement system is built and dark — configuration, not construction</td></tr>
+        <tr><td class="num">3</td><td>Saved-search alerts + weekly digest</td><td>Best impact-per-effort in the repo; only the producer job is missing</td></tr>
+        <tr><td class="num">4</td><td>Search facets (salary/experience/category)</td><td>The most-noticed table-stakes gap vs every AZ incumbent</td></tr>
+        <tr><td class="num">5</td><td>Messages tab + unread badges</td><td>Chat is the north star but is buried; the unread hook already exists</td></tr>
+        <tr><td class="num">6</td><td>Telegram channel + alert bot</td><td>The AZ-native acquisition channel; doubles as a push-independent fallback</td></tr>
+        <tr><td class="num">7</td><td>Wire spotlightProfile + messageBeforeApply</td><td>Two PAID entitlements currently do nothing — monetization integrity before the first charge</td></tr>
+        <tr><td class="num">8</td><td>One-tap apply</td><td>Cheapest measurable lift on the already-instrumented view→apply funnel</td></tr>
+        <tr><td class="num">9</td><td>"Responds quickly" employer badge</td><td>Attacks the #1 job-board complaint (silence) with data already collected</td></tr>
+        <tr><td class="num">10</td><td>Salary insights MVP</td><td>No AZ board publishes salary data — start aggregating now, the moat compounds</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Retention mechanics ready to switch on:</strong> "a company viewed your profile" push (one DB trigger — ties into the paid whoViewedYou tier), weekly new-matches digest, profile-freshness tap (hh.ru's "raise resume" mechanic). Streaks should tie to profile quality, never application count.</p>
+  <p><strong>Deliberately deferred:</strong> pgvector matching, video intros, referrals, ATS kanban, CV PDF export, social sign-in (triggers Apple's Sign-in-with-Apple requirement — add all providers in one pass).</p>
+
+  <footer class="footer">
+    <span>Sources live in the repo: docs/store-publishing-guide.md · docs/payments/ · docs/product-suggestions.md · docs/legal/</span>
+    <span>info@axtaris.app</span>
+  </footer>
+</div>

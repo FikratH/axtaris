@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { RowSkeleton } from '@/components/ui/SkeletonLoader';
 import { AdminUserSummary, UserRole } from '@/types/models';
 import { getRoleLabel } from '@/utils/labels';
 import { Search as SearchIcon } from 'lucide-react-native';
@@ -99,7 +99,7 @@ export default function AdminUsersScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           isLoading ? (
-            <View>{Array.from({ length: 5 }).map((_, i) => <VacancyCardSkeleton key={i} />)}</View>
+            <View>{Array.from({ length: 5 }).map((_, i) => <RowSkeleton key={i} />)}</View>
           ) : isError ? (
             <EmptyState title={tr('common.error')} subtitle={tr('common.retry')} actionTitle={tr('common.retry')} onAction={() => refetch()} />
           ) : (

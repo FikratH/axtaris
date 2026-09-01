@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -11,6 +11,8 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { AnimatedListItem } from '@/components/ui/Animated';
+import { AnimatedPressable } from '@/components/ui/AnimatedPressable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { Application, ApplicationStatus } from '@/types/models';
@@ -81,17 +83,17 @@ export default function ApplicationsScreen() {
     }
   }, [startChat, user, tr, router]);
 
-  const renderApplication = React.useCallback(({ item }: { item: Application }) => {
+  const renderApplication = React.useCallback(({ item, index }: { item: Application; index: number }) => {
     const appliedTime = new Date(item.appliedAt).getTime();
     const days = Number.isNaN(appliedTime)
       ? null
       : Math.floor((Date.now() - appliedTime) / (1000 * 60 * 60 * 24));
 
     return (
-      <TouchableOpacity
-        activeOpacity={0.7}
+      <AnimatedListItem index={index}>
+      <AnimatedPressable
         onPress={() => router.push({ pathname: '/vacancy/[id]', params: { id: item.vacancyId } })}
-        style={[
+        style={StyleSheet.flatten([
           styles.applicationCard,
           {
             backgroundColor: colors.cardBackground,
@@ -99,7 +101,7 @@ export default function ApplicationsScreen() {
             borderRadius: r.lg,
             padding: s.lg,
           },
-        ]}
+        ])}
       >
         <View style={styles.cardHeader}>
           <Avatar uri={item.vacancy?.company?.logoUrl} name={item.vacancy?.company?.name} size={42} />
@@ -140,7 +142,8 @@ export default function ApplicationsScreen() {
             icon={<MessageCircle size={14} color={colors.textPrimary} strokeWidth={1.8} />}
           />
         </View>
-      </TouchableOpacity>
+      </AnimatedPressable>
+      </AnimatedListItem>
     );
   }, [router, colors, s, t, r, tr, getStatusLabel, handleMessage, startChat]);
 
@@ -207,6 +210,9 @@ export default function ApplicationsScreen() {
         renderItem={renderApplication}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={colors.primary} />
+        }
         ListEmptyComponent={
           isLoading ? (
             <View>

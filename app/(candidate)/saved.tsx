@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
@@ -13,6 +13,7 @@ import { useSavedVacancies } from '@/hooks/useVacancyQueries';
 import { VacancyCard } from '@/components/ui/VacancyCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { AnimatedListItem } from '@/components/ui/Animated';
 import { Bookmark } from 'lucide-react-native';
 
 export default function SavedScreen() {
@@ -43,13 +44,15 @@ export default function SavedScreen() {
   );
   const handleSave = React.useCallback((id: string) => toggleSave.mutate(id), [toggleSave]);
   const renderItem = React.useCallback(
-    ({ item }: { item: (typeof savedJobs)[number] }) => (
-      <VacancyCard
-        vacancy={item}
-        onPress={handlePress}
-        onSave={handleSave}
-        saved={savedJobIds.includes(item.id)}
-      />
+    ({ item, index }: { item: (typeof savedJobs)[number]; index: number }) => (
+      <AnimatedListItem index={index}>
+        <VacancyCard
+          vacancy={item}
+          onPress={handlePress}
+          onSave={handleSave}
+          saved={savedJobIds.includes(item.id)}
+        />
+      </AnimatedListItem>
     ),
     [handlePress, handleSave, savedJobIds]
   );
@@ -61,7 +64,7 @@ export default function SavedScreen() {
           {tr('candidate.saved')}
         </Text>
         <Text style={[{ color: colors.textSecondary, ...t.bodySmall, marginTop: s.xs }]}>
-          {savedJobs.length} {tr('employer.vacancies').toLowerCase()}
+          {tr('candidate.searchResultsCount', { count: savedJobs.length })}
         </Text>
       </View>
 
@@ -71,6 +74,9 @@ export default function SavedScreen() {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={colors.primary} />
+        }
         ListEmptyComponent={
           isLoading || savedJobsLoading ? (
             <View>

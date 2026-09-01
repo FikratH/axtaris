@@ -331,6 +331,11 @@ export default {
     noApplicationsDesc: 'Start applying to vacancies',
     applyNow: 'Apply now',
     applied: 'Applied',
+    appliedCelebrationTitle: 'Application sent!',
+    appliedCelebrationBody: 'The employer will see it right away. Track its status in your applications.',
+    viewApplicationsCta: 'My applications',
+    completionCelebrationTitle: 'Profile 100% complete!',
+    completionCelebrationBody: 'Employers now see your full profile. Time to apply with confidence.',
     saveJob: 'Save',
     unsaveJob: 'Unsave',
     applicationStatus: 'Application status',
@@ -533,6 +538,9 @@ export default {
     salaryRange: 'Salary range',
     experienceRequired: 'Required experience',
     publishVacancy: 'Publish vacancy',
+    publishCelebrationTitle: 'Vacancy is live!',
+    publishCelebrationBody: 'Candidates can now find it and apply.',
+    viewVacanciesCta: 'My vacancies',
     saveDraft: 'Save as draft',
     viewApplicants: 'View applicants',
     review: 'Review',
@@ -639,11 +647,7 @@ export default {
   legal: {
     termsTitle: 'Terms of Service',
     privacyTitle: 'Privacy Policy',
-    lastUpdated: 'Last updated: 2026',
-    termsBody:
-      'By using the AxtarIS platform you agree to these terms. The platform is designed to connect job seekers with employers.\n\nUsers must provide accurate information and use the platform only for lawful purposes. Prohibited content or abuse may result in account suspension.\n\nThis document is placeholder text and may change before the final legal version is published.',
-    privacyBody:
-      'AxtarIS respects your privacy. We collect only the data needed to provide the service — profile, CV and application details.\n\nYour data is not sold to third parties. CV files are stored securely and are only visible to employers you have applied to.\n\nYou can delete your account and data at any time. This document is placeholder text.',
+    lastUpdated: 'Last updated: 1 September 2026',
   },
   ai: {
     generateWithAI: 'Generate with AI',

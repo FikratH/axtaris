@@ -14,10 +14,12 @@ import Animated, {
   SlideInRight,
   SlideOutLeft,
   Layout,
+  LinearTransition,
 } from 'react-native-reanimated';
+import { springs, staggerDelay, useMotionEnabled } from '@/theme/motion';
 
 // ── Re-export common layout animations for direct use ────────
-export { FadeIn, FadeInDown, FadeInUp, FadeOut, SlideInRight, SlideOutLeft, Layout };
+export { FadeIn, FadeInDown, FadeInUp, FadeOut, SlideInRight, SlideOutLeft, Layout, LinearTransition };
 
 // ── FadeInView — fades in children on mount ──────────────────
 interface FadeInViewProps {
@@ -88,49 +90,39 @@ export function StaggeredItem({ index, staggerDelay = 60, children, style }: Sta
   );
 }
 
-// ── PressableScale — scale down on press, spring back ────────
-interface PressableScaleProps {
-  onPress?: () => void;
-  disabled?: boolean;
-  scaleValue?: number;
+// PressableScale was removed: it never invoked onPress and faked press
+// detection with touch events. Use ui/AnimatedPressable instead.
+
+// ── AnimatedListItem — standard list-row motion ──────────────
+// Springy staggered entrance for the first screenful, immediate entrance for
+// rows mounting during scroll, springy layout shifts when neighbours are
+// removed, quick fade on exit. Under reduced motion rows render statically.
+interface AnimatedListItemProps {
+  index?: number;
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
 }
 
-export function PressableScale({
-  onPress,
-  disabled,
-  scaleValue = 0.97,
-  children,
-  style,
-}: PressableScaleProps) {
-  const scale = useSharedValue(1);
+export function AnimatedListItem({ index = 0, children, style }: AnimatedListItemProps) {
+  const motionEnabled = useMotionEnabled();
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    scale.value = withSpring(scaleValue, { damping: 15, stiffness: 300 });
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
-  };
+  if (!motionEnabled) {
+    return <Animated.View style={style}>{children}</Animated.View>;
+  }
 
   return (
-    <Animated.View style={[style, animatedStyle]}>
-      <Animated.View
-        onTouchStart={disabled ? undefined : handlePressIn}
-        onTouchEnd={disabled ? undefined : handlePressOut}
-        onTouchCancel={disabled ? undefined : handlePressOut}
-      >
-        {typeof onPress === 'function' ? (
-          <Animated.View>{children}</Animated.View>
-        ) : (
-          children
-        )}
-      </Animated.View>
+    <Animated.View
+      entering={FadeInDown.delay(staggerDelay(index))
+        .springify()
+        .damping(springs.gentle.damping)
+        .stiffness(springs.gentle.stiffness)}
+      exiting={FadeOut.duration(150)}
+      layout={LinearTransition.springify()
+        .damping(springs.gentle.damping)
+        .stiffness(springs.gentle.stiffness)}
+      style={style}
+    >
+      {children}
     </Animated.View>
   );
 }

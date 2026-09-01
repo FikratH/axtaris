@@ -56,6 +56,7 @@ export function Avatar({ uri, name, size = 44, style, onPress, editable = false 
       <Image
         source={resolvedSource}
         onError={() => setImageFailed(true)}
+        transition={180}
         style={[{ width: size, height: size, borderRadius }, style as ImageStyle]}
       />
     )

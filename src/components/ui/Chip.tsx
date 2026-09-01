@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
+import { Text, StyleSheet, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
+import { AnimatedPressable } from './AnimatedPressable';
 
 interface ChipProps {
   label: string;
@@ -13,11 +14,11 @@ export function Chip({ label, selected = false, onPress, style }: ChipProps) {
   const { colors, radius: r, typography } = useTheme();
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.7}
+    <AnimatedPressable
       onPress={onPress}
       disabled={!onPress}
-      style={[
+      pressedScale={0.95}
+      style={StyleSheet.flatten([
         styles.base,
         {
           backgroundColor: selected ? colors.chipActive : colors.chip,
@@ -26,7 +27,7 @@ export function Chip({ label, selected = false, onPress, style }: ChipProps) {
           borderColor: selected ? colors.primary : colors.border,
         },
         style,
-      ]}
+      ])}
     >
       <Text
         style={[
@@ -37,7 +38,7 @@ export function Chip({ label, selected = false, onPress, style }: ChipProps) {
       >
         {label}
       </Text>
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 }
 

@@ -1,6 +1,15 @@
-import React, { useRef, useState } from 'react';
-import { View, TextInput, StyleSheet, Keyboard } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, TextInput, StyleSheet, Keyboard, Platform } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/theme/ThemeContext';
+import { springs, useMotionEnabled } from '@/theme/motion';
 
 interface OTPInputProps {
   length?: number;
@@ -12,6 +21,26 @@ export function OTPInput({ length = 6, onComplete, error = false }: OTPInputProp
   const { colors, radius: r } = useTheme();
   const [values, setValues] = useState<string[]>(Array(length).fill(''));
   const inputs = useRef<(TextInput | null)[]>([]);
+  const motionEnabled = useMotionEnabled();
+  const shake = useSharedValue(0);
+
+  // A wrong code shakes the whole row and buzzes — the classic "try again"
+  // gesture; reduced motion keeps the border-color error state only.
+  useEffect(() => {
+    if (!error) return;
+    if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    if (motionEnabled) {
+      shake.value = withSequence(
+        withTiming(-8, { duration: 50 }),
+        withTiming(8, { duration: 50 }),
+        withTiming(-6, { duration: 50 }),
+        withTiming(6, { duration: 50 }),
+        withSpring(0, springs.snappy)
+      );
+    }
+  }, [error, motionEnabled, shake]);
+
+  const shakeStyle = useAnimatedStyle(() => ({ transform: [{ translateX: shake.value }] }));
 
   const commit = (newValues: string[], focusIndex: number) => {
     setValues(newValues);
@@ -61,12 +90,12 @@ export function OTPInput({ length = 6, onComplete, error = false }: OTPInputProp
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, shakeStyle]}>
       {Array(length)
         .fill(0)
         .map((_, i) => (
+          <OTPCell key={i} filled={!!values[i]} motionEnabled={motionEnabled}>
           <TextInput
-            key={i}
             ref={(ref) => { inputs.current[i] = ref; }}
             style={[
               styles.cell,
@@ -90,9 +119,26 @@ export function OTPInput({ length = 6, onComplete, error = false }: OTPInputProp
             onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, i)}
             selectTextOnFocus
           />
+          </OTPCell>
         ))}
-    </View>
+    </Animated.View>
   );
+}
+
+/** Each cell pops slightly when its digit lands. */
+function OTPCell({ filled, motionEnabled, children }: { filled: boolean; motionEnabled: boolean; children: React.ReactNode }) {
+  const scale = useSharedValue(1);
+  const wasFilled = useRef(filled);
+
+  useEffect(() => {
+    if (filled && !wasFilled.current && motionEnabled) {
+      scale.value = withSequence(withSpring(1.08, springs.bouncy), withSpring(1, springs.snappy));
+    }
+    wasFilled.current = filled;
+  }, [filled, motionEnabled, scale]);
+
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return <Animated.View style={style}>{children}</Animated.View>;
 }
 
 const styles = StyleSheet.create({

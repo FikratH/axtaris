@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/ThemeContext';
+import { AnimatedPressable } from './AnimatedPressable';
 
 interface CardProps {
   children: React.ReactNode;
@@ -68,9 +69,9 @@ export function Card({
 
   if (onPress) {
     return (
-      <TouchableOpacity activeOpacity={0.7} onPress={onPress} style={cardStyle}>
+      <AnimatedPressable onPress={onPress} style={StyleSheet.flatten(cardStyle)}>
         {children}
-      </TouchableOpacity>
+      </AnimatedPressable>
     );
   }
 

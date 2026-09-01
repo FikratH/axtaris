@@ -4,7 +4,7 @@ PLACEHOLDERS TO FILL BEFORE PUBLICATION:
 2. [REGISTERED ADDRESS] — registered office address
 3. [EFFECTIVE DATE] — the date this Policy takes effect
 4. [SUPABASE REGION — confirm in dashboard] — hosting region of the production Supabase project
-5. [WEB DELETION URL] — public web page URL for account deletion (required by Google Play)
+5. https://axtaris.app/legal/delete-account — public web page URL for account deletion (required by Google Play)
 -->
 
 # AxtarIS Privacy Policy
@@ -114,7 +114,7 @@ To exercise any right, use the in-app tools or write to **info@axtaris.app**. We
 ## 12. Deleting your account
 
 - **In the app:** Profile → Settings → **Delete account**. This permanently deletes your account and the data listed in Section 10.
-- **On the web:** [WEB DELETION URL] — for deletion without reinstalling the app.
+- **On the web:** https://axtaris.app/legal/delete-account — for deletion without reinstalling the app.
 
 Deletion is permanent; we cannot restore a deleted account.
 

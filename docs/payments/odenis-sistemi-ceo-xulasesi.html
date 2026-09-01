@@ -1,0 +1,246 @@
+<title>AxtarIS Ödəniş Qərarı</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #F7F8FB;
+    --card: #FFFFFF;
+    --ink: #131C2E;
+    --ink-soft: #46536E;
+    --ink-faint: #8B96AC;
+    --brand: #2D4797;
+    --brand-soft: #E8EDF5;
+    --teal: #0097A7;
+    --good: #1E7F5C;
+    --line: #D9DFEA;
+    --warn-bg: #FBF3E4;
+    --warn-ink: #7A5A18;
+  }
+  :root:not([data-theme="light"]) { }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0E1524;
+      --card: #16203A;
+      --ink: #E9EDF6;
+      --ink-soft: #AFBACE;
+      --ink-faint: #6E7A93;
+      --brand: #7D9AE0;
+      --brand-soft: #1D2A4A;
+      --teal: #3FBDCB;
+      --good: #4CC593;
+      --line: #2A3554;
+      --warn-bg: #2E2712;
+      --warn-ink: #E3C275;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0E1524;
+    --card: #16203A;
+    --ink: #E9EDF6;
+    --ink-soft: #AFBACE;
+    --ink-faint: #6E7A93;
+    --brand: #7D9AE0;
+    --brand-soft: #1D2A4A;
+    --teal: #3FBDCB;
+    --good: #4CC593;
+    --line: #2A3554;
+    --warn-bg: #2E2712;
+    --warn-ink: #E3C275;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+  .page { max-width: 46rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  .doc-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 1rem; flex-wrap: wrap;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: .9rem; margin-bottom: 2.2rem;
+  }
+  .wordmark { font-weight: 700; letter-spacing: .01em; font-size: 1.05rem; }
+  .wordmark .is { color: var(--brand); }
+  .doc-meta {
+    font-family: 'IBM Plex Mono', monospace; font-size: .72rem;
+    color: var(--ink-faint); text-transform: uppercase; letter-spacing: .09em;
+  }
+  h1 {
+    font-size: clamp(1.7rem, 4.5vw, 2.3rem); line-height: 1.2;
+    font-weight: 700; letter-spacing: -.015em; margin: 0 0 .4rem;
+    text-wrap: balance;
+  }
+  .subtitle { color: var(--ink-soft); margin: 0 0 2.4rem; font-size: 1.02rem; }
+  .thesis {
+    background: var(--brand-soft);
+    border-left: 3px solid var(--brand);
+    border-radius: 0 10px 10px 0;
+    padding: 1.15rem 1.3rem;
+    font-size: 1.12rem; line-height: 1.55; font-weight: 500;
+    margin: 0 0 2.6rem;
+    text-wrap: balance;
+  }
+  h2 {
+    font-size: 1.16rem; font-weight: 600; letter-spacing: -.005em;
+    margin: 2.6rem 0 .8rem; padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+    display: flex; align-items: baseline; gap: .65rem;
+    text-wrap: balance;
+  }
+  h2 .n {
+    font-family: 'IBM Plex Mono', monospace; font-size: .78rem;
+    color: var(--teal); font-weight: 500;
+  }
+  p { margin: 0 0 .9rem; }
+  ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin-bottom: .55rem; }
+  li strong, p strong { font-weight: 600; }
+  .flow {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 1rem 1.15rem; margin: 0 0 1rem;
+  }
+  .flow-title { font-weight: 600; font-size: .95rem; margin-bottom: .5rem; }
+  .flow-steps {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .45rem;
+    font-size: .9rem; color: var(--ink-soft);
+  }
+  .flow-steps .step {
+    background: var(--paper); border: 1px solid var(--line);
+    border-radius: 999px; padding: .28rem .75rem; white-space: normal;
+  }
+  .flow-steps .arr { color: var(--teal); font-weight: 600; }
+  .table-wrap { overflow-x: auto; margin: 0 0 1rem; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: .93rem;
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    overflow: hidden;
+  }
+  th {
+    text-align: left; font-family: 'IBM Plex Mono', monospace;
+    font-size: .7rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--ink-faint); font-weight: 500;
+    padding: .65rem .9rem; border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--card) 55%, var(--paper));
+  }
+  td { padding: .62rem .9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td .keep { color: var(--good); font-weight: 600; }
+  .note {
+    background: var(--warn-bg); color: var(--warn-ink);
+    border-radius: 10px; padding: .8rem 1rem; font-size: .92rem;
+    margin: 0 0 1rem;
+  }
+  .contact {
+    margin-top: 3rem; padding-top: 1.2rem; border-top: 2px solid var(--ink);
+    display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+    font-size: .9rem; color: var(--ink-soft);
+  }
+  .contact a { color: var(--brand); text-decoration: none; border-bottom: 1px solid currentColor; }
+  .contact a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+</style>
+
+<div class="page" lang="az">
+  <header class="doc-head">
+    <div class="wordmark">Axtar<span class="is">İS</span></div>
+    <div class="doc-meta">CEO xülasəsi · 1 sentyabr 2026</div>
+  </header>
+
+  <h1>Ödəniş sistemini necə quracağıq</h1>
+  <p class="subtitle">Texniki araşdırmanın sadə dildə xülasəsi — qərar, xərclər, risklər və bizdən tələb olunanlar.</p>
+
+  <div class="thesis">
+    Şirkətlər (işəgötürənlər) abunə haqqını <strong>saytımızda</strong> ödəyəcək,
+    namizədlər isə telefondakı <strong>tətbiqin içində</strong> — Apple və Google vasitəsilə.
+    Bir müddət sonra Azərbaycan kartları üçün <strong>yerli manat ödənişini</strong> də əlavə edəcəyik.
+  </div>
+
+  <h2><span class="n">01</span> Niyə belə?</h2>
+  <ul>
+    <li><strong>Apple-ın qaydası belədir.</strong> Adi istifadəçiyə (namizədə) tətbiqin içində abunə satırıqsa, ödəniş mütləq Apple-ın öz sistemindən keçməlidir. Başqa yol qadağandır — pozsaq, tətbiqi mağazadan çıxara bilərlər. Google-da da hələlik oxşar qayda var.</li>
+    <li><strong>Şirkətlərə isə saytdan satmaq olar.</strong> Biznes müştərilərə xidməti saytda satıb tətbiqdə istifadə etdirmək dünyada qəbul olunmuş yoldur — Slack və Zoom belə işləyir. Saytdan satanda Apple-a heç nə vermirik.</li>
+    <li><strong>Dünya üzrə kart ödənişləri üçün «Paddle» şirkətini seçdik.</strong> Paddle bizim yerimizə satıcı kimi çıxış edir: vergiləri, qaimə-fakturaları, geri qaytarmaları öz üzərinə götürür. Azərbaycandan olan satıcılarla işləyir — hətta şirkətimiz rəsmiləşməmişdən əvvəl də başlaya bilərik.</li>
+    <li><strong>Məşhur alternativ olan «Stripe» Azərbaycanda işləmir.</strong> Onu istifadə etmək üçün xaricdə şirkət açmaq lazımdır — əlavə xərc və baş ağrısı. Hələlik lazım deyil.</li>
+    <li><strong>Pul bizə çatır:</strong> Paddle yığılan məbləği hər ay bank hesabımıza və ya Payoneer-ə köçürür. Apple və Google da qazancı birbaşa bank hesabına göndərir.</li>
+  </ul>
+
+  <h2><span class="n">02</span> Pul necə hərəkət edir?</h2>
+  <div class="flow">
+    <div class="flow-title">Şirkət müştəri — məsələn, «Premium» plan ($49)</div>
+    <div class="flow-steps">
+      <span class="step">Saytda kartla ödəyir</span><span class="arr">→</span>
+      <span class="step">Paddle qəbul edir, qaiməni verir</span><span class="arr">→</span>
+      <span class="step">Hər ay bizə köçürür</span><span class="arr">→</span>
+      <span class="step">Tətbiqdəki hesab avtomatik açılır</span>
+    </div>
+  </div>
+  <div class="flow">
+    <div class="flow-title">Namizəd — məsələn, «Pro» plan ($5)</div>
+    <div class="flow-steps">
+      <span class="step">Tətbiqdə «Abunə ol» basır</span><span class="arr">→</span>
+      <span class="step">Ödəniş Apple/Google-dan keçir</span><span class="arr">→</span>
+      <span class="step">Öz payını saxlayıb qalanını göndərirlər</span><span class="arr">→</span>
+      <span class="step">İmkanlar dərhal açılır</span>
+    </div>
+  </div>
+  <p>Hər iki halda sistem özü işləyir — heç kim əl ilə heç nə açmır.</p>
+
+  <h2><span class="n">03</span> Nə qədər xərc çıxır?</h2>
+  <p>Hər 100 dollarlıq satışdan bizə nə qalır:</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Ödəniş yolu</th><th>Haqq</th><th>Bizə qalan</th></tr></thead>
+      <tbody>
+        <tr><td>Şirkətlər saytda (Paddle)</td><td class="num">~$5.50</td><td class="num"><span class="keep">~$94.50</span></td></tr>
+        <tr><td>Namizədlər tətbiqdə (Apple/Google)</td><td class="num">$15</td><td class="num"><span class="keep">~$85</span></td></tr>
+        <tr><td>Gələcəkdə yerli manat ödənişi (Payriff)</td><td class="num">~$2–3</td><td class="num"><span class="keep">~$97–98</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Saytdan satış daha sərfəlidir — ona görə böyük pulu (şirkət abunələrini) saytdan yığırıq. Namizədlərdə isə başqa yol yoxdur: Apple qayda ilə 15% götürür.</p>
+
+  <h2><span class="n">04</span> Bizdən nə tələb olunur?</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>İş</th><th>Xərc</th><th>Vaxt</th></tr></thead>
+      <tbody>
+        <tr><td>Azərbaycanda MMC qeydiyyatı (elektron)</td><td class="num">Pulsuz</td><td class="num">~3 iş günü</td></tr>
+        <tr><td>Bankda dollar hesabı (MMC üçün)</td><td class="num">Pulsuz/az</td><td class="num">~1 həftə</td></tr>
+        <tr><td>Apple developer hesabı</td><td class="num">$99 / il</td><td class="num">1–4 həftə</td></tr>
+        <tr><td>Google Play hesabı</td><td class="num">$25 birdəfəlik</td><td class="num">~1 həftə</td></tr>
+        <tr><td>Paddle qeydiyyatı (pasport + sayt lazımdır)</td><td class="num">Pulsuz</td><td class="num">bir neçə gün</td></tr>
+        <tr><td>Saytda qaydalar səhifələri (şərtlər, məxfilik, geri qaytarma)</td><td class="num">Hazırdır</td><td class="num">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Texniki quraşdırma bütövlükdə <strong>4–6 həftə</strong> çəkəcək.</p>
+
+  <h2><span class="n">05</span> Risklər və ehtiyat planı</h2>
+  <div class="note"><strong>18% məsələsi.</strong> 2026-cı ilin sentyabrından Azərbaycan bankları xarici saytlara edilən şəxsi ödənişlərdən 18% vergi tuta bilər. Yəni Azərbaycandakı namizəd saytda dollarla ödəsə, ona baha başa gələr. Həllimiz: Azərbaycandakı namizədlər tətbiqin içindən ödəsin (orada bu problem yoxdur), sonra isə yerli manat ödənişini işə salaq.</div>
+  <ul>
+    <li><strong>Paddle bizi qəbul etməsə?</strong> Ehtiyat variantımız hazırdır — «Polar» adlı oxşar xidmət, o da Azərbaycanla işləyir. Bir neçə günə keçid etmək olur.</li>
+    <li><strong>Apple şirkət planlarına irad tutsa?</strong> Nadir haldır, amma olsa — şirkət planlarını da tətbiqin içində satmalı olacağıq (15% itiririk, iş dayanmır).</li>
+    <li><strong>Qaydalar dəyişir.</strong> Apple və Google-un qaydaları məhkəmələr üzündən yumşalır. 2027-ci ilin sonundan Android-də saytın linkini birbaşa tətbiqdə göstərmək mümkün olacaq — o zaman xərcləri yenidən hesablayacağıq.</li>
+  </ul>
+
+  <h2><span class="n">06</span> Vaxt cədvəli</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Mərhələ</th><th>Nə vaxt</th><th>Nə baş verir</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td class="num">indi → +6 həftə</td><td>MMC, hesablar, Paddle + Apple/Google ödənişləri işə düşür. İlk real satış mümkün olur.</td></tr>
+        <tr><td class="num">2</td><td class="num">2027 əvvəli</td><td>Yerli manat ödənişi (Payriff) — Azərbaycan kartları üçün rahat və ucuz yol.</td></tr>
+        <tr><td class="num">3</td><td class="num">sentyabr 2027</td><td>Android-də saytdan alışa birbaşa keçid açılır — xərclərə yenidən baxırıq.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="contact">
+    <span>Tam texniki versiya (mənbələrlə): <em>payment-system-analysis.md</em></span>
+    <span>Suallar üçün: <a href="mailto:info@axtaris.app">info@axtaris.app</a></span>
+  </footer>
+</div>

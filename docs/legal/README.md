@@ -19,7 +19,7 @@ EN is the drafting master. If you amend a clause, amend it in all languages, and
 - `[AXTARIS MMC — registration pending; VÖEN: __________]` — the registered legal name + VÖEN, everywhere (also in AZ/RU variants of the bracket).
 - `[REGISTERED ADDRESS]` / `[QEYDİYYAT ÜNVANI]` / `[ЮРИДИЧЕСКИЙ АДРЕС]` — registered office.
 - `[EFFECTIVE DATE]` / `[QÜVVƏYƏ MİNMƏ TARİXİ]` / `[ДАТА ВСТУПЛЕНИЯ В СИЛУ]` — launch date of the documents.
-- Privacy Policy only: `[SUPABASE REGION — confirm in dashboard]` — check the production project's region in the Supabase dashboard; `[WEB DELETION URL]` — the public web account-deletion page (required by Google Play; must exist before store submission).
+- Privacy Policy only: `[SUPABASE REGION — confirm in dashboard]` — check the production project's region in the Supabase dashboard; `https://axtaris.app/legal/delete-account` — the public web account-deletion page (required by Google Play; must exist before store submission).
 - Subscription & Refund Terms only: `[PLAN NAMES/PRICES]` note — confirm the live tier names/prices at launch (document intentionally avoids hardcoding prices).
 
 ## 2. Where each document must be published
@@ -27,7 +27,7 @@ EN is the drafting master. If you amend a clause, amend it in all languages, and
 **Landing site (axtaris.app):**
 - Footer links to: Terms of Service, Privacy Policy, Community Guidelines, Subscription & Refund Terms (all three locales, matching the page locale).
 - Pricing/checkout page must link Subscription & Refund Terms and show renewal/cancellation facts near the buy button (Paddle domain review also checks that the site's ToS carries the seller's legal name).
-- A public **account deletion page** (the `[WEB DELETION URL]`) — required by Google Play's Data deletion policy.
+- A public **account deletion page** (the `https://axtaris.app/legal/delete-account`) — required by Google Play's Data deletion policy.
 
 **In the app (`app/legal/` screens):**
 - Terms of Service, Privacy Policy, Community Guidelines must replace any placeholder text, in az/en/ru, reachable from Settings and from the sign-up screen ("By creating an account you agree to…" links).
@@ -39,7 +39,7 @@ EN is the drafting master. If you amend a clause, amend it in all languages, and
 - EULA: leave Apple's standard EULA (do not upload a custom one).
 
 **Google Play Console:**
-- Privacy Policy URL; Data safety form must match Privacy Policy §1/§5; Account deletion URL = `[WEB DELETION URL]`.
+- Privacy Policy URL; Data safety form must match Privacy Policy §1/§5; Account deletion URL = `https://axtaris.app/legal/delete-account`.
 
 **Paddle:**
 - During domain verification, Paddle checks the site shows: legal name, ToS, Privacy Policy, refund terms. All satisfied by the above once placeholders are filled.

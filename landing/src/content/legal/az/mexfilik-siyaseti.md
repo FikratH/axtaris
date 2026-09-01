@@ -4,7 +4,7 @@ DƏRC ETMƏZDƏN ƏVVƏL DOLDURULMALI YERLƏR:
 2. [QEYDİYYAT ÜNVANI] — şirkətin hüquqi ünvanı
 3. [QÜVVƏYƏ MİNMƏ TARİXİ] — Siyasətin qüvvəyə mindiyi tarix
 4. [SUPABASE REGİONU — idarəetmə panelində dəqiqləşdirin] — istehsal Supabase layihəsinin hostinq regionu
-5. [VEB SİLİNMƏ URL] — hesabın silinməsi üçün açıq veb səhifə (Google Play tələbi)
+5. https://axtaris.app/legal/delete-account — hesabın silinməsi üçün açıq veb səhifə (Google Play tələbi)
 -->
 
 # AxtarIS Məxfilik Siyasəti
@@ -114,7 +114,7 @@ Hüquqlarınızı həyata keçirmək üçün tətbiqdəki alətlərdən istifad�
 ## 12. Hesabınızın silinməsi
 
 - **Tətbiqdə:** Profil → Parametrlər → **Hesabı sil**. Bu, hesabınızı və 10-cu bölmədə göstərilən məlumatları həmişəlik silir.
-- **Vebdə:** [VEB SİLİNMƏ URL] — tətbiqi yenidən quraşdırmadan silinmə üçün.
+- **Vebdə:** https://axtaris.app/legal/delete-account — tətbiqi yenidən quraşdırmadan silinmə üçün.
 
 Silinmə geri dönməzdir; silinmiş hesabı bərpa edə bilmərik.
 

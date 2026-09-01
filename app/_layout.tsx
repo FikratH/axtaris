@@ -277,8 +277,17 @@ function AppContent() {
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },
           animation: 'slide_from_right',
+          fullScreenGestureEnabled: true,
         }}
-      />
+      >
+        {/* Sheet-like tasks present modally (rise from bottom, swipe down to
+            dismiss) instead of pretending to be sibling pages. */}
+        <Stack.Screen name="checkout" options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }} />
+        <Stack.Screen name="subscription" options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }} />
+        <Stack.Screen name="cv-preview" options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }} />
+        <Stack.Screen name="profile/edit" options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }} />
+        <Stack.Screen name="profile/upload-cv" options={{ presentation: 'modal', animation: 'slide_from_bottom', gestureEnabled: true, gestureDirection: 'vertical' }} />
+      </Stack>
       <DialogHost />
     </>
   );

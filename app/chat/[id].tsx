@@ -13,6 +13,8 @@ import {
   View,
 } from 'react-native';
 import { Image } from 'expo-image';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, Send, ImagePlus, X, Briefcase, Flag, Ban } from 'lucide-react-native';
@@ -99,6 +101,7 @@ export default function ChatThreadScreen() {
     const text = draft.trim();
     if (!text || sendMessage.isPending || isBlocked) return;
     setDraft('');
+    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     sendMessage.mutate(text, { onError: () => setDraft(text) });
   }, [draft, sendMessage, isBlocked]);
 
@@ -168,8 +171,19 @@ export default function ChatThreadScreen() {
     ({ item }: { item: ChatMessage }) => {
       const mine = item.senderId === user?.id;
       const isImage = item.kind === 'image' && !!item.imageUrl;
+      // Only fresh messages animate in — opening a long history stays calm.
+      const isRecent = Date.now() - new Date(item.createdAt).getTime() < 3000;
       return (
-        <View style={[styles.bubbleRow, { justifyContent: mine ? 'flex-end' : 'flex-start' }]}>
+        <Animated.View
+          entering={
+            isRecent
+              ? mine
+                ? FadeInDown.springify().damping(16).stiffness(220)
+                : FadeIn.duration(180)
+              : undefined
+          }
+          style={[styles.bubbleRow, { justifyContent: mine ? 'flex-end' : 'flex-start' }]}
+        >
           <View
             style={[
               styles.bubble,
@@ -188,7 +202,7 @@ export default function ChatThreadScreen() {
               </Text>
             ) : null}
           </View>
-        </View>
+        </Animated.View>
       );
     },
     [colors, t, user?.id]

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, MessageCircle, LifeBuoy } from 'lucide-react-native';
@@ -8,6 +8,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/authStore';
 import { useConversations } from '@/hooks/useChat';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { AnimatedListItem } from '@/components/ui/Animated';
+import { AnimatedPressable } from '@/components/ui/AnimatedPressable';
+import { RowSkeleton } from '@/components/ui/SkeletonLoader';
 import { Conversation } from '@/types/models';
 import { safeBack } from '@/utils/navigation';
 import { getConversationTitle } from '@/utils/chatPresentation';
@@ -24,14 +27,14 @@ export default function MessagesScreen() {
     router.push({ pathname: '/chat/[id]', params: { id: c.id, subject: getConversationTitle(c, user?.role, tr) } } as never);
   }, [router, user?.role, tr]);
 
-  const renderItem = React.useCallback(({ item }: { item: Conversation }) => {
+  const renderItem = React.useCallback(({ item, index }: { item: Conversation; index: number }) => {
     const support = item.kind === 'support';
     const title = getConversationTitle(item, user?.role, tr);
     return (
-      <TouchableOpacity
-        activeOpacity={0.7}
+      <AnimatedListItem index={index}>
+      <AnimatedPressable
         onPress={() => openThread(item)}
-        style={[styles.row, { borderBottomColor: colors.divider }]}
+        style={StyleSheet.flatten([styles.row, { borderBottomColor: colors.divider }])}
       >
         <View style={[styles.avatar, { backgroundColor: support ? colors.warning + '20' : colors.primaryLight }]}>
           {support ? (
@@ -48,7 +51,8 @@ export default function MessagesScreen() {
             {item.lastMessage || tr('chat.noMessages')}
           </Text>
         </View>
-      </TouchableOpacity>
+      </AnimatedPressable>
+      </AnimatedListItem>
     );
   }, [openThread, colors, s, t, user?.role, tr]);
 
@@ -66,8 +70,10 @@ export default function MessagesScreen() {
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.primary} />
+        <View style={{ paddingHorizontal: s.xl, paddingTop: s.lg }}>
+          {Array.from({ length: 5 }).map((_, index) => (
+            <RowSkeleton key={index} />
+          ))}
         </View>
       ) : isError ? (
         <View style={styles.center}>
@@ -84,6 +90,9 @@ export default function MessagesScreen() {
           keyExtractor={(c) => c.id}
           renderItem={renderItem}
           contentContainerStyle={{ paddingHorizontal: s.xl, flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={false} onRefresh={() => refetch()} tintColor={colors.primary} />
+          }
           ListEmptyComponent={
             <View style={styles.center}>
               <EmptyState title={tr('chat.emptyListTitle')} subtitle={tr('chat.emptyListSubtitle')} />
