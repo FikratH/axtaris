@@ -129,5 +129,7 @@ export interface Dictionary {
     contactLabel: string;
     langLabel: string;
     copyright: string;
+    legalPrivacy: string;
+    legalTerms: string;
   };
 }

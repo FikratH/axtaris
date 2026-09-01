@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { SECTION_IDS } from "@/lib/anchors";
+import { legalPath } from "@/lib/legal";
 import { site } from "@/config/site";
 import { localePath, locales, type Dictionary, type Locale } from "@/content";
 import { cn } from "@/lib/utils";
@@ -83,9 +84,29 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
         </div>
       </div>
       <div className="border-t border-brand-500/20">
-        <p className="doc-label-sm mx-auto max-w-6xl px-4 py-5 text-brand-300 sm:px-6">
-          {dict.footer.copyright}
-        </p>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-2 sm:px-6">
+          <p className="doc-label-sm py-3 text-brand-300">
+            {dict.footer.copyright}
+          </p>
+          <ul className="flex flex-wrap items-center gap-x-5">
+            <li>
+              <a
+                href={legalPath(locale, "privacy")}
+                className="doc-label-sm inline-flex min-h-9 items-center text-brand-300 no-underline transition-colors hover:text-brand-50"
+              >
+                {dict.footer.legalPrivacy}
+              </a>
+            </li>
+            <li>
+              <a
+                href={legalPath(locale, "terms")}
+                className="doc-label-sm inline-flex min-h-9 items-center text-brand-300 no-underline transition-colors hover:text-brand-50"
+              >
+                {dict.footer.legalTerms}
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </footer>
   );
