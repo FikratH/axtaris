@@ -181,7 +181,7 @@ export const ru: Dictionary = {
       },
       {
         q: "Когда запуск?",
-        a: "Сейчас идёт закрытая бета. Релизы в App Store и Google Play — скоро; записавшиеся в бету узнают о запуске первыми — достаточно написать на info@axtaris.app.",
+        a: "Сейчас идёт закрытая бета. Релизы в App Store и Google Play — скоро; записавшиеся в бету узнают о запуске первыми — достаточно оставить заявку в форме в конце этой страницы.",
       },
       {
         q: "AxtarIS бесплатен?",
@@ -203,19 +203,33 @@ export const ru: Dictionary = {
       "Документ готов — пустуют две строки для подписи. Запишитесь в бету и узнайте о запуске первыми.",
     candidateLabel: "КАНДИДАТ",
     candidateLine: "Ищу работу",
-    candidateCta: "Записаться в бету",
     employerLabel: "РАБОТОДАТЕЛЬ",
     employerLine: "Хочу разместить вакансию",
-    employerCta: "Написать нам",
     signatureLine: "подпись",
     directLabel: "Или напишите напрямую:",
-    copied: "Адрес скопирован",
     stores: [
       { name: "App Store", status: "Скоро" },
       { name: "Google Play", status: "Скоро" },
     ],
-    emailSubjectCandidate: "AxtarIS бета — кандидат",
-    emailSubjectEmployer: "AxtarIS бета — работодатель",
+    form: {
+      nameLabel: "Имя и фамилия",
+      namePlaceholder: "Ваше имя",
+      emailLabel: "Эл. почта",
+      emailPlaceholder: "you@example.com",
+      roleLabel: "Роль",
+      roleCandidate: "Кандидат",
+      roleEmployer: "Работодатель",
+      consentLabel:
+        "Я согласен(-на) получать письма о запуске беты по эл. почте.",
+      submit: "Записаться в бету",
+      submitting: "Отправка…",
+      successStamp: "ПРИНЯТО",
+      successNote: "Вы в списке — узнаете о запуске первыми.",
+      errorRequired: "Обязательное поле.",
+      errorEmail: "Проверьте адрес эл. почты.",
+      errorGeneric:
+        "Не получилось отправить. Попробуйте ещё раз или напишите на info@axtaris.app.",
+    },
   },
   footer: {
     tagline: "Премиальная платформа занятости для Азербайджана",

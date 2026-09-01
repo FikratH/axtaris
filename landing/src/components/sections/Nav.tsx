@@ -38,7 +38,7 @@ function LangSwitch({
               hrefLang={locale}
               aria-current={locale === current ? "true" : undefined}
               className={cn(
-                "doc-label-sm flex min-h-10 min-w-11 items-center justify-center px-2 transition-colors",
+                "doc-label-sm flex min-h-11 min-w-11 items-center justify-center px-2 transition-colors",
                 locale === current
                   ? "bg-carbon-600 font-bold text-cover-950"
                   : onSheet
@@ -64,8 +64,10 @@ export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
     { href: `#${SECTION_IDS.employers}`, label: dict.nav.employers },
   ];
 
+  // Below lg the backdrop blur is dropped for scroll performance;
+  // a nearly opaque cover carries the separation instead.
   return (
-    <header className="sticky top-0 z-30 border-b border-brand-500/25 bg-cover-950/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 border-b border-brand-500/25 bg-cover-950/95 lg:bg-cover-950/90 lg:backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <a
           href={localePath(locale)}
@@ -101,7 +103,7 @@ export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           <LangSwitch current={locale} label={dict.a11y.langSwitch} />
           <AnchorLink
             href={`#${SECTION_IDS.join}`}
-            className="flex min-h-11 items-center rounded-[2px] bg-carbon-600 px-5 text-[0.9375rem] font-semibold text-cover-950 no-underline shadow-[0_2px_0_0_var(--carbon-700)] transition-colors hover:bg-carbon-500"
+            className="flex min-h-11 items-center rounded-[2px] bg-carbon-600 px-5 text-[0.9375rem] font-semibold text-cover-950 no-underline shadow-[0_2px_0_0_var(--carbon-700)] transition-[background-color,translate,box-shadow] duration-150 hover:bg-carbon-500 active:translate-y-px active:bg-carbon-500 active:shadow-none"
           >
             {dict.nav.join}
           </AnchorLink>
@@ -132,7 +134,7 @@ export function Nav({ dict, locale }: { dict: Dictionary; locale: Locale }) {
               <AnchorLink
                 href={`#${SECTION_IDS.join}`}
                 onNavigate={() => setOpen(false)}
-                className="mt-6 flex min-h-12 items-center justify-center rounded-[2px] bg-carbon-600 px-5 font-semibold text-cover-950 no-underline shadow-[0_2px_0_0_var(--carbon-700)] transition-colors hover:bg-carbon-500"
+                className="mt-6 flex min-h-12 items-center justify-center rounded-[2px] bg-carbon-600 px-5 font-semibold text-cover-950 no-underline shadow-[0_2px_0_0_var(--carbon-700)] transition-[background-color,translate,box-shadow] duration-150 hover:bg-carbon-500 active:translate-y-px active:bg-carbon-500 active:shadow-none"
               >
                 {dict.nav.join}
               </AnchorLink>
