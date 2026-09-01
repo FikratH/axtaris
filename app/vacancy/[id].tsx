@@ -37,7 +37,8 @@ import { MatchBadge } from '@/components/ui/MatchBadge';
 import { UpgradeSheet } from '@/components/UpgradeSheet';
 import { useCandidateEntitlements } from '@/hooks/useEntitlements';
 import { toUserMessage } from '@/utils/errorMessage';
-import { ChevronLeft, Bookmark, BookmarkCheck, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Sparkles, Lock, Languages as LanguagesIcon } from 'lucide-react-native';
+import { ChevronLeft, Bookmark, BookmarkCheck, Flag, MapPin, Briefcase, BarChart3, Banknote, CheckCircle2, BadgeCheck, Star, Sparkles, Lock, Languages as LanguagesIcon } from 'lucide-react-native';
+import { useReportEntity } from '@/hooks/useModeration';
 
 export default function VacancyDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -56,6 +57,7 @@ export default function VacancyDetailScreen() {
   const applyToVacancy = useApplyToVacancy(user?.id);
   const { entitlements: candidateEntitlements } = useCandidateEntitlements();
   const { requireAuth } = useGuestGate();
+  const reportEntity = useReportEntity(user?.id);
   const {
     data: vacancy,
     isLoading,
@@ -183,6 +185,26 @@ export default function VacancyDetailScreen() {
     }
   };
 
+  const handleReport = () => {
+    if (!id || !requireAuth()) return;
+    const submit = (reasonKey: string) => {
+      reportEntity.mutate(
+        { entityType: 'vacancy', entityId: id, reason: tr(reasonKey) },
+        {
+          onSuccess: () => Alert.alert(tr('common.done'), tr('chat.reportSubmitted')),
+          onError: (error) => Alert.alert(tr('common.error'), toUserMessage(error, tr)),
+        }
+      );
+    };
+    Alert.alert(tr('moderation.reportVacancyTitle'), tr('moderation.reportMessage'), [
+      { text: tr('moderation.reportReasonScam'), onPress: () => submit('moderation.reportReasonScam') },
+      { text: tr('chat.reportReasonSpam'), onPress: () => submit('chat.reportReasonSpam') },
+      { text: tr('chat.reportReasonInappropriate'), onPress: () => submit('chat.reportReasonInappropriate') },
+      { text: tr('chat.reportReasonOther'), onPress: () => submit('chat.reportReasonOther') },
+      { text: tr('common.cancel'), style: 'cancel' },
+    ]);
+  };
+
   const handleApply = () => {
     if (!id || !requireAuth()) return;
 
@@ -306,17 +328,26 @@ export default function VacancyDetailScreen() {
           >
             <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              if (requireAuth() && id) toggleSave.mutate(id);
-            }}
-            style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
-          >
-            {saved
-              ? <BookmarkCheck size={20} color={colors.primary} strokeWidth={1.8} />
-              : <Bookmark size={20} color={colors.textTertiary} strokeWidth={1.8} />
-            }
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              onPress={handleReport}
+              style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+              accessibilityLabel={tr('moderation.reportCta')}
+            >
+              <Flag size={18} color={colors.textTertiary} strokeWidth={1.8} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (requireAuth() && id) toggleSave.mutate(id);
+              }}
+              style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+            >
+              {saved
+                ? <BookmarkCheck size={20} color={colors.primary} strokeWidth={1.8} />
+                : <Bookmark size={20} color={colors.textTertiary} strokeWidth={1.8} />
+              }
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={[styles.companySection, { paddingHorizontal: s.xl, marginTop: s.xl }]}> 

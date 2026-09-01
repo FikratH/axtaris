@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { moderationService } from '@/services/moderationService';
+import { moderationService, ReportableEntityType } from '@/services/moderationService';
 
 export const moderationKeys = {
   isBlocked: (blockerId?: string, blockedId?: string) =>
@@ -18,6 +18,20 @@ export function useReportUser(reporterId?: string) {
   return useMutation({
     mutationFn: ({ targetUserId, reason }: { targetUserId: string; reason: string }) =>
       moderationService.reportUser(reporterId || '', targetUserId, reason),
+  });
+}
+
+export function useReportEntity(reporterId?: string) {
+  return useMutation({
+    mutationFn: ({
+      entityType,
+      entityId,
+      reason,
+    }: {
+      entityType: ReportableEntityType;
+      entityId: string;
+      reason: string;
+    }) => moderationService.reportEntity(reporterId || '', entityType, entityId, reason),
   });
 }
 

@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/Input';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { ApplicationStatus } from '@/types/models';
 import { fileStorageService } from '@/services/fileStorageService';
+import { formatDate as formatLocalizedDate } from '@/utils/dates';
 import { getLanguageLevelLabel } from '@/utils/labels';
 import { safeBack } from '@/utils/navigation';
 import { Briefcase, ChevronLeft, Download, Mail, MapPin, MessageCircle } from 'lucide-react-native';
@@ -50,7 +51,7 @@ function getStatusLabel(status: ApplicationStatus, tr: (key: string) => string) 
 
 function formatDate(value?: string): string {
   if (!value) return '';
-  return new Date(value).toLocaleDateString();
+  return formatLocalizedDate(value);
 }
 
 export default function EmployerApplicantDetailScreen() {

@@ -16,11 +16,13 @@
       "supportsTablet": false,
       "bundleIdentifier": "az.axtaris.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocalNetworkUsageDescription": "AxtarIS uses the local network only during development to connect to developer tools. It is not used in normal app usage."
       }
     },
     "android": {
       "package": "az.axtaris.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -36,6 +38,18 @@
       "expo-router",
       "expo-font",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/axtaris_splash_logo.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF",
+          "dark": {
+            "image": "./assets/axtaris_splash_logo.png",
+            "backgroundColor": "#0A1628"
+          }
+        }
+      ],
+      [
         "expo-secure-store",
         {
           "faceIDPermission": false
@@ -50,7 +64,21 @@
           "microphonePermission": false
         }
       ],
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-monochrome.png",
+          "color": "#2D4797"
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "axtaris",
+          "project": "axtaris-app",
+          "url": "https://sentry.io/"
+        }
+      ],
       "expo-image"
     ],
     "experiments": {

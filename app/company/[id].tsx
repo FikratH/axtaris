@@ -24,7 +24,11 @@ import { VacancyCard } from '@/components/ui/VacancyCard';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { getVerificationPresentation } from '@/utils/labels';
 import { safeBack } from '@/utils/navigation';
-import { Building2, ChevronLeft, Globe, Star, Users } from 'lucide-react-native';
+import { toUserMessage } from '@/utils/errorMessage';
+import { Alert } from '@/utils/dialog';
+import { useGuestGate } from '@/hooks/useGuestGate';
+import { useReportEntity } from '@/hooks/useModeration';
+import { Building2, ChevronLeft, Flag, Globe, Star, Users } from 'lucide-react-native';
 
 export default function CompanyDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r } = useTheme();
@@ -39,6 +43,28 @@ export default function CompanyDetailScreen() {
   const { data: vacancies = [], isLoading: vacanciesLoading } = useCompanyVacancies(id);
   const { data: savedJobIds = [] } = useSavedJobIds(isCandidate ? user?.id : undefined);
   const toggleSave = useToggleSavedJob(user?.id);
+  const { requireAuth } = useGuestGate();
+  const reportEntity = useReportEntity(user?.id);
+
+  const handleReport = React.useCallback(() => {
+    if (!id || !requireAuth()) return;
+    const submit = (reasonKey: string) => {
+      reportEntity.mutate(
+        { entityType: 'company', entityId: id, reason: tr(reasonKey) },
+        {
+          onSuccess: () => Alert.alert(tr('common.done'), tr('chat.reportSubmitted')),
+          onError: (error) => Alert.alert(tr('common.error'), toUserMessage(error, tr)),
+        }
+      );
+    };
+    Alert.alert(tr('moderation.reportCompanyTitle'), tr('moderation.reportMessage'), [
+      { text: tr('moderation.reportReasonScam'), onPress: () => submit('moderation.reportReasonScam') },
+      { text: tr('chat.reportReasonSpam'), onPress: () => submit('chat.reportReasonSpam') },
+      { text: tr('chat.reportReasonInappropriate'), onPress: () => submit('chat.reportReasonInappropriate') },
+      { text: tr('chat.reportReasonOther'), onPress: () => submit('chat.reportReasonOther') },
+      { text: tr('common.cancel'), style: 'cancel' },
+    ]);
+  }, [id, requireAuth, reportEntity, tr]);
 
   if (isLoading) {
     return (
@@ -78,6 +104,14 @@ export default function CompanyDetailScreen() {
           style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
         >
           <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
+        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+          onPress={handleReport}
+          style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+          accessibilityLabel={tr('moderation.reportCta')}
+        >
+          <Flag size={18} color={colors.textTertiary} strokeWidth={1.8} />
         </TouchableOpacity>
       </View>
 

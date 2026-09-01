@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { VacancyCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { getModerationEntityTypeLabel, getVacancyStatusPresentation } from '@/utils/labels';
+import { formatDate } from '@/utils/dates';
 import { toUserMessage } from '@/utils/errorMessage';
 
 export default function AdminModerationScreen() {
@@ -113,7 +114,7 @@ export default function AdminModerationScreen() {
                 <Text style={[{ color: colors.textSecondary, marginTop: 4 }, t.bodySmall]}>{f.reason}</Text>
                 <Text style={[{ color: colors.textTertiary, marginTop: 4 }, t.caption]}>
                   {f.reporterName ? `${f.reporterName} · ` : ''}
-                  {new Date(f.createdAt).toLocaleDateString()}
+                  {formatDate(f.createdAt)}
                 </Text>
                 <View style={[styles.actions, { marginTop: s.md }]}>
                   <View style={{ flex: 1 }}>

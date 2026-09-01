@@ -1,5 +1,6 @@
 import 'react-native-url-polyfill/auto';
 import React, { useEffect } from 'react';
+import * as Sentry from '@sentry/react-native';
 import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -15,6 +16,16 @@ import { useTranslation } from 'react-i18next';
 import { Alert } from '@/utils/dialog';
 import { DialogHost } from '@/components/ui/DialogHost';
 import '@/i18n';
+
+// Crash reporting is a no-op until EXPO_PUBLIC_SENTRY_DSN is provided (eas.json
+// env or EAS project env). Kept out of dev so local errors stay local.
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+Sentry.init({
+  dsn: sentryDsn,
+  enabled: !!sentryDsn && !__DEV__,
+  tracesSampleRate: 0.2,
+  sendDefaultPii: false,
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -273,7 +284,7 @@ function AppContent() {
   );
 }
 
-export default function RootLayout() {
+function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
@@ -284,3 +295,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);

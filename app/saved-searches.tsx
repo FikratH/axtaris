@@ -50,7 +50,10 @@ export default function SavedSearchesScreen() {
       params: {
         savedQuery: search.filters.query ?? '',
         savedCity: search.filters.city ?? '',
-        savedWorkType: search.filters.workType ?? '',
+        savedWorkType: (
+          search.filters.workTypes ??
+          (search.filters.workType ? [search.filters.workType] : [])
+        ).join(','),
         savedSkills: (search.filters.skills ?? []).join(','),
       },
     } as never);
@@ -79,7 +82,9 @@ export default function SavedSearchesScreen() {
     const filterBits = [
       item.filters.query,
       item.filters.city,
-      item.filters.workType ? getWorkTypeLabel(tr, item.filters.workType) : undefined,
+      ...(item.filters.workTypes ?? (item.filters.workType ? [item.filters.workType] : [])).map(
+        (wt) => getWorkTypeLabel(tr, wt)
+      ),
       ...(item.filters.skills ?? []),
     ].filter(Boolean);
 

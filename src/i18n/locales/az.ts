@@ -309,6 +309,9 @@ export default {
     recentJobs: 'Son vakansiyalar',
     topCompanies: 'Aparıcı şirkətlər',
     searchPlaceholder: 'Vəzifə, şirkət və ya açar söz...',
+    searchResultsCount_one: '{{count}} vakansiya',
+    searchResultsCount_other: '{{count}} vakansiya',
+    searchEmptySubtitle: 'Fərqli açar sözlər yoxlayın və ya daha çox vakansiya görmək üçün filtrləri təmizləyin.',
     filters: 'Filtrlər',
     jobType: 'İş növü',
     salary: 'Maaş',
@@ -701,7 +704,25 @@ export default {
       matchingSkillsOne: '{{count}} uyğun bacarıq: {{skills}}',
       matchingSkillsMany: '{{count}} uyğun bacarıq: {{skills}}',
       noSkillOverlap: 'Birbaşa bacarıq üst-üstə düşməsi yoxdur',
+      resumeSummary:
+        'Nəticəyönümlü {{title}} — {{years}}+ illik təcrübə. {{skills}} sahəsində sübut olunmuş nailiyyətlər. Təcrübəsini yeni və maraqlı bir rolda tətbiq etməyə hazırdır.',
+      resumeHighlightYears: '{{years}}+ illik peşəkar təcrübə',
+      resumeHighlightSkills: '{{skills}} üzrə bacarıqlı',
+      resumeHighlightEducation: '{{institution}} — {{degree}}',
+      resumeHighlightSelfTaught: 'Müstəqil öyrənmiş mütəxəssis',
+      resumeHighlightLanguages: '{{count}} dildə danışır',
+      resumeImprovedBio:
+        '{{location}} üzrə fəaliyyət göstərən, yüksək təsirli həllər çatdırmaqda geniş təcrübəyə malik {{title}}. Texniki bilikləri güclü ünsiyyət bacarıqları ilə birləşdirərək biznes nəticələrinə töhfə verir.',
+      defaultLocation: 'Azərbaycan',
     },
+  },
+  moderation: {
+    reportCta: 'Şikayət et',
+    reportVacancyTitle: 'Bu vakansiyanı şikayət et',
+    reportCompanyTitle: 'Bu şirkəti şikayət et',
+    reportProfileTitle: 'Bu profili şikayət et',
+    reportMessage: 'Şikayətinizin səbəbi nədir?',
+    reportReasonScam: 'Fırıldaq və ya saxta elan',
   },
   validation: {
     required: 'Bu sahə məcburidir',
@@ -800,7 +821,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '5 AZN / 30 günlük',
+            priceLabel: 'Beta dövründə pulsuz',
             visibilityLabel: 'Namizəd siyahısında prioritet',
             highlights: [
               'Gündə 10 müraciət göndərin',
@@ -810,7 +831,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '15 AZN / 30 günlük',
+            priceLabel: 'Beta dövründə pulsuz',
             visibilityLabel: 'Namizəd siyahısının ən üstündə',
             highlights: [
               'Limitsiz müraciət',
@@ -823,8 +844,8 @@ export default {
           price: {
             label: '30 günlük qiymət',
             free: 'Pulsuz',
-            pro: '5 AZN',
-            premium: '15 AZN',
+            pro: 'Beta dövründə pulsuz',
+            premium: 'Beta dövründə pulsuz',
           },
           applications: {
             label: 'Gündəlik müraciət',
@@ -868,7 +889,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '19 AZN / 30 günlük',
+            priceLabel: 'Beta dövründə pulsuz',
             visibilityLabel: 'Prioritet dəstək və quraşdırma',
             highlights: [
               'Prioritet dəstək və işə qəbul üzrə quraşdırma köməyi',
@@ -878,7 +899,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '49 AZN / 30 günlük',
+            priceLabel: 'Beta dövründə pulsuz',
             visibilityLabel: 'Fərdi VIP dəstək',
             highlights: [
               'AxtarIS komandasından fərdi VIP dəstək',
@@ -891,8 +912,8 @@ export default {
           price: {
             label: '30 günlük qiymət',
             free: 'Pulsuz',
-            pro: '19 AZN',
-            premium: '49 AZN',
+            pro: 'Beta dövründə pulsuz',
+            premium: 'Beta dövründə pulsuz',
           },
           vacancyVisibility: {
             label: 'Vakansiya tanıtımı',

@@ -12,9 +12,14 @@ function keyPaths(value: unknown, prefix = ''): string[] {
   );
 }
 
-const azKeys = new Set(keyPaths(az));
-const enKeys = new Set(keyPaths(en));
-const ruKeys = new Set(keyPaths(ru));
+// i18next plural forms legitimately differ per language (ru needs _few/_many,
+// az/en only _one/_other) — parity is enforced on the base key.
+const stripPluralSuffix = (key: string) =>
+  key.replace(/_(zero|one|two|few|many|other)$/, '');
+
+const azKeys = new Set(keyPaths(az).map(stripPluralSuffix));
+const enKeys = new Set(keyPaths(en).map(stripPluralSuffix));
+const ruKeys = new Set(keyPaths(ru).map(stripPluralSuffix));
 
 const diff = (a: Set<string>, b: Set<string>) => [...a].filter((k) => !b.has(k)).sort();
 

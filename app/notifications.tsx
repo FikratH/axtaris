@@ -20,6 +20,7 @@ import {
   useMarkNotificationRead,
   useNotifications,
 } from '@/hooks/useEngagementQueries';
+import { formatTime } from '@/utils/dates';
 import { safeBack } from '@/utils/navigation';
 import { ChevronLeft, FileText, UserPlus, Briefcase, Star, BadgeCheck, ClipboardList, Bell as BellIcon } from 'lucide-react-native';
 
@@ -119,7 +120,7 @@ export default function NotificationsScreen() {
             {notif.body}
           </Text>
           <Text style={[{ color: colors.textTertiary, ...t.caption, marginTop: 4 }]}>
-            {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {formatTime(notif.createdAt)}
           </Text>
         </View>
         {!notif.read && (

@@ -7,10 +7,17 @@ function blockKey(blockerId: string, blockedId: string): string {
   return `${blockerId}:${blockedId}`;
 }
 
+export type ReportableEntityType = 'vacancy' | 'company' | 'user';
+
 export const moderationService = {
-  async reportUser(reporterId: string, targetUserId: string, reason: string): Promise<void> {
+  async reportEntity(
+    reporterId: string,
+    entityType: ReportableEntityType,
+    entityId: string,
+    reason: string
+  ): Promise<void> {
     const trimmedReason = reason.trim();
-    if (!reporterId || !targetUserId || !trimmedReason) {
+    if (!reporterId || !entityId || !trimmedReason) {
       throw new Error(i18n.t('errors.reportReasonRequired'));
     }
 
@@ -20,8 +27,12 @@ export const moderationService = {
 
     const { error } = await getSupabase()
       .from('moderation_flags')
-      .insert({ entity_type: 'user', entity_id: targetUserId, reason: trimmedReason, reported_by: reporterId });
+      .insert({ entity_type: entityType, entity_id: entityId, reason: trimmedReason, reported_by: reporterId });
     if (error) throw new Error(error.message);
+  },
+
+  async reportUser(reporterId: string, targetUserId: string, reason: string): Promise<void> {
+    return this.reportEntity(reporterId, 'user', targetUserId, reason);
   },
 
   async blockUser(blockerId: string, blockedId: string): Promise<void> {

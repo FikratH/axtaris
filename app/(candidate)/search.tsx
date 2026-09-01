@@ -88,7 +88,7 @@ export default function SearchScreen() {
     );
     setSelectedWorkTypes(
       typeof params.savedWorkType === 'string' && params.savedWorkType
-        ? [params.savedWorkType as WorkType]
+        ? (params.savedWorkType.split(',').filter(Boolean) as WorkType[])
         : []
     );
   }, [params.savedQuery, params.savedCity, params.savedWorkType, params.savedSkills]);
@@ -191,6 +191,7 @@ export default function SearchScreen() {
           query: query.trim() || undefined,
           city: selectedCity || undefined,
           workType: selectedWorkTypes[0],
+          workTypes: selectedWorkTypes.length > 0 ? selectedWorkTypes : undefined,
         },
       },
       {
@@ -300,7 +301,7 @@ export default function SearchScreen() {
           ) : (
             <EmptyState
               title={tr('common.noResults')}
-              subtitle={tr('candidate.searchPlaceholder')}
+              subtitle={tr('candidate.searchEmptySubtitle')}
               icon={<SearchX size={48} color={colors.textTertiary} strokeWidth={1.2} />}
             />
           )
@@ -308,7 +309,7 @@ export default function SearchScreen() {
         ListHeaderComponent={
           !isLoading ? (
             <Text style={[{ color: colors.textSecondary, ...t.caption, marginBottom: s.md }]}>
-              {filteredVacancies.length} {tr('employer.vacancies').toLowerCase()}
+              {tr('candidate.searchResultsCount', { count: filteredVacancies.length })}
             </Text>
           ) : null
         }

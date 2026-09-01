@@ -309,6 +309,9 @@ export default {
     recentJobs: 'Recent vacancies',
     topCompanies: 'Top companies',
     searchPlaceholder: 'Job title, company, or keyword...',
+    searchResultsCount_one: '{{count}} vacancy',
+    searchResultsCount_other: '{{count}} vacancies',
+    searchEmptySubtitle: 'Try different keywords or clear the filters to see more roles.',
     filters: 'Filters',
     jobType: 'Job type',
     salary: 'Salary',
@@ -701,7 +704,25 @@ export default {
       matchingSkillsOne: '{{count}} matching skill: {{skills}}',
       matchingSkillsMany: '{{count}} matching skills: {{skills}}',
       noSkillOverlap: 'No direct skill overlap',
+      resumeSummary:
+        'Results-driven {{title}} with {{years}}+ years of experience. Proven track record in {{skills}}. Seeking to leverage expertise in a challenging new role.',
+      resumeHighlightYears: '{{years}}+ years of professional experience',
+      resumeHighlightSkills: 'Skilled in {{skills}}',
+      resumeHighlightEducation: '{{degree}} from {{institution}}',
+      resumeHighlightSelfTaught: 'Self-taught professional',
+      resumeHighlightLanguages: '{{count}} languages spoken',
+      resumeImprovedBio:
+        'Dedicated {{title}} based in {{location}} with extensive experience in delivering high-impact solutions. Combining technical expertise with strong communication skills to drive business outcomes.',
+      defaultLocation: 'Azerbaijan',
     },
+  },
+  moderation: {
+    reportCta: 'Report',
+    reportVacancyTitle: 'Report this vacancy',
+    reportCompanyTitle: 'Report this company',
+    reportProfileTitle: 'Report this profile',
+    reportMessage: 'Why are you reporting this?',
+    reportReasonScam: 'Scam or fake listing',
   },
   validation: {
     required: 'This field is required',
@@ -800,7 +821,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '5 AZN / 30 days',
+            priceLabel: 'Free during beta',
             visibilityLabel: 'Priority in applicant lists',
             highlights: [
               'Send up to 10 applications per day',
@@ -810,7 +831,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '15 AZN / 30 days',
+            priceLabel: 'Free during beta',
             visibilityLabel: 'Top of applicant lists',
             highlights: [
               'Unlimited applications',
@@ -823,8 +844,8 @@ export default {
           price: {
             label: '30-day price',
             free: 'Free',
-            pro: '5 AZN',
-            premium: '15 AZN',
+            pro: 'Free during beta',
+            premium: 'Free during beta',
           },
           applications: {
             label: 'Daily applications',
@@ -868,7 +889,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '19 AZN / 30 days',
+            priceLabel: 'Free during beta',
             visibilityLabel: 'Priority support & onboarding',
             highlights: [
               'Priority support and hiring setup help',
@@ -878,7 +899,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '49 AZN / 30 days',
+            priceLabel: 'Free during beta',
             visibilityLabel: 'Dedicated VIP support',
             highlights: [
               'Dedicated VIP support from the AxtarIS team',
@@ -891,8 +912,8 @@ export default {
           price: {
             label: '30-day price',
             free: 'Free',
-            pro: '19 AZN',
-            premium: '49 AZN',
+            pro: 'Free during beta',
+            premium: 'Free during beta',
           },
           vacancyVisibility: {
             label: 'Vacancy promotion',

@@ -6,6 +6,18 @@ import { getSupabase, shouldUseMockBackend } from './supabase';
 let Notifications: typeof import('expo-notifications') | null = null;
 if (Platform.OS !== 'web') {
   Notifications = require('expo-notifications');
+
+  // Without a handler, expo-notifications presents NOTHING while the app is
+  // foregrounded — pushes silently vanish. Registered at module scope so it's
+  // in place before any notification can arrive.
+  Notifications!.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
 }
 
 export function getNotificationsModule() {
@@ -28,6 +40,19 @@ export async function registerForPushNotifications(userId: string): Promise<stri
   if ((Constants.executionEnvironment as string) === 'storeClient') return null;
 
   try {
+    // Android 8+ requires a channel or notifications display with default
+    // (non-heads-up) importance; create it before the permission prompt so the
+    // system dialog is tied to a real channel.
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'General',
+        importance: Notifications.AndroidImportance.MAX,
+        sound: 'default',
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#2D4797',
+      });
+    }
+
     const current = await Notifications.getPermissionsAsync();
     let status = current.status;
     if (status !== 'granted') {

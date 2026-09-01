@@ -382,16 +382,28 @@ class AIService {
       return Math.max(max, currentYear - start);
     }, 0);
 
+    const title = profile.title || i18n.t('ai.fallback.genericProfessional');
+    const location = profile.location || i18n.t('ai.fallback.defaultLocation');
+
     return {
-      summary: `Results-driven ${profile.title || 'professional'} with ${yearsExp}+ years of experience. Proven track record in ${profile.skills.slice(0, 3).join(', ')}. Seeking to leverage expertise in a challenging new role.`,
+      summary: i18n.t('ai.fallback.resumeSummary', {
+        title,
+        years: yearsExp,
+        skills: profile.skills.slice(0, 3).join(', '),
+      }),
       highlights: [
-        `${yearsExp}+ years of professional experience`,
-        `Skilled in ${profile.skills.slice(0, 5).join(', ')}`,
-        profile.education.length > 0 ? `${profile.education[0].degree} from ${profile.education[0].institution}` : 'Self-taught professional',
-        `${profile.languages.length} languages spoken`,
+        i18n.t('ai.fallback.resumeHighlightYears', { years: yearsExp }),
+        i18n.t('ai.fallback.resumeHighlightSkills', { skills: profile.skills.slice(0, 5).join(', ') }),
+        profile.education.length > 0
+          ? i18n.t('ai.fallback.resumeHighlightEducation', {
+              degree: profile.education[0].degree,
+              institution: profile.education[0].institution,
+            })
+          : i18n.t('ai.fallback.resumeHighlightSelfTaught'),
+        i18n.t('ai.fallback.resumeHighlightLanguages', { count: profile.languages.length }),
       ],
       suggestedSkills: await this.suggestSkills(profile.skills, profile.title),
-      improvedBio: `Dedicated ${profile.title || 'professional'} based in ${profile.location || 'Azerbaijan'} with extensive experience in delivering high-impact solutions. Combining technical expertise with strong communication skills to drive business outcomes.`,
+      improvedBio: i18n.t('ai.fallback.resumeImprovedBio', { title, location }),
     };
   }
 

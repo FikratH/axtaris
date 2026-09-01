@@ -20,6 +20,7 @@ import {
   useToggleSavedJob,
 } from '@/hooks/useCandidateVacancyActions';
 import { useCandidateSubscriptionSummary } from '@/hooks/useSubscriptionQueries';
+import { useNotifications } from '@/hooks/useEngagementQueries';
 import { useCandidateVacancies, useTopCompanies } from '@/hooks/useVacancyQueries';
 import { useGuestGate } from '@/hooks/useGuestGate';
 import { VacancyCard } from '@/components/ui/VacancyCard';
@@ -49,6 +50,11 @@ export default function CandidateHomeScreen() {
   const { data: profile } = useCandidateProfile(user?.id);
   const { data: subscriptionSummary } = useCandidateSubscriptionSummary(user?.id);
   const { data: savedJobIds = [] } = useSavedJobIds(user?.id);
+  const { data: notifications = [] } = useNotifications(user?.id);
+  const hasUnreadNotifications = useMemo(
+    () => notifications.some((n) => !n.read),
+    [notifications]
+  );
   const toggleSave = useToggleSavedJob(user?.id);
   const { requireAuth } = useGuestGate();
   const saveJob = useCallback(
@@ -123,6 +129,7 @@ export default function CandidateHomeScreen() {
               style={styles.headerIconBtn}
             >
               <Bell size={20} color="rgba(255,255,255,0.85)" strokeWidth={1.8} />
+              {hasUnreadNotifications && <View style={styles.bellUnreadDot} />}
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push('/(candidate)/profile')}
@@ -330,6 +337,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bellUnreadDot: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#F59E0B',
+    borderWidth: 1.5,
+    borderColor: 'rgba(27, 46, 90, 0.9)',
   },
   searchBar: {
     flexDirection: 'row',

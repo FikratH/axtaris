@@ -309,6 +309,11 @@ export default {
     recentJobs: 'Новые вакансии',
     topCompanies: 'Топ компании',
     searchPlaceholder: 'Должность, компания или ключевое слово...',
+    searchResultsCount_one: '{{count}} вакансия',
+    searchResultsCount_few: '{{count}} вакансии',
+    searchResultsCount_many: '{{count}} вакансий',
+    searchResultsCount_other: '{{count}} вакансии',
+    searchEmptySubtitle: 'Попробуйте другие ключевые слова или сбросьте фильтры, чтобы увидеть больше вакансий.',
     filters: 'Фильтры',
     jobType: 'Тип работы',
     salary: 'Зарплата',
@@ -701,7 +706,25 @@ export default {
       matchingSkillsOne: '{{count}} совпадающий навык: {{skills}}',
       matchingSkillsMany: '{{count}} совпадающих навыков: {{skills}}',
       noSkillOverlap: 'Нет прямого совпадения навыков',
+      resumeSummary:
+        'Ориентированный на результат {{title}} с опытом {{years}}+ лет. Подтверждённые достижения в {{skills}}. Готов(а) применить экспертизу в новой интересной роли.',
+      resumeHighlightYears: '{{years}}+ лет профессионального опыта',
+      resumeHighlightSkills: 'Навыки: {{skills}}',
+      resumeHighlightEducation: '{{degree}}, {{institution}}',
+      resumeHighlightSelfTaught: 'Специалист-самоучка',
+      resumeHighlightLanguages: 'Языков: {{count}}',
+      resumeImprovedBio:
+        'Целеустремлённый {{title}} из региона {{location}} с большим опытом реализации значимых решений. Сочетает технические знания с сильными коммуникативными навыками для достижения бизнес-результатов.',
+      defaultLocation: 'Азербайджан',
     },
+  },
+  moderation: {
+    reportCta: 'Пожаловаться',
+    reportVacancyTitle: 'Пожаловаться на вакансию',
+    reportCompanyTitle: 'Пожаловаться на компанию',
+    reportProfileTitle: 'Пожаловаться на профиль',
+    reportMessage: 'Укажите причину жалобы',
+    reportReasonScam: 'Мошенничество или фальшивое объявление',
   },
   validation: {
     required: 'Обязательное поле',
@@ -800,7 +823,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '5 AZN / 30 дней',
+            priceLabel: 'Бесплатно в бета-версии',
             visibilityLabel: 'Приоритет в списке кандидатов',
             highlights: [
               'До 10 откликов в день',
@@ -810,7 +833,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '15 AZN / 30 дней',
+            priceLabel: 'Бесплатно в бета-версии',
             visibilityLabel: 'В самом верху списка кандидатов',
             highlights: [
               'Безлимитные отклики',
@@ -823,8 +846,8 @@ export default {
           price: {
             label: 'Цена за 30 дней',
             free: 'Бесплатно',
-            pro: '5 AZN',
-            premium: '15 AZN',
+            pro: 'Бесплатно в бета-версии',
+            premium: 'Бесплатно в бета-версии',
           },
           applications: {
             label: 'Откликов в день',
@@ -868,7 +891,7 @@ export default {
           },
           pro: {
             name: 'Pro',
-            priceLabel: '19 AZN / 30 дней',
+            priceLabel: 'Бесплатно в бета-версии',
             visibilityLabel: 'Приоритетная поддержка и настройка',
             highlights: [
               'Приоритетная поддержка и помощь с настройкой найма',
@@ -878,7 +901,7 @@ export default {
           },
           premium: {
             name: 'Premium',
-            priceLabel: '49 AZN / 30 дней',
+            priceLabel: 'Бесплатно в бета-версии',
             visibilityLabel: 'Выделенная VIP-поддержка',
             highlights: [
               'Выделенная VIP-поддержка от команды AxtarIS',
@@ -891,8 +914,8 @@ export default {
           price: {
             label: 'Цена за 30 дней',
             free: 'Бесплатно',
-            pro: '19 AZN',
-            premium: '49 AZN',
+            pro: 'Бесплатно в бета-версии',
+            premium: 'Бесплатно в бета-версии',
           },
           vacancyVisibility: {
             label: 'Продвижение вакансии',

@@ -40,8 +40,14 @@ export function usePushNotifications(userId?: string, role?: UserRole) {
       const data = (response?.notification?.request?.content?.data ?? {}) as Record<string, unknown>;
       const vacancyId = data.vacancyId ? String(data.vacancyId) : undefined;
       const applicationId = data.applicationId ? String(data.applicationId) : undefined;
+      const conversationId = data.conversationId ? String(data.conversationId) : undefined;
+      const inviteId = data.inviteId ? String(data.inviteId) : undefined;
 
-      if (applicationId && role === 'employer') {
+      if (conversationId) {
+        router.push({ pathname: '/chat/[id]', params: { id: conversationId } } as never);
+      } else if (inviteId || data.type === 'invite') {
+        router.push('/invites' as never);
+      } else if (applicationId && role === 'employer') {
         router.push({ pathname: '/(employer)/applicant/[id]', params: { id: applicationId } } as never);
       } else if (vacancyId) {
         router.push({ pathname: '/vacancy/[id]', params: { id: vacancyId } } as never);

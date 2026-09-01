@@ -62,10 +62,29 @@ Deno.serve(async (req) => {
         data: data ?? {},
         sound: 'default',
         priority: 'high',
+        channelId: 'default',
       }),
     });
 
-    return json(await expoResp.json(), 200);
+    // Expo's HTTP 200 does NOT mean delivered — per-message errors (e.g.
+    // InvalidCredentials, DeviceNotRegistered) come back inside the ticket.
+    // Surface them in function logs and prune tokens Expo says are dead,
+    // otherwise credential failures stay invisible until manually probed.
+    const ticketPayload = await expoResp.json();
+    const ticket = Array.isArray(ticketPayload?.data) ? ticketPayload.data[0] : ticketPayload?.data;
+
+    if (ticket?.status === 'error') {
+      console.error(
+        `[send-push] Expo ticket error for user ${userId}: ${ticket.message} ` +
+          `(${ticket.details?.error ?? 'no error code'})`
+      );
+      if (ticket.details?.error === 'DeviceNotRegistered') {
+        await admin.from('profiles').update({ expo_push_token: null }).eq('id', userId);
+      }
+      return json({ error: ticket.message, details: ticket.details ?? null }, 502);
+    }
+
+    return json(ticketPayload, 200);
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

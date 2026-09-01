@@ -16,7 +16,8 @@ import { useEmployerEntitlements } from '@/hooks/useEntitlements';
 import { talentService } from '@/services/talentService';
 import { toUserMessage } from '@/utils/errorMessage';
 import { safeBack } from '@/utils/navigation';
-import { ChevronLeft, MapPin, Crown, UserPlus, Lock, Briefcase, Clock } from 'lucide-react-native';
+import { useReportEntity } from '@/hooks/useModeration';
+import { ChevronLeft, Flag, MapPin, Crown, UserPlus, Lock, Briefcase, Clock } from 'lucide-react-native';
 
 export default function TalentDetailScreen() {
   const { colors, spacing: s, typography: t, radius: r, isDark } = useTheme();
@@ -30,7 +31,28 @@ export default function TalentDetailScreen() {
   const { data: candidate, isLoading } = useTalentCandidate(id);
   const { data: inviteCount = 0 } = useCompanyInviteCount(company?.id);
   const sendInvite = useSendInvite(company?.id);
+  const reportEntity = useReportEntity(user?.id);
   const [invited, setInvited] = React.useState(false);
+
+  const handleReport = React.useCallback(() => {
+    if (!id) return;
+    const submit = (reasonKey: string) => {
+      reportEntity.mutate(
+        { entityType: 'user', entityId: id, reason: tr(reasonKey) },
+        {
+          onSuccess: () => Alert.alert(tr('common.done'), tr('chat.reportSubmitted')),
+          onError: (error) => Alert.alert(tr('common.error'), toUserMessage(error, tr)),
+        }
+      );
+    };
+    Alert.alert(tr('moderation.reportProfileTitle'), tr('moderation.reportMessage'), [
+      { text: tr('chat.reportReasonSpam'), onPress: () => submit('chat.reportReasonSpam') },
+      { text: tr('moderation.reportReasonScam'), onPress: () => submit('moderation.reportReasonScam') },
+      { text: tr('chat.reportReasonInappropriate'), onPress: () => submit('chat.reportReasonInappropriate') },
+      { text: tr('chat.reportReasonOther'), onPress: () => submit('chat.reportReasonOther') },
+      { text: tr('common.cancel'), style: 'cancel' },
+    ]);
+  }, [id, reportEntity, tr]);
 
   // Record the profile view once (drives the candidate's "who viewed you").
   useEffect(() => {
@@ -91,9 +113,18 @@ export default function TalentDetailScreen() {
       contentContainerStyle={{ paddingBottom: 40, paddingTop: insets.top + 12, paddingHorizontal: 20 }}
       showsVerticalScrollIndicator={false}
     >
-      <TouchableOpacity onPress={() => safeBack(router, '/(employer)/talent' as never)} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
-        <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
-      </TouchableOpacity>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <TouchableOpacity onPress={() => safeBack(router, '/(employer)/talent' as never)} style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}>
+          <ChevronLeft size={20} color={colors.textPrimary} strokeWidth={2} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleReport}
+          style={[styles.backBtn, { backgroundColor: colors.surfaceSecondary, borderRadius: r.md }]}
+          accessibilityLabel={tr('moderation.reportCta')}
+        >
+          <Flag size={18} color={colors.textTertiary} strokeWidth={1.8} />
+        </TouchableOpacity>
+      </View>
 
       <Card padding="lg" style={{ marginTop: s.lg }}>
         <View style={styles.header}>

@@ -475,7 +475,9 @@ export interface ProfileViewSummary {
 export interface SavedSearchCriteria {
   query?: string;
   city?: string;
+  /** @deprecated legacy single value — new saves also write workTypes */
   workType?: WorkType;
+  workTypes?: WorkType[];
   skills?: string[];
 }
 
