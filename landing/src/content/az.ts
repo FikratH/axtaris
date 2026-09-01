@@ -238,5 +238,7 @@ export const az: Dictionary = {
     contactLabel: "Əlaqə",
     langLabel: "Dil",
     copyright: "© 2026 AxtarIS. Bütün hüquqlar qorunur.",
+    legalPrivacy: "Məxfilik siyasəti",
+    legalTerms: "İstifadə şərtləri",
   },
 };

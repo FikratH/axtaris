@@ -237,5 +237,7 @@ export const ru: Dictionary = {
     contactLabel: "Контакты",
     langLabel: "Язык",
     copyright: "© 2026 AxtarIS. Все права защищены.",
+    legalPrivacy: "Политика конфиденциальности",
+    legalTerms: "Условия использования",
   },
 };

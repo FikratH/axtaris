@@ -237,5 +237,7 @@ export const en: Dictionary = {
     contactLabel: "Contact",
     langLabel: "Language",
     copyright: "© 2026 AxtarIS. All rights reserved.",
+    legalPrivacy: "Privacy Policy",
+    legalTerms: "Terms of Service",
   },
 };
