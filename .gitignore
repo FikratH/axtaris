@@ -38,3 +38,7 @@ expo-env.d.ts
 .impeccable/review/
 .impeccable/questions/
 .DS_Store
+
+# Credential files — never commit (FCM service-account keys etc.)
+*firebase-adminsdk*.json
+*service-account*.json

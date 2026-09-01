@@ -11,10 +11,12 @@ function organizationNode() {
     name: site.name,
     url: site.url,
     logo: {
+      // Square ≥112px per Google's Organization-logo guideline; the SERP
+      // site icon is picked from this + the ≥48px favicon set.
       "@type": "ImageObject",
-      url: `${site.url}/brand/mark.png`,
-      width: 194,
-      height: 190,
+      url: `${site.url}/brand/logo-square.png`,
+      width: 512,
+      height: 512,
     },
     contactPoint: {
       "@type": "ContactPoint",
