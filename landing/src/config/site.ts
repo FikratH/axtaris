@@ -27,5 +27,9 @@ export const site = {
   url: "https://axtaris.app",
   /** the only real public contact (confirmed 2026-08-27) */
   supportEmail: "info@axtaris.app",
+  /** E.164, for tel: links and schema.org telephone (added 2026-09-02) */
+  supportPhone: "+994505050280",
+  supportPhoneDisplay: "+994 50 505 02 80",
+  whatsappUrl: "https://wa.me/994505050280",
   name: "AxtarIS",
 } as const;

@@ -21,6 +21,7 @@ function organizationNode() {
     contactPoint: {
       "@type": "ContactPoint",
       email: site.supportEmail,
+      telephone: site.supportPhone,
       contactType: "customer support",
       areaServed: "AZ",
       availableLanguage: ["az", "en", "ru"],

@@ -53,12 +53,34 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           <p className="doc-label-sm mb-3 text-carbon-300">
             {dict.footer.contactLabel}
           </p>
-          <a
-            href={`mailto:${site.supportEmail}`}
-            className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
-          >
-            {site.supportEmail}
-          </a>
+          <ul className="flex flex-col items-start gap-1">
+            <li>
+              <a
+                href={`mailto:${site.supportEmail}`}
+                className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
+              >
+                {site.supportEmail}
+              </a>
+            </li>
+            <li>
+              <a
+                href={`tel:${site.supportPhone}`}
+                className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
+              >
+                {site.supportPhoneDisplay}
+              </a>
+            </li>
+            <li>
+              <a
+                href={site.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
+              >
+                WhatsApp
+              </a>
+            </li>
+          </ul>
           <p className="doc-label-sm mt-6 mb-3 text-carbon-300">
             {dict.footer.langLabel}
           </p>
