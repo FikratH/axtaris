@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Alumni_Sans, Commissioner, Martian_Mono } from "next/font/google";
 import Script from "next/script";
+import { CookieConsentBanner } from "@/components/CookieConsentBanner";
 import { site } from "@/config/site";
 import {
   defaultLocale,
@@ -9,6 +10,7 @@ import {
   localePath,
   type Locale,
 } from "@/content";
+import { CONSENT_STORAGE_KEY, GA_MEASUREMENT_ID } from "@/lib/analytics";
 import { getJsonLd } from "@/lib/schema";
 import "../globals.css";
 
@@ -121,8 +123,26 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd }}
         />
+        {/*
+          Consent Mode default — must run before gtag.js so the first hit
+          already carries the right value. Reads the same localStorage key
+          the banner writes, so a returning visitor who already accepted
+          isn't counted as "denied" again on their next visit. The banner
+          flips this to "granted" for a first-time visitor who accepts
+          (Privacy Policy §14).
+        */}
+        <Script id="google-consent-default" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            var stored = localStorage.getItem('${CONSENT_STORAGE_KEY}');
+            gtag('consent', 'default', {
+              analytics_storage: stored === 'granted' ? 'granted' : 'denied',
+            });
+          `}
+        </Script>
         <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-E3RQNWY1BX"
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
         />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -130,10 +150,11 @@ export default async function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-E3RQNWY1BX');
+            gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
         {children}
+        <CookieConsentBanner dict={dict.cookieConsent} locale={locale} />
       </body>
     </html>
   );

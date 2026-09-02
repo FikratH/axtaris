@@ -8,6 +8,7 @@ import { useMotion } from "@/components/motion/MotionProvider";
 import { Stamp } from "@/components/doc/primitives";
 import { stampCtaClass } from "@/components/ui/stamp-cta";
 import type { Dictionary, Locale } from "@/content";
+import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 type Role = "candidate" | "employer";
@@ -137,6 +138,7 @@ export function WaitlistForm({
         (data as { ok?: unknown }).ok === true;
       if (ok) {
         setStatus("success");
+        trackEvent("waitlist_signup", { role, locale });
         return;
       }
       setStatus("idle");

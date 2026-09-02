@@ -241,4 +241,11 @@ export const az: Dictionary = {
     legalPrivacy: "Məxfilik siyasəti",
     legalTerms: "İstifadə şərtləri",
   },
+  cookieConsent: {
+    message:
+      "Saytı təkmilləşdirmək üçün analitika kukilərindən istifadə edirik. Razısınızmı?",
+    privacyLink: "Məxfilik siyasəti",
+    accept: "Qəbul edirəm",
+    decline: "İmtina",
+  },
 };

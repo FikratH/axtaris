@@ -240,4 +240,11 @@ export const ru: Dictionary = {
     legalPrivacy: "Политика конфиденциальности",
     legalTerms: "Условия использования",
   },
+  cookieConsent: {
+    message:
+      "Мы используем аналитические cookie, чтобы улучшать сайт. Вы согласны?",
+    privacyLink: "Политика конфиденциальности",
+    accept: "Принять",
+    decline: "Отклонить",
+  },
 };

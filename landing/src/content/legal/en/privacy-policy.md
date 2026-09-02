@@ -74,6 +74,7 @@ We use a small set of service providers, bound by data processing agreements:
 | Paddle | payment processing for web purchases (as **merchant of record** — see Section 7) | purchase and billing data |
 | Apple / Google | in-app purchases, app distribution | purchase data per their policies |
 | OpenAI (via our secured proxy) | AI-assisted text features (Section 8) | the text you submit to those features |
+| Google Analytics | website usage analytics (Section 14), only after you accept the cookie banner | pseudonymous usage data (pages viewed, device/browser type) |
 
 We do not sell personal data and we do not share it with advertisers.
 
@@ -124,7 +125,9 @@ By registering, you consent to the processing of your personal data by **[AXTARI
 
 ## 14. Cookies (website)
 
-The axtaris.app website currently uses only **strictly necessary** cookies/storage (e.g. language preference). We do not run advertising or cross-site tracking cookies. If we add analytics cookies later, we will update this Policy and, where required, ask for consent first.
+The axtaris.app website uses **strictly necessary** cookies/storage (e.g. language preference, your cookie choice) at all times.
+
+We also use **Google Analytics 4** to understand aggregate site usage (pages viewed, waitlist signups). Analytics cookies (`_ga`, `_ga_*`, expiring after up to 14 months) are set **only if you accept** the cookie banner shown on your first visit; until you accept, Google Consent Mode keeps analytics storage denied. You can withdraw your choice at any time by clearing your browser's site data for axtaris.app, which brings the banner back. We do not run advertising or cross-site tracking cookies, and Google does not receive your name or email through this integration.
 
 ## 15. Children
 

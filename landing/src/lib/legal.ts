@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { marked } from "marked";
-import { localePath, type Locale } from "@/content";
+import type { Locale } from "@/content";
+export { legalPath } from "@/lib/legal-path";
 
 /**
  * Build-time loader for the hosted legal documents.
@@ -123,10 +124,4 @@ export function loadLegalDocument(
     isEnFallback,
     contentLocale: isEnFallback ? "en" : locale,
   };
-}
-
-/** /legal/terms · /en/legal/terms · /ru/legal — locale-aware legal URLs. */
-export function legalPath(locale: Locale, slug?: string): string {
-  const prefix = locale === "az" ? "" : localePath(locale);
-  return `${prefix}/legal${slug ? `/${slug}` : ""}`;
 }

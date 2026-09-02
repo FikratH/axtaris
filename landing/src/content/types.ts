@@ -132,4 +132,10 @@ export interface Dictionary {
     legalPrivacy: string;
     legalTerms: string;
   };
+  cookieConsent: {
+    message: string;
+    privacyLink: string;
+    accept: string;
+    decline: string;
+  };
 }

@@ -74,6 +74,7 @@ Məlumat emalı müqavilələri ilə bağlı olan məhdud sayda xidmət təchiza
 | Paddle | veb alışların ödəniş emalı (**rəsmi satıcı — merchant of record**, 7-ci bölmə) | alış və hesablaşma məlumatları |
 | Apple / Google | tətbiqdaxili alışlar, tətbiq paylanması | öz siyasətlərinə uyğun alış məlumatları |
 | OpenAI (qorunan proksimiz vasitəsilə) | süni intellekt mətn funksiyaları (8-ci bölmə) | həmin funksiyalara təqdim etdiyiniz mətn |
+| Google Analytics | sayt istifadəsi analitikası (14-cü bölmə), yalnız kuki bannerini qəbul etdikdən sonra | psevdonimləşdirilmiş istifadə məlumatları (baxılan səhifələr, cihaz/brauzer növü) |
 
 Fərdi məlumatları satmırıq və reklamçılarla paylaşmırıq.
 
@@ -124,7 +125,9 @@ Qeydiyyatdan keçməklə fərdi məlumatlarınızın **[AXTARIS MMC — qeydiyya
 
 ## 14. Kukilər (veb sayt)
 
-axtaris.app saytı hazırda yalnız **ciddi zəruri** kukilərdən/yaddaşdan istifadə edir (məsələn, dil seçimi). Reklam və saytlararası izləmə kukiləri işlətmirik. Gələcəkdə analitika kukiləri əlavə etsək, bu Siyasəti yeniləyəcək və tələb olunduqda əvvəlcə razılıq soruşacağıq.
+axtaris.app saytı həmişə yalnız **ciddi zəruri** kukilərdən/yaddaşdan istifadə edir (məsələn, dil seçimi, kuki bannerindəki seçiminiz).
+
+Həmçinin sayta ümumi baxışı qiymətləndirmək üçün (baxılan səhifələr, gözləmə siyahısına qeydiyyatlar) **Google Analytics 4**-dən istifadə edirik. Analitika kukiləri (`_ga`, `_ga_*`, 14 ayadək qüvvədədir) **yalnız ilk ziyarətinizdə göstərilən banneri qəbul etdiyiniz halda** qoyulur; qəbul etməzdən əvvəl Google Consent Mode analitika yaddaşını rədd edilmiş vəziyyətdə saxlayır. Razılığınızı istənilən vaxt brauzerinizdə axtaris.app sayt məlumatlarını təmizləməklə geri götürə bilərsiniz — banner yenidən görünəcək. Reklam və saytlararası izləmə kukiləri işlətmirik və Google bu inteqrasiya vasitəsilə adınızı və ya e-poçtunuzu almır.
 
 ## 15. Uşaqlar
 

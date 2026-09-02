@@ -240,4 +240,11 @@ export const en: Dictionary = {
     legalPrivacy: "Privacy Policy",
     legalTerms: "Terms of Service",
   },
+  cookieConsent: {
+    message:
+      "We use analytics cookies to improve the site. Is that okay with you?",
+    privacyLink: "Privacy Policy",
+    accept: "Accept",
+    decline: "Decline",
+  },
 };
