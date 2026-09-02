@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Alumni_Sans, Commissioner, Martian_Mono } from "next/font/google";
+import Script from "next/script";
 import { site } from "@/config/site";
 import {
   defaultLocale,
@@ -120,6 +121,18 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: jsonLd }}
         />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-E3RQNWY1BX"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-E3RQNWY1BX');
+          `}
+        </Script>
         {children}
       </body>
     </html>
