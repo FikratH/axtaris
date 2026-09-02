@@ -1,9 +1,14 @@
 import Image from "next/image";
+import { Mail, Phone } from "lucide-react";
+import { SiWhatsapp } from "react-icons/si";
 import { SECTION_IDS } from "@/lib/anchors";
 import { legalPath } from "@/lib/legal";
 import { site } from "@/config/site";
 import { localePath, locales, type Dictionary, type Locale } from "@/content";
 import { cn } from "@/lib/utils";
+
+const contactLinkClass =
+  "inline-flex min-h-9 items-center gap-2 text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50";
 
 export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
   const navLinks = [
@@ -55,18 +60,14 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
           </p>
           <ul className="flex flex-col items-start gap-1">
             <li>
-              <a
-                href={`mailto:${site.supportEmail}`}
-                className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
-              >
+              <a href={`mailto:${site.supportEmail}`} className={contactLinkClass}>
+                <Mail className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
                 {site.supportEmail}
               </a>
             </li>
             <li>
-              <a
-                href={`tel:${site.supportPhone}`}
-                className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
-              >
+              <a href={`tel:${site.supportPhone}`} className={contactLinkClass}>
+                <Phone className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
                 {site.supportPhoneDisplay}
               </a>
             </li>
@@ -75,8 +76,9 @@ export function Footer({ dict, locale }: { dict: Dictionary; locale: Locale }) {
                 href={site.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex min-h-9 items-center text-[0.9375rem] text-brand-200 underline decoration-brand-500 underline-offset-4 transition-colors hover:text-brand-50"
+                className={contactLinkClass}
               >
+                <SiWhatsapp className="size-4 shrink-0" aria-hidden />
                 WhatsApp
               </a>
             </li>
