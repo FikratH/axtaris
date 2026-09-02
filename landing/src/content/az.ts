@@ -243,7 +243,7 @@ export const az: Dictionary = {
   },
   cookieConsent: {
     message:
-      "Saytı təkmilləşdirmək üçün analitika kukilərindən istifadə edirik. Razısınızmı?",
+      "Saytı təkmilləşdirmək üçün analitika cookie-lərindən istifadə edirik. Razısınızmı?",
     privacyLink: "Məxfilik siyasəti",
     accept: "Qəbul edirəm",
     decline: "İmtina",

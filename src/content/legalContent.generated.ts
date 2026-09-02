@@ -203,7 +203,7 @@ export const legalContent: Record<'az' | 'en' | 'ru', Record<LegalDocument, Lega
         "heading": "5. Who processes data for us (processors)",
         "paragraphs": [
           "We use a small set of service providers, bound by data processing agreements:",
-          "| Provider | Role | Data | |---|---|---| | Supabase (hosting infrastructure) | database, authentication, file storage, serverless functions | all Service data | | Expo (push delivery) | delivering push notifications to your device | push token, notification content | | Paddle | payment processing for web purchases (as merchant of record — see Section 7) | purchase and billing data | | Apple / Google | in-app purchases, app distribution | purchase data per their policies | | OpenAI (via our secured proxy) | AI-assisted text features (Section 8) | the text you submit to those features |",
+          "| Provider | Role | Data | |---|---|---| | Supabase (hosting infrastructure) | database, authentication, file storage, serverless functions | all Service data | | Expo (push delivery) | delivering push notifications to your device | push token, notification content | | Paddle | payment processing for web purchases (as merchant of record — see Section 7) | purchase and billing data | | Apple / Google | in-app purchases, app distribution | purchase data per their policies | | OpenAI (via our secured proxy) | AI-assisted text features (Section 8) | the text you submit to those features | | Google Analytics | website usage analytics (Section 14), only after you accept the cookie banner | pseudonymous usage data (pages viewed, device/browser type) |",
           "We do not sell personal data and we do not share it with advertisers."
         ]
       },
@@ -262,7 +262,8 @@ export const legalContent: Record<'az' | 'en' | 'ru', Record<LegalDocument, Lega
       {
         "heading": "14. Cookies (website)",
         "paragraphs": [
-          "The axtaris.app website currently uses only strictly necessary cookies/storage (e.g. language preference). We do not run advertising or cross-site tracking cookies. If we add analytics cookies later, we will update this Policy and, where required, ask for consent first."
+          "The axtaris.app website uses strictly necessary cookies/storage (e.g. language preference, your cookie choice) at all times.",
+          "We also use Google Analytics 4 to understand aggregate site usage (pages viewed, waitlist signups). Analytics cookies (_ga, _ga_*, expiring after up to 14 months) are set only if you accept the cookie banner shown on your first visit; until you accept, Google Consent Mode keeps analytics storage denied. You can withdraw your choice at any time by clearing your browser's site data for axtaris.app, which brings the banner back. We do not run advertising or cross-site tracking cookies, and Google does not receive your name or email through this integration."
         ]
       },
       {
@@ -487,7 +488,7 @@ export const legalContent: Record<'az' | 'en' | 'ru', Record<LegalDocument, Lega
         "heading": "5. Məlumatları bizim üçün kim emal edir (emalçılar)",
         "paragraphs": [
           "Məlumat emalı müqavilələri ilə bağlı olan məhdud sayda xidmət təchizatçısından istifadə edirik:",
-          "| Təchizatçı | Rolu | Məlumatlar | |---|---|---| | Supabase (hostinq infrastrukturu) | verilənlər bazası, autentifikasiya, fayl anbarı, server funksiyaları | bütün Xidmət məlumatları | | Expo (push çatdırılması) | push bildirişlərin cihazınıza çatdırılması | push tokeni, bildiriş məzmunu | | Paddle | veb alışların ödəniş emalı (rəsmi satıcı — merchant of record, 7-ci bölmə) | alış və hesablaşma məlumatları | | Apple / Google | tətbiqdaxili alışlar, tətbiq paylanması | öz siyasətlərinə uyğun alış məlumatları | | OpenAI (qorunan proksimiz vasitəsilə) | süni intellekt mətn funksiyaları (8-ci bölmə) | həmin funksiyalara təqdim etdiyiniz mətn |",
+          "| Təchizatçı | Rolu | Məlumatlar | |---|---|---| | Supabase (hostinq infrastrukturu) | verilənlər bazası, autentifikasiya, fayl anbarı, server funksiyaları | bütün Xidmət məlumatları | | Expo (push çatdırılması) | push bildirişlərin cihazınıza çatdırılması | push tokeni, bildiriş məzmunu | | Paddle | veb alışların ödəniş emalı (rəsmi satıcı — merchant of record, 7-ci bölmə) | alış və hesablaşma məlumatları | | Apple / Google | tətbiqdaxili alışlar, tətbiq paylanması | öz siyasətlərinə uyğun alış məlumatları | | OpenAI (qorunan proksimiz vasitəsilə) | süni intellekt mətn funksiyaları (8-ci bölmə) | həmin funksiyalara təqdim etdiyiniz mətn | | Google Analytics | sayt istifadəsi analitikası (14-cü bölmə), yalnız cookie bannerini qəbul etdikdən sonra | psevdonimləşdirilmiş istifadə məlumatları (baxılan səhifələr, cihaz/brauzer növü) |",
           "Fərdi məlumatları satmırıq və reklamçılarla paylaşmırıq."
         ]
       },
@@ -544,9 +545,10 @@ export const legalContent: Record<'az' | 'en' | 'ru', Record<LegalDocument, Lega
         ]
       },
       {
-        "heading": "14. Kukilər (veb sayt)",
+        "heading": "14. Cookie-lər (veb sayt)",
         "paragraphs": [
-          "axtaris.app saytı hazırda yalnız ciddi zəruri kukilərdən/yaddaşdan istifadə edir (məsələn, dil seçimi). Reklam və saytlararası izləmə kukiləri işlətmirik. Gələcəkdə analitika kukiləri əlavə etsək, bu Siyasəti yeniləyəcək və tələb olunduqda əvvəlcə razılıq soruşacağıq."
+          "axtaris.app saytı həmişə yalnız ciddi zəruri cookie-lərdən/yaddaşdan istifadə edir (məsələn, dil seçimi, cookie bannerindəki seçiminiz).",
+          "Həmçinin sayta ümumi baxışı qiymətləndirmək üçün (baxılan səhifələr, gözləmə siyahısına qeydiyyatlar) Google Analytics 4-dən istifadə edirik. Analitika cookie-ləri (_ga, _ga_*, 14 ayadək qüvvədədir) yalnız ilk ziyarətinizdə göstərilən banneri qəbul etdiyiniz halda qoyulur; qəbul etməzdən əvvəl Google Consent Mode analitika yaddaşını rədd edilmiş vəziyyətdə saxlayır. Razılığınızı istənilən vaxt brauzerinizdə axtaris.app sayt məlumatlarını təmizləməklə geri götürə bilərsiniz — banner yenidən görünəcək. Reklam və saytlararası izləmə cookie-ləri işlətmirik və Google bu inteqrasiya vasitəsilə adınızı və ya e-poçtunuzu almır."
         ]
       },
       {
@@ -771,7 +773,7 @@ export const legalContent: Record<'az' | 'en' | 'ru', Record<LegalDocument, Lega
         "heading": "5. Кто обрабатывает данные для нас (процессоры)",
         "paragraphs": [
           "Мы используем ограниченный набор провайдеров, связанных соглашениями об обработке данных:",
-          "| Провайдер | Роль | Данные | |---|---|---| | Supabase (хостинг-инфраструктура) | база данных, аутентификация, файлы, серверные функции | все данные Сервиса | | Expo (доставка push) | доставка push-уведомлений на устройство | push-токен, содержание уведомления | | Paddle | обработка платежей на сайте (официальный продавец — merchant of record, раздел 7) | данные покупки и биллинга | | Apple / Google | встроенные покупки, дистрибуция приложений | данные покупок по их политикам | | OpenAI (через наш защищённый прокси) | ИИ-функции для текста (раздел 8) | текст, который вы отправляете этим функциям |",
+          "| Провайдер | Роль | Данные | |---|---|---| | Supabase (хостинг-инфраструктура) | база данных, аутентификация, файлы, серверные функции | все данные Сервиса | | Expo (доставка push) | доставка push-уведомлений на устройство | push-токен, содержание уведомления | | Paddle | обработка платежей на сайте (официальный продавец — merchant of record, раздел 7) | данные покупки и биллинга | | Apple / Google | встроенные покупки, дистрибуция приложений | данные покупок по их политикам | | OpenAI (через наш защищённый прокси) | ИИ-функции для текста (раздел 8) | текст, который вы отправляете этим функциям | | Google Analytics | аналитика использования сайта (раздел 14), только после согласия в баннере cookie | псевдонимизированные данные использования (просмотренные страницы, тип устройства/браузера) |",
           "Мы не продаём персональные данные и не передаём их рекламодателям."
         ]
       },
@@ -830,7 +832,8 @@ export const legalContent: Record<'az' | 'en' | 'ru', Record<LegalDocument, Lega
       {
         "heading": "14. Cookie (сайт)",
         "paragraphs": [
-          "Сайт axtaris.app сейчас использует только строго необходимые cookie/хранилище (например, выбор языка). Рекламных и кросс-сайтовых трекинговых cookie нет. Если добавим аналитические cookie, обновим Политику и, где требуется, сначала запросим согласие."
+          "Сайт axtaris.app всегда использует строго необходимые cookie/хранилище (например, выбор языка, ваш выбор в баннере cookie).",
+          "Мы также используем Google Analytics 4 для оценки общей посещаемости сайта (просмотры страниц, регистрации в лист ожидания). Аналитические cookie (_ga, _ga_*, срок действия до 14 месяцев) устанавливаются только если вы согласитесь в баннере, показанном при первом посещении; до согласия Google Consent Mode держит аналитическое хранилище отклонённым. Вы можете отозвать согласие в любой момент, очистив данные сайта axtaris.app в браузере — баннер появится снова. Рекламных и кросс-сайтовых трекинговых cookie нет, и Google не получает через эту интеграцию ваше имя или email."
         ]
       },
       {
